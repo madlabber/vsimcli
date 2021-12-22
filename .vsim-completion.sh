@@ -92,8 +92,8 @@ __vsim ()   #  By convention, the function name
       #! [[ "$COMP_LINE" == *"-vsim"* ]] && [ -z "$name" ] && wordlist="$wordlist -vsim"
       ! [[ "$COMP_LINE" == *"-version"* ]] && ! [[ "$COMP_LINE" == *"-package"* ]] && wordlist="$wordlist -version -package"
      # ! [[ "$COMP_LINE" == *"-version"* ]] && ! [[ "$COMP_LINE" == *"-package"* ]] && wordlist="$wordlist -package"
-      ! [[ "$COMP_LINE" == *"-mode"* ]] && wordlist="$wordlist -mode"
       # Optional
+      ! [[ "$COMP_LINE" == *"-mode"* ]] && wordlist2="$wordlist2 -mode"
       ! [[ "$COMP_LINE" == *"-partner"* ]] && wordlist2="$wordlist2 -partner"
       if ! [[ "$COMP_LINE" == *"-auto"* ]] && ! [[ "$COMP_LINE" == *"-create"* ]] && ! [[ "$COMP_LINE" == *"-join"* ]]; then wordlist2="$wordlist2 -auto -create -join";fi 
       ! [[ "$COMP_LINE" == *"-serial"* ]] && wordlist2="$wordlist2 -serial" 

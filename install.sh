@@ -30,13 +30,15 @@ if ! [ -f "$OVFTOOL" ] || ! [ -f "$VDISKMANAGER" ] || ! [ -f "$VMRUN" ];then
 fi
 
 if ! [ -f "standard.tgz" ];then 
-	ovafile=`ls vsim-netapp-DOT8.3*.ova | sort | head -1` 
+	ovafile=`ls vsim-netapp-DOT9.9.1-cm_nodar.ova | sort | head -1` 
 fi
 
 if [ -z "$ovafile" ] && ! [ -f "standard.tgz" ];then 
-		echo "An existing 8.3.x VSim OVA file is required."
-		echo "Plase download the workstation version and place it in this"
-		echo "folder, then try the installation again."
+		echo "An existing 9.9.1 vsim OVA file is required."
+		echo "Plase download vsim-netapp-DOT9.9.1-cm_nodar.ova and "
+		echo "place it in this folder, then try the installation again."
+		echo "This file can be downloaded from the mysupport.netapp.com at:"
+		echo "https://mysupport.netapp.com/api/tools-service/toolsbinary/simulate-ontap/download/vsim-netapp-DOT9.9.1-cm_nodar.ova"
 		((errCount++))
 fi
 
