@@ -14,26 +14,34 @@ OVFTOOL="/Applications/VMware Fusion.app/Contents/Library/VMware OVF Tool/ovftoo
 VDISKMANAGER="/Applications/VMware Fusion.app/Contents/Library/vmware-vdiskmanager"
 VMRUN="/Applications/VMware Fusion.app/Contents/Library/vmrun"
 
+#If those failed, maybe it is a tech preview of Fusion:
+if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware Fusion Tech Preview.app/Contents/Library/VMware OVF Tool/ovftool";fi
+if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmware-vdiskmanager";fi
+if ! [ -f "$VMRUN" ];then VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun";fi
+
+#OVFTOOL Might be installed as a standalone package
+if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware OVF Tool/ovftool";fi
+
 #If they aren't in default locations check the path
 if ! [ -f "$OVFTOOL" ];then OVFTOOL=$(which ovftool);fi
 if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER=$(which ovftool);fi
 if ! [ -f "$VMRUN" ];then VMRUN=$(which vmrun);fi
 
-if ! [ -f "$OVFTOOL" ] || ! [ -f "$VDISKMANAGER" ] || ! [ -f "$VMRUN" ];then 
+if ! [ -f "$OVFTOOL" ] || ! [ -f "$VDISKMANAGER" ] || ! [ -f "$VMRUN" ];then
 	echo "VMware components....FAILED"
 	echo
 	echo "One or more VMware components were not found:"
-	if ! [ -f "$OVFTOOL" ];then echo "missing: $OVFTOOL";((errCount++));fi
-	if ! [ -f "$VDISKMANAGER" ];then echo "missing: $VDISKMANAGER";((errCount++));fi
-	if ! [ -f "$VMRUN" ];then echo "missing: $VMRUN";((errCount++));fi
+	if ! [ -f "$OVFTOOL" ];then echo "missing: OVFTOOL";((errCount++));fi
+	if ! [ -f "$VDISKMANAGER" ];then echo "missing: VDISKMANAGER";((errCount++));fi
+	if ! [ -f "$VMRUN" ];then echo "missing: VMRUN";((errCount++));fi
 	echo "Install VMware Fusion/Workstation and try the installation again."
 fi
 
-if ! [ -f "standard.tgz" ];then 
-	ovafile=`ls vsim-netapp-DOT9.9.1-cm_nodar.ova | sort | head -1` 
+if ! [ -f "standard.tgz" ];then
+	ovafile=`ls vsim-netapp-DOT9.9.1-cm_nodar.ova | sort | head -1`
 fi
 
-if [ -z "$ovafile" ] && ! [ -f "standard.tgz" ];then 
+if [ -z "$ovafile" ] && ! [ -f "standard.tgz" ];then
 		echo "An existing 9.9.1 vsim OVA file is required."
 		echo "Plase download vsim-netapp-DOT9.9.1-cm_nodar.ova and "
 		echo "place it in this folder, then try the installation again."
@@ -43,10 +51,10 @@ if [ -z "$ovafile" ] && ! [ -f "standard.tgz" ];then
 fi
 
 if ! [ -f "classic.tgz" ];then
-	classic=`ls vsim-DOT81-*.zip | sort | head -1` 
+	classic=`ls vsim-DOT81-*.zip | sort | head -1`
 fi
 
-if [ -z "$classic" ] && ! [ -f "classic.tgz" ];then 
+if [ -z "$classic" ] && ! [ -f "classic.tgz" ];then
 		echo "A classic vSIM template was not found."
 		echo "This will prevent the creation of vsims running 8.0.x releases of Data ONTAP."
 		#echo "Plase download the workstation version and place it in this"
@@ -57,7 +65,7 @@ if [ -z "$classic" ] && ! [ -f "classic.tgz" ];then
 fi
 
 #If something went wrong bail out now
-if [ $errCount -ne 0 ];then 
+if [ $errCount -ne 0 ];then
 	echo
 	echo "!!Dependency check failed!!"
 	echo "!!Installation cancelled!!"
@@ -70,26 +78,26 @@ echo "Proceeding with installation."
 echo "Copying files to /usr/local/bin:"
 mkdir -p /usr/local/bin
 cp vsim /usr/local/bin
-if [ -f "/usr/local/bin/vsim" ]; then 
+if [ -f "/usr/local/bin/vsim" ]; then
 	echo "+ /usr/local/bin/vsim"
 fi
 cp .vsim-completion.sh /usr/local/bin
-if [ -f "/usr/local/bin/.vsim-completion.sh" ]; then 
+if [ -f "/usr/local/bin/.vsim-completion.sh" ]; then
 	echo "+ /usr/local/bin/.vsim-completion.sh"
 fi
 
 #Simlinks go here too
 echo "Creating symlinks for VMware Fusion components"
 ln -s "$VMRUN" "/usr/local/bin/vmrun" 2>/dev/null
-if [ -f "/usr/local/bin/vmrun" ]; then 
+if [ -f "/usr/local/bin/vmrun" ]; then
 	echo "+ /usr/local/bin/vmrun"
 fi
 ln -s "$OVFTOOL" "/usr/local/bin/ovftool" 2>/dev/null
-if [ -f "/usr/local/bin/ovftool" ];then 
+if [ -f "/usr/local/bin/ovftool" ];then
 	echo "+ /usr/local/bin/ovftool"
 fi
 ln -s "$VDISKMANAGER" "/usr/local/bin/vmware-vdiskmanager" 2>/dev/null
-if [ -f "/usr/local/bin/vmware-vdiskmanager" ]; then 
+if [ -f "/usr/local/bin/vmware-vdiskmanager" ]; then
 	echo "+ /usr/local/bin/vmware-vdiskmanager"
 fi
 
@@ -97,9 +105,13 @@ echo "Adding tab completion to bash environment"
 src="source /usr/local/bin/.vsim-completion.sh"
 if [ -f "$HOME/.bash_profile" ];then bashrc="$HOME/.bash_profile";fi
 if [ -f "$HOME/.bashrc" ];then bashrc="$HOME/.bashrc";fi
+if ! [ -f "$bashrc" ];then
+  bashrc="$HOME/.bash_profile"
+  touch "$bashrc"
+fi
 if cat "$bashrc" | grep "$src";then
 	echo "Installed."
-else 
+else
 	echo "$src" >> "$bashrc"
 	echo "Done."
 fi
@@ -112,11 +124,11 @@ fi
 
 #Build templates if necessary
 #Build standard.tgz from the ova
-if ! [ -f "standard.tgz" ];then 
+if ! [ -f "standard.tgz" ];then
 	echo "Building standard diskmodel template."
 	mkdir -p "$HOME/vsims"
 	chmod -R 777 "$HOME/vsims"
-	./vsim rm standard
+	./vsim delete standard
 	./vsim import -file "$ovafile" -name "standard"
 	echo "Mounting CF Card"
 	./vsim mount standard
@@ -127,7 +139,7 @@ if ! [ -f "standard.tgz" ];then
 	./vsim unmount standard
 	echo "Exporting tgz"
 	./vsim export standard -tgz
-	./vsim rm standard
+	./vsim delete standard
 fi
 # Build Classic.tgz
 # At some point
@@ -140,14 +152,14 @@ chmod -R 777 "$HOME/vsims"
 cp standard.tgz $HOME/vsims 2>/dev/null
 if [ -f "$HOME/vsims/standard.tgz" ];then
 	echo "+ $HOME/vsims/standard.tgz"
-	cp standard.tgz $HOME/vsims 
+	cp standard.tgz $HOME/vsims
 fi
 cp classic.tgz $HOME/vsims 2>/dev/null
-if [ -f "$HOME/vsims/classic.tgz" ];then 
+if [ -f "$HOME/vsims/classic.tgz" ];then
 	echo "+ $HOME/vsims/classic.tgz"
 fi
 cp universal.tgz $HOME/vsims 2>/dev/null
-if [ -f "$HOME/vsims/universal.tgz" ];then 
+if [ -f "$HOME/vsims/universal.tgz" ];then
 	echo "+ $HOME/vsims/universal.tgz"
 fi
 
@@ -162,7 +174,7 @@ if ! [ -f "/usr/local/bin/vsim" ]; then failed=1;fi
 if ! [ -f "$HOME/vsims/standard.tgz" ];then failed=1;fi
 #if ! [ -f "$HOME/vsims/classic.tgz" ];then failed=1;fi
 
-if [ $failed -ne 0 ];then 
+if [ $failed -ne 0 ];then
 	echo "File copy failed.  try again with sudo."
 	exit
 fi
