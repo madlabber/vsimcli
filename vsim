@@ -23,14 +23,22 @@ SIMDIR="$HOME/vsims"
 FODDIR="$HOME/vsims"
 ITGZPATH="$VSIMHOME/ontap"
 VSIMPASSWORD="netapp1!"
-#VSIMLICENSE="" #User must provide cluster base 
+#VSIMLICENSE="" #User must provide cluster base
 # Cluster base is deprecated now so leaving 99 here since it was the first result in google for "cluster base license key"
 VSIMLICENSE="UJBGVLVQJHOJKBAAAAAAAAAAAAAA"
 SDOT_BUILTIN_LICENSES="" #These can be found in the eval .ova
 
+#If those failed, maybe it is a tech preview of Fusion:
+if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware Fusion Tech Preview.app/Contents/Library/VMware OVF Tool/ovftool";fi
+if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmware-vdiskmanager";fi
+if ! [ -f "$VMRUN" ];then VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun";fi
+
+#OVFTOOL Might be installed as a standalone package
+if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware OVF Tool/ovftool";fi
+
 #If they aren't in default locations check the path
 if ! [ -f "$OVFTOOL" ];then OVFTOOL=$(which ovftool);fi
-if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER=$(which ovftool);fi
+if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER=$(which vmware-vdiskmanager);fi
 if ! [ -f "$VMRUN" ];then VMRUN=$(which vmrun);fi
 
 #A config file for extra settings
@@ -96,21 +104,21 @@ fi
 	#echo "     -vscsi                  : Use vscsi data diskmodel (for ESX)"
 #$}
 
-#help 
+#help
 function help() # $1=subcommand
 {
 	### Print the header and sign my work
-	if [ -n "$1" ] && ! [ "$1" = "usage" ]; then 
+	if [ -n "$1" ] && ! [ "$1" = "usage" ]; then
 					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
 					echo "Usage:";fi
 	case $1 in
-		console  )  
+		console  )
 					echo "   vsim console <vsim name> [options]";;
-		create  | make )  
+		create  | make )
 					echo "   vsim create <vsim name> -package <image.tgz> [options]"
 					echo "   vsim create <vsim name> -version <version> [options]";;
 		configure )	echo "   vsim configure <vsim name> [options]";;
-		delete | rm  )  
+		delete | rm  )
 					echo "   vsim delete <vsim name>|<fod name> [options]";;
 		deploy   )	echo "   vsim deploy <vsim name> [options]";;
 		export   )	echo "   vsim export <vsim name> [options]";;
@@ -118,7 +126,7 @@ function help() # $1=subcommand
 		modify   )  echo "   vsim modify <vsim name> [options]";;
 		mount    )  echo "   vsim mount <vsim name> [options]";;
 		options  )  echo "   vsim options [variable] [value] [options]";;
-		poweroff | kill )  
+		poweroff | kill )
 					echo "   vsim poweroff <vsim name> [options]";;
 		printenv )  echo "   vsim printenv <vsim name> [variable] [options]";;
 		printvmx )  echo "   vsim printvmx <vsim name> [options]";;
@@ -127,7 +135,7 @@ function help() # $1=subcommand
 		setenv   )  echo "   vsim setenv <vsim name> <variable> <value> [options]";;
 		setvmx   )  echo "   vsim setvmx <vsim name> <variable> <value> [options]";;
 		show     )  echo "   vsim show [vsim name] [options]";;
-		software | image )  
+		software | image )
 					echo "   vsim image [options]"
 					echo "   vsim image <vsim name> [options]";;
 		start    )  echo "   vsim start <vsim name> [options]";;
@@ -142,10 +150,10 @@ function help() # $1=subcommand
     				echo "vsim4osx - A vsim toolkit for OSX and VMware fusion"
     				echo "Version: $VSIMVERSION"
     				echo "Author : Sean Hatfield"
-    				echo	
+    				echo
     				echo "Usage:"
-    				echo "   vsim console  <vsim name> [options]" 
-					echo "   vsim create   <vsim name> (-version <version>|-package <image.tgz>) [options]" 
+    				echo "   vsim console  <vsim name> [options]"
+					echo "   vsim create   <vsim name> (-version <version>|-package <image.tgz>) [options]"
 					echo "   vsim delete   <vsim name>|<fod name> [options]"
 					echo "   vsim deploy   <vsim name> [options]"
 					echo "   vsim export   <vsim name> [options]"
@@ -191,9 +199,9 @@ function help() # $1=subcommand
 					echo "  deploy                      Deploy a vsim to an ESXi host (experimental)"
 					echo "  export                      Export a vsim"
     				echo "  help                        Display help"
-    				echo "  image                       Manage software images"	
+    				echo "  image                       Manage software images"
 					echo "  import                      Import a vsim or software package"
-					echo "  modify                      Modify a vsim"	
+					echo "  modify                      Modify a vsim"
 					echo "  mount                       Mount a vsim's cf card"
 					echo "  options                     Show and Set options and paths"
 					echo "  poweroff                    Poweroff a vsim (poweroff vm)"
@@ -207,7 +215,7 @@ function help() # $1=subcommand
 					echo "  start                       Start a vsim"
 					echo "  stop                        Stop a vsim (shutdown guest)"
 					echo "  suspend                     Suspend a vsim"
-					echo "  unmount                     Unmount a vsim's cf card"	
+					echo "  unmount                     Unmount a vsim's cf card"
 					echo "  unsetenv                    Unset a loader variable"
 					echo "  unsetvmx                    Unset a vmx variable"
 					echo "  update                      Update a vsim's ontap image"
@@ -225,7 +233,7 @@ function help() # $1=subcommand
 					echo "   -vsim <vsim name>                    Vsim name";;esac
 	case $1 in usage|image|show|software|create|update )
 					echo "   -version <Version>                   Software version";;esac
-	case $1 in usage|image|show|software|create|import|update )				
+	case $1 in usage|image|show|software|create|import|update )
 					echo "   -package <image.tgz>                 Software package";;esac
 	case $1 in usage|configure )
 					echo "   -cluster <name>                      Cluster Name"
@@ -243,16 +251,16 @@ function help() # $1=subcommand
 	case $1 in usage|create|make|stop )
 					echo "   -force                               Force the operation to continue";;esac
 	case $1 in usage|export )
-					echo "   -ova                                 Export the vsim in OVA format"		
+					echo "   -ova                                 Export the vsim in OVA format"
 					echo "   -tgz                                 Export the vsim in tgz format"
 					echo "   -esx                                 Export the vsim with ESX style NICS"
 					echo "   -vbox                                Export the vsim in vbox format";;esac
 	case $1 in deploy )
-					echo "   -host <name | ip>                    ESXi host"		
+					echo "   -host <name | ip>                    ESXi host"
 					echo "   -datastore  <name>                   ESXi Datastore"
 					echo "   -nat <portgroup>                     ESXi Data Network (VM Network)"
 					echo "   -hostonly <portgroup>                ESXi Cluster Network (Cluster Network)";;esac
-	case $1 in usage|export|image|software|update )						
+	case $1 in usage|export|image|software|update )
 					echo "   -image <image1|image2>               Image Name";;esac
 	case $1 in usage|image|software|update )
 					echo "   -isdefault                           Is Default Image";;esac
@@ -267,7 +275,7 @@ function help() # $1=subcommand
 	case $1 in usage|create|run )
 					echo "   -password <password>                 Password (overides OPTIONS VSIMPASSWORD)";;esac
 					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
-	case $1 in usage|create|modify ) 
+	case $1 in usage|create|modify )
 					echo "   -7m                                  7-Mode (alias for -mode 7)"
 					echo "   -cmode                               Cluster-Mode (alias for -mode C)"
 					echo "   -mode <7|C>                          Cluster Mode or 7-Mode"
@@ -302,8 +310,8 @@ function help() # $1=subcommand
 				rename|run|setenv|setvmx|show|start|stop|suspend|unmount|unsetenv|unsetvmx|update )
 					echo "   -simdir <path>                       Alternate location for vsims";;esac
 	case $1 in unmount )
-					echo "   -zero                                Zero whitespace prior to unmounting";;esac	
-	} | sort 	
+					echo "   -zero                                Zero whitespace prior to unmounting";;esac
+	} | sort
 					echo
 }
 
@@ -317,7 +325,7 @@ function addbridge
   	cp "$vmxfile.sed" "$vmxfile"
 	rm "$vmxfile.sed"
 
-  	#Clear any existing pci slot assignments	
+  	#Clear any existing pci slot assignments
   	sed "/pciSlotNumber/d" "$vmxfile" > "$vmxfile.sed"
   	cp "$vmxfile.sed" "$vmxfile"
 	rm "$vmxfile.sed"
@@ -339,7 +347,7 @@ function addbridge
 }
 
 #Add a nic
-function addnic() 
+function addnic()
 {
 
 	local _nic=$(countnics)
@@ -350,21 +358,21 @@ function addnic()
 	if [ "$_nic" -ge 10 ];then return;fi
 
 	# Cluster ports are special
-	if [ "$_nic" -lt 2 ] && [ "$mode" = "C" ];then 
+	if [ "$_nic" -lt 2 ] && [ "$mode" = "C" ];then
 		_net_esx="Cluster Network"
 		_net_fusion="hostonly"
 	fi
 
 	# Insert it into the VMX
-	setvmx "ethernet$_nic.present" 		"TRUE" 		
-	setvmx "ethernet$_nic.virtualDev" 	"e1000" 	
-	setvmx "ethernet$_nic.addressType"	"generated"	
+	setvmx "ethernet$_nic.present" 		"TRUE"
+	setvmx "ethernet$_nic.virtualDev" 	"e1000"
+	setvmx "ethernet$_nic.addressType"	"generated"
 	if ! $esx; then setvmx "ethernet$_nic.connectionType" "$_net_fusion" 	;fi
 	if   $esx; then setvmx "ethernet$_nic.networkName" 	 "$_net_esx" 	;fi
 }
 
 #Remove a nic
-function removenic() 
+function removenic()
 {
 
 	#Removing nics requires determining the minimum number of nics to allow
@@ -379,13 +387,13 @@ function removenic()
 
 	#Be sure not to remove the bsd nic if assigned
 	bsdnic=$(ntap2vmx $(getenv bootarg.bsdportname))
-	if [ -n "$bsdnic" ];then 
+	if [ -n "$bsdnic" ];then
 		if [ "$bsdnic" -gt "$min_nic" ];then min_nic="$bsdnic";fi
 	fi
 
 	#Or the IC Nic
 	icnic=$(ntap2vmx $(ic2ntap $(echo "$(getenv bootarg.ic_mac)" | cut -d':' -f 1)))
-	if [ -n "$icnic" ];then 
+	if [ -n "$icnic" ];then
 		if [ "$icnic" -gt "$min_nic" ];then min_nic="$icnic";fi
 	fi
 
@@ -407,8 +415,8 @@ function autosetup()
 
 	#This fixes it on High Sierra but FIXME later
 	field7=$(/bin/ls -l /etc/localtime|/usr/bin/cut -d"/" -f7)
-	if [ "$field7" == "zoneinfo" ];then 
-		timezone=$(/bin/ls -l /etc/localtime|/usr/bin/cut -d"/" -f8,9);fi	
+	if [ "$field7" == "zoneinfo" ];then
+		timezone=$(/bin/ls -l /etc/localtime|/usr/bin/cut -d"/" -f8,9);fi
 
 	# If -node-name not specified, use the VM name
 	local _node_name="$nodename"
@@ -416,14 +424,14 @@ function autosetup()
 
 	# Base node IP on the ticket #.  FIXME: avoid the DHCP range
 	nodeip="$(echo "$vmnet8_subnet" | cut -d'.' -f1-3).1$ticket"
-	
+
 	# In create mode we need a cluster_mgmt ip
 	if [ "$operation" = "create" ];then
-		# use the IP we have for the cluster 
-		# Then pull another ticket and generate another IP for the node 
+		# use the IP we have for the cluster
+		# Then pull another ticket and generate another IP for the node
 		ticket2=$(pullticket)
 		clusterip="$nodeip"
-		nodeip="$(echo "$vmnet8_subnet" | cut -d'.' -f1-3).1$ticket2"	
+		nodeip="$(echo "$vmnet8_subnet" | cut -d'.' -f1-3).1$ticket2"
 	fi
 
 	dns_info="$vmnet8_domain;$vmnet8_gateway"
@@ -436,7 +444,7 @@ function autosetup()
 	#Test code for auto setup
 	#only works in 7mode
 	echo "Configuring auto setup:"
-	if $delorean_required;then echo "Delorean Required!";fi	
+	if $delorean_required;then echo "Delorean Required!";fi
 	echo "Password : $VSIMPASSWORD"
 	echo "Node IP  : $nodeip"
 	echo "Node Name: $_node_name"
@@ -447,7 +455,7 @@ function autosetup()
 	setenv "bootarg.setup.filer_location" "$(hostname)"  "$env"
 	setenv "bootarg.setup.hostname" "$name" "$env"
 	setenv "bootarg.setup.nic_e0d" "$nodeip;$vmnet8_netmask;;full;n"  "$env"
-	if [ -n "$fodname" ];then 
+	if [ -n "$fodname" ];then
 		setenv "bootarg.setup.nic_e0d_failover_ip" "e0d" "$env"
 	fi
 	setenv "bootarg.setup.run_dns" "y" "$env"
@@ -468,7 +476,7 @@ function autosetup()
 	if [ "$mode" = "7" ]; then return 0;fi
 	echo "cluster ip: $clusterip"
 	#cDOT needs an ngsh script to self configure
-	#This is just enough for a 44/a and a node mgmt lif	
+	#This is just enough for a 44/a and a node mgmt lif
 	# ngsh script support started ~FS.0.  older versions need an xml.  TBD.
 
 	setenv "bootarg.setup.auto.file" "/cfcard/setup.ngsh" "$env"
@@ -492,7 +500,7 @@ function autosetup()
 	echo "ngsh -c network route create -gateway $vmnet8_gateway -vserver Default -metric 10" >> $setupfile
 	#fix the systemshell  - old burt or just cosmic
 	#echo "ngsh -c set diag;debug system regenerate-systemshell-key-pair" >> $setupfile
-	
+
 	#What happens next depends on the operation
 	if [ -n "$operation" ];then echo "Cluster Operation: $operation";fi
 
@@ -508,7 +516,7 @@ function autosetup()
 			#Create the cluster
 			echo "ngsh -c cluster create -clustername $cluster" >> $setupfile
 			#If a cluster base license is available, add it
-			if [ -n "$VSIMLICENSE" ];then 
+			if [ -n "$VSIMLICENSE" ];then
 				echo "ngsh -c license add $VSIMLICENSE" >> $setupfile
 			fi
 			#BURT 8250500 may require a time machine
@@ -520,7 +528,7 @@ function autosetup()
 			#Jumbos don't work in Fusion, so fix the Cluster ports
 			echo "ngsh -c network port broadcast-domain modify -broadcast-domain Cluster -ipspace Cluster -mtu 1500"  >> $setupfile
 			#If HA, then reboot now to enable HA
-			if [ -n "$fodname" ];then 
+			if [ -n "$fodname" ];then
 				echo "ngsh -c echo 'Rebooting to activate HA'" >> $setupfile
 				echo "ngsh -c reboot local" >> $setupfile
 			fi
@@ -534,9 +542,9 @@ function autosetup()
 			echo "ngsh -c network port modify -ipspace Cluster -mtu 1500 -node local -port e0b" >> $setupfile
 			echo "ngsh -c sleep 10" >> $setupfile
 			#join the cluster
-			echo "ngsh -c cluster join -cluster-name $cluster" >> $setupfile	
+			echo "ngsh -c cluster join -cluster-name $cluster" >> $setupfile
 			#If HA, then reboot now to enable HA
-			if [ -n "$fodname" ];then 
+			if [ -n "$fodname" ];then
 				echo "ngsh -c echo 'Rebooting to activate HA'" >> $setupfile
 				echo "ngsh -c reboot local" >> $setupfile
 			fi
@@ -544,7 +552,7 @@ function autosetup()
 		*	)
 			#finish now at the end of node setup
 			echo "Operation: Node Setup"
-			echo "sudo kenv -p bootarg.setup.auto=false" >> $setupfile		
+			echo "sudo kenv -p bootarg.setup.auto=false" >> $setupfile
 	esac
 }
 
@@ -570,7 +578,7 @@ function convertvmdk2esx()
 	if   [ -z "$_simpath" ];        then echo "convertvmdk2esx:simpath not specified";return 1;fi
 	if ! [ -d "$_simpath" ];        then echo "convertvmdk2esx:directory not found:$_simpath";return 1;fi
 	if ! [ -f "$_simpath/$_vmdk" ]; then echo "convertvmdk2esx:vmdk not found:$_simpath/$_vmdk";return 1;fi
-	
+
 	#If its not thick we must convert it
 	# IDE00
 	if [ -f "$_simpath/$_ide00" ] && ! [ -f "$_simpath/$_ide00_flat" ]; then
@@ -578,7 +586,7 @@ function convertvmdk2esx()
 		rm "$_simpath/tmp-flat.vmdk" 2>/dev/null
 		"$VDISKMANAGER" -n "$_simpath/$_ide00" "$_simpath/tmp.vmdk"
 		"$VDISKMANAGER" -r "$_simpath/tmp.vmdk" -t 4 "$_simpath/$_ide00"
-	fi	
+	fi
 	# IDE01
 	if [ -f "$_simpath/$_ide01" ] && ! [ -f "$_simpath/$_ide01_flat" ]; then
 		rm "$_simpath/tmp.vmdk" 2>/dev/null
@@ -607,7 +615,7 @@ function convertvmdk2esx()
 }
 
 # Mount the simulator boot device (CF Card) vmdk
-function cfmount() # $1=vsimpath 
+function cfmount() # $1=vsimpath
 {
 	local _simpath="$1"
 	local _vmdk="$(getcfvmdk "$1")"
@@ -620,7 +628,8 @@ function cfmount() # $1=vsimpath
 	if   [ -z "$_simpath" ];        then echo "cfmount:simpath not specified";return 1;fi
 	if ! [ -d "$_simpath" ];        then echo "cfmount:directory not found:$_simpath";return 1;fi
 	if ! [ -f "$_simpath/$_vmdk" ]; then echo "cfmount:vmdk not found:$_simpath/$_vmdk";return 1;fi
-	
+  echo "make thick"
+	echo "VDISKMANAGER: $VDISKMANAGER"
 	#If its not thick we must convert it
 	if [ -f "$_simpath/$_vmdk" ] && ! [ -f "$_simpath/$_flat" ]; then
 		rm "$_simpath/tmp.vmdk" 2>/dev/null
@@ -628,9 +637,9 @@ function cfmount() # $1=vsimpath
 		"$VDISKMANAGER" -n "$_simpath/$_vmdk" "$_simpath/tmp.vmdk"
 		"$VDISKMANAGER" -r "$_simpath/tmp.vmdk" -t 4 "$_simpath/$_vmdk"
 		rm "$_simpath/tmp.vmdk" 2>/dev/null
-		rm "$_simpath/tmp-flat.vmdk" 2>/dev/null	
+		rm "$_simpath/tmp-flat.vmdk" 2>/dev/null
 	fi
-
+  echo "create mnt"
 	#Create the mount point
 	mkdir "$_simpath/mnt" &> /dev/null
 
@@ -645,7 +654,7 @@ function cfmount() # $1=vsimpath
 		if [ -z "$_partition" ];then echo "Partition table not supported by vmware-mount";exit;fi
 		_partition=$(fdisk -o device,type -l "$simpath/$_flat"  | grep FAT | sed "s^$simpath/$_flat^^" | cut -d' ' -f1)
 		echo "DISK: $_simpath/$_vmdk"
-		echo "PARTITION: $_partition"	
+		echo "PARTITION: $_partition"
 		"$VMWAREMOUNT" "$_simpath/$_vmdk" "$_partition" "$_simpath/mnt"
 	fi
 
@@ -670,7 +679,7 @@ function cfunmount() # [ $1=vsimpath ] [ $2=-quick ] - skip zero whitespace
 #	if   [ "$2" = "-quick" ]; then _zero=false;fi
 	if   [ "$1" = "-zero" ];  then _zero=true;fi
 	if   [ "$2" = "-zero" ];  then _zero=true;fi
-	if   [ -z "$_simpath" ] ; then _simpath="$simpath";fi	
+	if   [ -z "$_simpath" ] ; then _simpath="$simpath";fi
 	if ! [ -d "$_simpath" ] ; then echo "cfunmount:path does not exist:$_simpath";return 1;fi
 
 	# Files Names
@@ -679,7 +688,7 @@ function cfunmount() # [ $1=vsimpath ] [ $2=-quick ] - skip zero whitespace
 	#echo "unmounting $_vmdk"
 
 	# Skip these steps if the user unmounted in the GUI
-	if [ -n "$(mount | grep "$_simpath/")" ];then 
+	if [ -n "$(mount | grep "$_simpath/")" ];then
 		#Save a copy of the env outside the vmdk
 		mkdir "$_simpath/cfcard" &> /dev/null
 		mkdir "$_simpath/cfcard/env" &> /dev/null
@@ -687,8 +696,8 @@ function cfunmount() # [ $1=vsimpath ] [ $2=-quick ] - skip zero whitespace
 		mkdir -p "$_simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
 		cp "$_simpath/mnt/env/env" "$_simpath/cfcard/env" &>/dev/null
 		cp "$_simpath/mnt/x86_64/freebsd/image1/VERSION" "$_simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
-		cp "$_simpath/mnt/x86_64/freebsd/image2/VERSION" "$_simpath/cfcard/x86_64/freebsd/image2" &>/dev/null		
-	
+		cp "$_simpath/mnt/x86_64/freebsd/image2/VERSION" "$_simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
+
 		if $_zero; then
 			#Zero whitespace
 			echo "zeroing unused blocks in $_vmdk"
@@ -696,17 +705,17 @@ function cfunmount() # [ $1=vsimpath ] [ $2=-quick ] - skip zero whitespace
 			dd if=/dev/zero of="$_simpath/mnt/zero.bin" bs=512 count=$_ws &> /dev/null
 			rm "$_simpath/mnt/zero.bin"
 		fi
-	
+
 		#Clean up some OSX specific flotsam
 		rm -rf "$_simpath/mnt/.T"*
 		rm -rf "$_simpath/mnt/._"*
 		rm -rf "$_simpath/mnt/.f"*
 		rm -rf "$_simpath/mnt/x86_64/freebsd/image1/._"*
-		rm -rf "$_simpath/mnt/x86_64/freebsd/image2/._"*	
+		rm -rf "$_simpath/mnt/x86_64/freebsd/image2/._"*
 
 		#Detach
 		if   [ -n "$(which hdiutil 2>/dev/null)" ];then hdiutil detach "$_simpath/mnt" >/dev/null
-		elif [ -n "$(which vmware-mount 2>/dev/null)" ];then vmware-mount -d "$_simpath/mnt";fi	
+		elif [ -n "$(which vmware-mount 2>/dev/null)" ];then vmware-mount -d "$_simpath/mnt";fi
 
 	fi
 
@@ -728,7 +737,7 @@ function cfunmount() # [ $1=vsimpath ] [ $2=-quick ] - skip zero whitespace
 function connectnics() #$1=network $2=nic_list $3=vmxfile
 {
 	local _net="$1"
-	local _list="$2"	
+	local _list="$2"
 	local _vmx="$3"
 	local _nics
 	local _vmxnic
@@ -740,7 +749,7 @@ function connectnics() #$1=network $2=nic_list $3=vmxfile
 
 	OLDIFS=$IFS
 	IFS=","
-	for i in $_list 
+	for i in $_list
 	do
 		#Make sure the nic exists
 		_vmxnic=$(ntap2vmx "$i")
@@ -792,8 +801,8 @@ function exportova()  #$1=vmx, $2=destination, $3=name (outfile.ova)
 	extraConfig[5]="--extraConfig:monitor_control.disable_tsc_offsetting=TRUE"
 	extraConfig[6]="--extraConfig:monitor_control.disable_rdtscopt_bt=TRUE"
 	extraConfig[7]="--extraConfig:pciHole.start=1024"
-	extraConfig[8]="--skipManifestGeneration"	
-	
+	extraConfig[8]="--skipManifestGeneration"
+
 	#Call ovftool
 	"$OVFTOOL" ${extraConfig[@]} "$1" "$2/$3"
 }
@@ -829,7 +838,7 @@ function exportvbox()
 	# Mount the CF Card
 	cfmount
 
-	#Must use vidconsole 
+	#Must use vidconsole
 	setenv console vidconsole
 	setenv bootarg.vm.run_vmtools "false"
 
@@ -846,7 +855,7 @@ function exportvbox()
 	#ONTAP < 8.3 needs to use vnvram fake or it will panic
 	#vsim modify "$name" -vnvram fake
 	#need code here to modify based on primary kernel version
-	if [ "$_baseversion" -lt "830" ];then 
+	if [ "$_baseversion" -lt "830" ];then
 		nvmode="fake"
 		vsimmodify
 	fi
@@ -858,13 +867,13 @@ function exportvbox()
 
 	#Make it from scratch
 	vboxmanage createvm --name "$name" --basefolder "$SIMDIR" --ostype "FreeBSD_64" --register
-	vboxmanage modifyvm "$name" --ioapic on 
+	vboxmanage modifyvm "$name" --ioapic on
 	vboxmanage modifyvm "$name" --vram 16
 	vboxmanage modifyvm "$name" --cpus 2
 	vboxmanage modifyvm "$name" --memory "$(getvmx memsize)"
 
 	#Nics should minic the configuration in the vmx
-	if [ "$(getvmx ethernet0.present)" = "TRUE" ]; then 
+	if [ "$(getvmx ethernet0.present)" = "TRUE" ]; then
 		vboxmanage modifyvm "$name" --nic1 natnetwork --nictype1 82545EM --cableconnected1 on;fi
 	if [ "$(getvmx ethernet1.present)" = "TRUE" ]; then
 		vboxmanage modifyvm "$name" --nic2 natnetwork --nictype2 82545EM --cableconnected2 on;fi
@@ -886,12 +895,12 @@ function exportvbox()
 	vboxmanage modifyvm "$name" --uart2 0x2F8 3
 
 	#A blank floppy image keeps disk enumeration as expected
-	vboxmanage storagectl "$name" --name floppy --add floppy --controller I82078 --portcount 1 
+	vboxmanage storagectl "$name" --name floppy --add floppy --controller I82078 --portcount 1
 	vboxmanage storageattach "$name" --storagectl floppy --device 0 --medium emptydrive
 
 	#This should just mimic the vsim
 	vboxmanage storagectl "$name" --name IDE    --add ide    --controller PIIX4  --portcount 2
-	if [ -n "$_ide00" ];then 
+	if [ -n "$_ide00" ];then
 		vboxmanage storageattach "$name" --storagectl IDE --port 0 --device 0 --type hdd --medium "$SIMDIR/$name/$_ide00";fi
 	if [ -n "$_ide01" ];then
 		vboxmanage storageattach "$name" --storagectl IDE --port 0 --device 1 --type hdd --medium "$SIMDIR/$name/$_ide01";fi
@@ -916,14 +925,14 @@ function evparse() #$1=$ev, $2=$env
 {
 	evstring=$1
 	env=$2
-	
+
 	echo "$evstring"
 	#leave now if $env does not exist
 	if ! [ -f "$env" ]; then
 		echo "File not found: $env"
 		return
 	fi
-	
+
 	#Iterate through the list and setenv
 	IFS=","
 	for i in $evstring
@@ -942,7 +951,7 @@ function getbaseversion() #$1=version string
 
   	baseversion=$1
   	#remove any codename prefix
-  	if [[ "$baseversion" == *__* ]];then 
+  	if [[ "$baseversion" == *__* ]];then
   		baseversion=$(echo "$baseversion" | cut -d'_' -f3)
   		codename=$(echo "$baseversion" | cut -d'_' -f1)
   	fi
@@ -961,7 +970,7 @@ function getbaseversion() #$1=version string
    	#add a zero if needed
   	if [ $baseversion -lt "100" ];then baseversion=$(($baseversion*10));fi
   	if [ $baseversion -gt "999" ];then
-  		#This might happen if you use a nightly 
+  		#This might happen if you use a nightly
   		#In this case guess based on codename
   		if [ "$codename" = "BoilerMaker" ];then baseversion="800";fi
   		if [ "$codename" = "RollingRock" ];then baseversion="810";fi
@@ -990,7 +999,7 @@ function getcfvmdk() # $1=simpath
 	if [ -z "$_ide00" ] && [ -z "$_scsi00" ];then return 1;fi
 
 	#if IDE00 is empty but scsi00 is not, this is the new style VSA
-	if [ -z "$_ide00" ] && ! [ -z "$_scsi00" ];then 
+	if [ -z "$_ide00" ] && ! [ -z "$_scsi00" ];then
 		echo "$_scsi00"
 		return 0
 	fi
@@ -1024,7 +1033,7 @@ function getcdrom()
 	if [ "$(getvmx "ide1:0.deviceType" "$_vmx")" = "cdrom-image" ]; then echo "ide1:0";return 0;fi
 	if [ "$(getvmx "ide1:1.deviceType" "$_vmx")" = "cdrom-image" ]; then echo "ide1:1";return 0;fi
 
-	return 1		
+	return 1
 
 }
 
@@ -1063,7 +1072,7 @@ function getenv() # $1=variable [ $2=envfile ]
 
 	if   [ -z "$_var" ]; then return 1;fi
 	if   [ -z "$_env" ]; then _env="$simpath/mnt/env/env";fi
-	if ! [ -f "$_env" ]; then return 1;fi		
+	if ! [ -f "$_env" ]; then return 1;fi
 
 	_val=`cat "$_env" | sed 's^"^^g' | grep "setenv $_var " | sort | sed "s^setenv $_var^^" | sed 's^ ^^'`
 
@@ -1108,19 +1117,19 @@ function unsetoption() #$1=option
 function setoption() #$1=option $2=value
 {
 	case $1 in
-		OVFTOOL | ovftool ) 
+		OVFTOOL | ovftool )
 			if [ -f "$value" ];then	OVFTOOL="$2";echo "$1=$2"
 			else echo "error:options: file does not exist: $value";fi;;
-		VMRUN | vmrun ) 				
+		VMRUN | vmrun )
 			if [ -f "$value" ];then VMRUN="$2";echo "$1=$2"
 			else echo "error:options: file does not exist: $value";fi;;
-		VDISKMANAGER | vdiskmanager ) 	
+		VDISKMANAGER | vdiskmanager )
 			if [ -f "$value" ];then VDISKMANAGER="$2";echo "$1=$2"
 			else echo "error:options: file does not exist: $value";fi;;
-		SIMDIR  | simdir  ) 			
+		SIMDIR  | simdir  )
 			if [ -d "$value" ];then SIMDIR="$2";echo "$1=$2"
 			else echo "error:options: directory does not exist: $value";fi;;
-		FODDIR | foddir ) 
+		FODDIR | foddir )
 			#FODDIR is special:
 			#It must be a directory that exists
 			if ! [ -d "$value" ];then echo "error:options: directory does not exist: $value";exit;fi
@@ -1132,7 +1141,7 @@ function setoption() #$1=option $2=value
 			#vmnet1_netmask=$(cat "$vmnet_file" | grep "VNET_1" | grep "NETMASK" | cut -d' ' -f3)
 			if [ -z "$vmnet1_subnet" ];then echo "vmnet1 subnet not defined.";exit;fi
 
-			#if [ "$(uname)" = "Linux" ];then 
+			#if [ "$(uname)" = "Linux" ];then
 			#	echo "Manualy update the /etc/exports file:"
 			#	echo "$2 $vmnet1_subnet/$(getcidr "$vmnet1_netmask")(rw,sync,fsid=0,no_root_squash)"
 			#	echo
@@ -1143,8 +1152,8 @@ function setoption() #$1=option $2=value
 			#fi
 
 			#And it needs an export
-			newexport="$value -alldirs -mapall=root -network $vmnet1_subnet -mask $vmnet1_netmask" 
-			if [ "$(uname)" = "Linux" ];then 
+			newexport="$value -alldirs -mapall=root -network $vmnet1_subnet -mask $vmnet1_netmask"
+			if [ "$(uname)" = "Linux" ];then
 				newexport="$2 $vmnet1_subnet/$(getcidr "$vmnet1_netmask")(rw,sync,fsid=0,no_root_squash)";fi
 			oldexport=$(cat /etc/exports | grep "^$value")
 			if [ "$newexport" = "$oldexport" ];then
@@ -1161,7 +1170,7 @@ function setoption() #$1=option $2=value
     			echo "sudo $0 $*"
     			echo
     			exit 1
-			fi			
+			fi
 
 			#Made it this far so OK to proceed
 			FODDIR="$2"
@@ -1183,19 +1192,19 @@ function setoption() #$1=option $2=value
 			#finally, bounce nfsd
 			if [ "$(uname)" = "Linux" ] && [ -n "$(which exportfs)" ];then
 				exportfs -r
-			else 
+			else
 				nfsd enable
 				nfsd restart
 			fi
 
 			;;
-		VSIMHOME | vsimhome ) 			
+		VSIMHOME | vsimhome )
 			if [ -d "$value" ];then VSIMHOME="$2";echo "$1=$2"
 			else echo "error:options: directory does not exist: $value";fi;;
-		VSIMPASSWORD | vsimpassword ) 	
+		VSIMPASSWORD | vsimpassword )
 			VSIMPASSWORD="$2"
 			echo "$1=$2";;
-		ITGZPATH | itgzpath ) 			
+		ITGZPATH | itgzpath )
 			ITGZPATH="$2"
 			echo "$1=$2";;
 		VSIMLICENSE | vsimlicense )
@@ -1207,7 +1216,7 @@ function setoption() #$1=option $2=value
 		NAT_SUBNET | NAT_NETMASK | NAT_GATEWAY )
 			echo "This read-only option is managed by VMware Fusion."
 			echo;;
-	esac	
+	esac
 	saveoptions
 }
 
@@ -1215,33 +1224,33 @@ function saveoptions()
 {
 
 	{
-	echo "#These are components installed with VMware Fusion" 
-	echo 'OVFTOOL="'$OVFTOOL'"' 
-	echo 'VMRUN="'$VMRUN'"' 
-	echo 'VDISKMANAGER="'$VDISKMANAGER'"' 
-	echo 
-	echo "#Templates and Counters are stored here:" 
-	echo 'VSIMHOME="'$VSIMHOME'"' 
-	echo 
-	echo "#VSIMS are stored here" 
-	echo 'SIMDIR="'$SIMDIR'"' 
-	echo 
-	echo "#FODs (Shared HA disks) are stored here:" 
-	echo "#Note: if you move this add it to /etc/exports and restart nfsd" 
-	echo 'FODDIR="'$FODDIR'"' 
-	echo 
-	echo "#ITGZPATH - the search path for Data ONTAP image.tgz files" 
-	echo 'ITGZPATH="'$ITGZPATH'"' 
-	echo 
-	echo "#This is the default password for vsims created with auto setup enabled" 
-	echo 'VSIMPASSWORD="'$VSIMPASSWORD'"' 
-	echo 
+	echo "#These are components installed with VMware Fusion"
+	echo 'OVFTOOL="'$OVFTOOL'"'
+	echo 'VMRUN="'$VMRUN'"'
+	echo 'VDISKMANAGER="'$VDISKMANAGER'"'
+	echo
+	echo "#Templates and Counters are stored here:"
+	echo 'VSIMHOME="'$VSIMHOME'"'
+	echo
+	echo "#VSIMS are stored here"
+	echo 'SIMDIR="'$SIMDIR'"'
+	echo
+	echo "#FODs (Shared HA disks) are stored here:"
+	echo "#Note: if you move this add it to /etc/exports and restart nfsd"
+	echo 'FODDIR="'$FODDIR'"'
+	echo
+	echo "#ITGZPATH - the search path for Data ONTAP image.tgz files"
+	echo 'ITGZPATH="'$ITGZPATH'"'
+	echo
+	echo "#This is the default password for vsims created with auto setup enabled"
+	echo 'VSIMPASSWORD="'$VSIMPASSWORD'"'
+	echo
 	echo "#This is the default cluster base license for vsims with cluster create enabled"
 	echo 'VSIMLICENSE="'$VSIMLICENSE'"'
-	echo 
+	echo
 	echo "#These are the licenses used to initialize ONTAP Select"
 	echo 'SDOT_BUILTIN_LICENSES="'$SDOT_BUILTIN_LICENSES'"'
-	} > "$VSIMCFGFILE" 
+	} > "$VSIMCFGFILE"
 	chmod 777 "$VSIMCFGFILE"
 }
 
@@ -1279,7 +1288,7 @@ function getreleaseimage() #$1=release
 	elif [ -f "$(getimagepath "image_v_""$prefix"".tgz")" ]; then
 		echo "image_v_""$prefix"".tgz"
 	elif [ -f "$(getimagepath "$prefix""_q_image.tgz")" ]; then
-		echo "$prefix""_q_image.tgz"	
+		echo "$prefix""_q_image.tgz"
 	fi
 }
 
@@ -1293,7 +1302,7 @@ function getrelease() #$1=release
 
 	if [ -f "$_vimage" ];then echo "$_vimage";return 0;fi
 	if [ -f "$_vimagenew" ];then echo "$_vimagenew";return 0;fi
-	if [ -f "$_qimage" ];then echo "$_qimage";return 0;fi		
+	if [ -f "$_qimage" ];then echo "$_qimage";return 0;fi
 
 	return 1
 }
@@ -1379,7 +1388,7 @@ function ifvalue() #$1=value
 {
  	if [[ $1 == -* ]]; then return; fi
   	echo "$1"
-}	
+}
 
 #Test if a given vsim is mounted
 function IsMounted() #$1=simpath
@@ -1409,7 +1418,7 @@ function IsNumber()
 {
 	if [ "$1" -eq "$1" ] 2>/dev/null; then
 		return 0
-	else 
+	else
 		return 1
 	fi
 }
@@ -1417,22 +1426,22 @@ function IsNumber()
 #Test if value is a parameter
 function IsParameter() #$1=value
 {
- 	if [[ "$1" == -* ]]; then 
+ 	if [[ "$1" == -* ]]; then
  		return 0
  	else
  		return 1
   	fi
-}	
+}
 
 #Test if value is a value
 function IsValue() #$1=value
 {
- 	if [[ "$1" == -* ]]; then 
+ 	if [[ "$1" == -* ]]; then
  		return 1
  	else
  		return 0
   	fi
-}	
+}
 
 #Return the value if its not a parameter
 function validate() # $1=value
@@ -1467,13 +1476,13 @@ function IsRunning() #$1=name
 	if [ -n "$1" ];then loc_vmxfile=$(getvmxfile "$1");fi
 
 	if [ -f "$("$VMRUN" -T fusion list | grep "$loc_vmxfile")" ];then return 0;fi
-	
+
 	return 1
 }
 
 #is directory a VM?
 function IsVM() #$1=directory
-{ 
+{
 	local _simpath="$1"
 	if [ -z "$_simpath" ]; then _simpath="$simpath";fi
 
@@ -1496,122 +1505,122 @@ function makedisks() #$1=type, $2=qty $3=adapter, $4=directory
 	do
 		#some slots are not valid, for reasons unknown
 		#must also add a check that the disk file isn't already there, but for my mkfod use case that can wait
-		if ! [[ "23 30 31"  =~ $slot ]];then 
+		if ! [[ "23 30 31"  =~ $slot ]];then
 			#I can't think of an algorithm more elegent than this simple case
-			case $1 in 
+			case $1 in
 				0)  diskid="v$3.$slot:NETAPP__:VD-16MB_________:8"`date +%M%S`"$3$slot:89216"
-					bs=512; fz='\x00'; disksize='\x80\x24\x00\x00'; checksum='\x84\x20\x00\x00'  
+					bs=512; fz='\x00'; disksize='\x80\x24\x00\x00'; checksum='\x84\x20\x00\x00'
 					;;
 				1)  diskid="v$3.$slot:NETAPP__:VD-35MB_________:8"`date +%M%S`"$3$slot:126592"
-					bs=512; fz='\x00'; disksize='\x80\x37\x00\x00'; checksum='\x84\x0d\x00\x00'  
+					bs=512; fz='\x00'; disksize='\x80\x37\x00\x00'; checksum='\x84\x0d\x00\x00'
 					;;
 				2)  diskid="v$3.$slot:NETAPP__:VD-50MB_________:8"`date +%M%S`"$3$slot:158848"
-					bs=512; fz='\x00'; disksize='\x80\x46\x00\x00'; checksum='\x84\xfe\x00\x00'  
+					bs=512; fz='\x00'; disksize='\x80\x46\x00\x00'; checksum='\x84\xfe\x00\x00'
 					;;
 				3)  diskid="v$3.$slot:NETAPP__:VD-100MB________:8"`date +%M%S`"$3$slot:261248"
-					bs=512; fz='\x00'; disksize='\x80\x78\x00\x00'; checksum='\x84\xcc\x00\x00'  
+					bs=512; fz='\x00'; disksize='\x80\x78\x00\x00'; checksum='\x84\xcc\x00\x00'
 					;;
 				4)  diskid="v$3.$slot:NETAPP__:VD-500MB________:8"`date +%M%S`"$3$slot:1080448"
-					bs=512; fz='\x00'; disksize='\x80\x08\x02\x00'; checksum='\x82\x3c\x00\x00'  
+					bs=512; fz='\x00'; disksize='\x80\x08\x02\x00'; checksum='\x82\x3c\x00\x00'
 					;;
 				5)  diskid="v$3.$slot:NETAPP__:VD-1000MB_______:8"`date +%M%S`"$3$slot:2104448"
-					bs=512; fz='\x00'; disksize='\x80\xfc\x03\x00'; checksum='\x81\x48\x00\x00' 
+					bs=512; fz='\x00'; disksize='\x80\xfc\x03\x00'; checksum='\x81\x48\x00\x00'
 					;;
 				6)  diskid="v$3.$slot:NETAPP__:VD-16MB-FZ______:8"`date +%M%S`"$3$slot:89216"
-					bs=512; fz='\x01'; disksize='\x80\x24\x00\x00'; checksum='\x83\x20\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x24\x00\x00'; checksum='\x83\x20\x00\x00'
 					;;
 				7)  diskid="v$3.$slot:NETAPP__:VD-35MB-FZ______:8"`date +%M%S`"$3$slot:126592"
-					bs=512; fz='\x01'; disksize='\x80\x37\x00\x00'; checksum='\x83\x0d\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x37\x00\x00'; checksum='\x83\x0d\x00\x00'
 					;;
 				8)  diskid="v$3.$slot:NETAPP__:VD-50MB-FZ______:8"`date +%M%S`"$3$slot:158848"
-					bs=512; fz='\x01'; disksize='\x80\x46\x00\x00'; checksum='\x83\xfe\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x46\x00\x00'; checksum='\x83\xfe\x00\x00'
 					;;
 				9)  diskid="v$3.$slot:NETAPP__:VD-100MB-FZ_____:8"`date +%M%S`"$3$slot:261248"
-					bs=512; fz='\x00'; disksize='\x80\x78\x00\x00'; checksum='\x84\xcc\x00\x00'  
+					bs=512; fz='\x00'; disksize='\x80\x78\x00\x00'; checksum='\x84\xcc\x00\x00'
 					;;
 				10) diskid="v$3.$slot:NETAPP__:VD-500MB-FZ_____:8"`date +%M%S`"$3$slot:1080448"
-					bs=512; fz='\x01'; disksize='\x80\x08\x02\x00'; checksum='\x81\x3c\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x08\x02\x00'; checksum='\x81\x3c\x00\x00'
 					;;
 				11) diskid="v$3.$slot:NETAPP__:VD-1000MB-FZ____:8"`date +%M%S`"$3$slot:2104448"
-					bs=512; fz='\x01'; disksize='\x80\xfc\x03\x00'; checksum='\x80\x48\x00\x00' 
+					bs=512; fz='\x01'; disksize='\x80\xfc\x03\x00'; checksum='\x80\x48\x00\x00'
 					;;
 				12) diskid="v$3.$slot:NETAPP__:VD-16MB-520_____:8"`date +%M%S`"$3$slot:89216"
-					bs=520; fz='\x00'; disksize='\x80\x24\x00\x00'; checksum='\x84\x20\x00\x00'  
+					bs=520; fz='\x00'; disksize='\x80\x24\x00\x00'; checksum='\x84\x20\x00\x00'
 					;;
 				13) diskid="v$3.$slot:NETAPP__:VD-35MB-520_____:8"`date +%M%S`"$3$slot:126592"
-					bs=520; fz='\x00'; disksize='\x80\x37\x00\x00'; checksum='\x84\x0d\x00\x00'  
+					bs=520; fz='\x00'; disksize='\x80\x37\x00\x00'; checksum='\x84\x0d\x00\x00'
 					;;
 				14) diskid="v$3.$slot:NETAPP__:VD-50MB-520_____:8"`date +%M%S`"$3$slot:158848"
-					bs=520; fz='\x00'; disksize='\x80\x46\x00\x00'; checksum='\x84\xfe\x00\x00'  
+					bs=520; fz='\x00'; disksize='\x80\x46\x00\x00'; checksum='\x84\xfe\x00\x00'
 					;;
 				15) diskid="v$3.$slot:NETAPP__:VD-100MB-520____:8"`date +%M%S`"$3$slot:261248"
-					bs=520; fz='\x00'; disksize='\x80\x78\x00\x00'; checksum='\x84\xcc\x00\x00'  
+					bs=520; fz='\x00'; disksize='\x80\x78\x00\x00'; checksum='\x84\xcc\x00\x00'
 					;;
-				16) diskid="v$3.$slot:NETAPP__:VD-500MB-520____:8"`date +%M%S`"$3$slot:1080448" 
-					bs=520; fz='\x00'; disksize='\x80\x08\x02\x00'; checksum='\x82\x3c\x00\x00'  
+				16) diskid="v$3.$slot:NETAPP__:VD-500MB-520____:8"`date +%M%S`"$3$slot:1080448"
+					bs=520; fz='\x00'; disksize='\x80\x08\x02\x00'; checksum='\x82\x3c\x00\x00'
 					;;
 				17) diskid="v$3.$slot:NETAPP__:VD-1000MB-520___:8"`date +%M%S`"$3$slot:2104448"
-					bs=520; fz='\x00'; disksize='\x80\xfc\x03\x00'; checksum='\x81\x48\x00\x00' 
+					bs=520; fz='\x00'; disksize='\x80\xfc\x03\x00'; checksum='\x81\x48\x00\x00'
 					;;
 				18) diskid="v$3.$slot:NETAPP__:VD-16MB-FZ-520__:8"`date +%M%S`"$3$slot:89216"
-					bs=520; fz='\x01'; disksize='\x80\x24\x00\x00'; checksum='\x83\x20\x00\x00'  
+					bs=520; fz='\x01'; disksize='\x80\x24\x00\x00'; checksum='\x83\x20\x00\x00'
 					;;
 				19) diskid="v$3.$slot:NETAPP__:VD-35MB-FZ-520__:8"`date +%M%S`"$3$slot:126592"
-					bs=520; fz='\x01'; disksize='\x80\x37\x00\x00'; checksum='\x83\x0d\x00\x00'  
+					bs=520; fz='\x01'; disksize='\x80\x37\x00\x00'; checksum='\x83\x0d\x00\x00'
 					;;
 				20) diskid="v$3.$slot:NETAPP__:VD-50MB-FZ-520__:8"`date +%M%S`"$3$slot:158848"
-					bs=520; fz='\x01'; disksize='\x80\x46\x00\x00'; checksum='\x83\xfe\x00\x00'  
+					bs=520; fz='\x01'; disksize='\x80\x46\x00\x00'; checksum='\x83\xfe\x00\x00'
 					;;
 				21) diskid="v$3.$slot:NETAPP__:VD-100MB-FZ-520_:8"`date +%M%S`"$3$slot:261248"
-					bs=520; fz='\x01'; disksize='\x80\x78\x00\x00'; checksum='\x83\xcc\x00\x00'  
+					bs=520; fz='\x01'; disksize='\x80\x78\x00\x00'; checksum='\x83\xcc\x00\x00'
 					;;
 				22) diskid="v$3.$slot:NETAPP__:VD-500MB-FZ-520_:8"`date +%M%S`"$3$slot:1080448"
-					bs=520; fz='\x01'; disksize='\x80\x08\x02\x00'; checksum='\x81\x3c\x00\x00'  
+					bs=520; fz='\x01'; disksize='\x80\x08\x02\x00'; checksum='\x81\x3c\x00\x00'
 					;;
 				23) diskid="v$3.$slot:NETAPP__:VD-1000MB-FZ-520:8"`date +%M%S`"$3$slot:2104448"
-					bs=520; fz='\x01'; disksize='\x80\xfc\x03\x00'; checksum='\x80\x48\x00\x00' 
+					bs=520; fz='\x01'; disksize='\x80\xfc\x03\x00'; checksum='\x80\x48\x00\x00'
 					;;
 				24) diskid="v$3.$slot:NETAPP__:VD-16MB-FZ-ATA__:8"`date +%M%S`"$3$slot:100368"
-					bs=512; fz='\x01'; disksize='\x80\x24\x00\x00'; checksum='\x83\x20\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x24\x00\x00'; checksum='\x83\x20\x00\x00'
 					;;
 				25) diskid="v$3.$slot:NETAPP__:VD-35MB-FZ-ATA__:8"`date +%M%S`"$3$slot:144144"
-					bs=512; fz='\x01'; disksize='\x80\x37\x00\x00'; checksum='\x83\x0d\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x37\x00\x00'; checksum='\x83\x0d\x00\x00'
 					;;
 				26) diskid="v$3.$slot:NETAPP__:VD-50MB-FZ-ATA__:8"`date +%M%S`"$3$slot:178704"
-					bs=512; fz='\x01'; disksize='\x80\x46\x00\x00'; checksum='\x83\xfe\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x46\x00\x00'; checksum='\x83\xfe\x00\x00'
 					;;
 				27) diskid="v$3.$slot:NETAPP__:VD-100MB-FZ-ATA_:8"`date +%M%S`"$3$slot:293904"
-					bs=512; fz='\x01'; disksize='\x80\x78\x00\x00'; checksum='\x83\xcc\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x78\x00\x00'; checksum='\x83\xcc\x00\x00'
 					;;
 				28) diskid="v$3.$slot:NETAPP__:VD-500MB-FZ-ATA_:8"`date +%M%S`"$3$slot:1215504"
-					bs=512; fz='\x01'; disksize='\x80\x08\x02\x00'; checksum='\x81\x3c\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x08\x02\x00'; checksum='\x81\x3c\x00\x00'
 					;;
 				29) diskid="v$3.$slot:NETAPP__:VD-1000MB-FZ-ATA:8"`date +%M%S`"$3$slot:2367504"
-					bs=512; fz='\x01'; disksize='\x80\xfc\x03\x00'; checksum='\x80\x48\x00\x00' 
+					bs=512; fz='\x01'; disksize='\x80\xfc\x03\x00'; checksum='\x80\x48\x00\x00'
 					;;
 				30) diskid="v$3.$slot:NETAPP__:VD-2000MB-FZ-520:8"`date +%M%S`"$3$slot:4152448"
-					bs=520; fz='\x01'; disksize='\x80\xe4\x07\x00'; checksum='\x7c\x60\x00\x00' 
+					bs=520; fz='\x01'; disksize='\x80\xe4\x07\x00'; checksum='\x7c\x60\x00\x00'
 					;;
 				31) diskid="v$3.$slot:NETAPP__:VD-4000MB-FZ-520:8"`date +%M%S`"$3$slot:8248448"
-					bs=520; fz='\x01'; disksize='\x80\xb4\x0f\x00'; checksum='\x74\x90\x00\x00' 
+					bs=520; fz='\x01'; disksize='\x80\xb4\x0f\x00'; checksum='\x74\x90\x00\x00'
 					;;
 				32) diskid="v$3.$slot:NETAPP__:VD-2000MB-FZ-ATA:8"`date +%M%S`"$3$slot:4671504"
-					bs=512; fz='\x01'; disksize='\x80\xe4\x07\x00'; checksum='\x7c\x60\x00\x00' 
+					bs=512; fz='\x01'; disksize='\x80\xe4\x07\x00'; checksum='\x7c\x60\x00\x00'
 					;;
 				33) diskid="v$3.$slot:NETAPP__:VD-4000MB-FZ-ATA:8"`date +%M%S`"$3$slot:9279504"
-					bs=512; fz='\x01'; disksize='\x80\xb4\x0f\x00'; checksum='\x74\x90\x00\x00' 
+					bs=512; fz='\x01'; disksize='\x80\xb4\x0f\x00'; checksum='\x74\x90\x00\x00'
 					;;
 				34) diskid="v$3.$slot:NETAPP__:VD-100MB-SS-512_:8"`date +%M%S`"$3$slot:261248"
-					bs=512; fz='\x01'; disksize='\x80\x78\x00\x00'; checksum='\x83\xcc\x00\x00' 
+					bs=512; fz='\x01'; disksize='\x80\x78\x00\x00'; checksum='\x83\xcc\x00\x00'
 					;;
 				35) diskid="v$3.$slot:NETAPP__:VD-500MB-SS-520_:8"`date +%M%S`"$3$slot:1080448"
-					bs=520; fz='\x01'; disksize='\x80\x08\x02\x00'; checksum='\x81\x3c\x00\x00'  
+					bs=520; fz='\x01'; disksize='\x80\x08\x02\x00'; checksum='\x81\x3c\x00\x00'
 					;;
 				36) diskid="v$3.$slot:NETAPP__:VD-9000MB-FZ-520:8"`date +%M%S`"$3$slot:18488448"
-					bs=520; fz='\x01'; disksize='\x80\x3c\x23\x00'; checksum='\x60\x08\x00\x00'  
+					bs=520; fz='\x01'; disksize='\x80\x3c\x23\x00'; checksum='\x60\x08\x00\x00'
 					;;
 				37) diskid="v$3.$slot:NETAPP__:VD-9000MB-FZ-ATA:8"`date +%M%S`"$3$slot:20799504"
-					bs=512; fz='\x01'; disksize='\x80\x3c\x23\x00'; checksum='\x60\x08\x00\x00'  
+					bs=512; fz='\x01'; disksize='\x80\x3c\x23\x00'; checksum='\x60\x08\x00\x00'
 					;;
 				*)  echo "invalid disk type"
 			esac
@@ -1727,17 +1736,17 @@ function makefod() #$1=fodname, $2=vdevinit
 	touch "$FODDIR/$_fod/nodeb/,local-interconnect"
 	touch "$FODDIR/$_fod/nodeb/,serialno"
 	ln -s "/sim/remote/nodea" "$FODDIR/$_fod/nodeb/,partner"
-		
-	#Make disks	
-	OLFIFS=$IFS	
+
+	#Make disks
+	OLFIFS=$IFS
 	IFS=","
 	for i in $_disks
 	do
 		t=$(echo $i | cut -d':' -f1)
 		n=$(echo $i | cut -d':' -f2)
 		a=$(echo $i | cut -d':' -f3)
-		makedisks $t $n $a "$FODDIR/$_fod/nodea"	
-		makedisks $t $n $a "$FODDIR/$_fod/nodeb"		
+		makedisks $t $n $a "$FODDIR/$_fod/nodea"
+		makedisks $t $n $a "$FODDIR/$_fod/nodeb"
 	done
 	IFS=$OLDIFS
 
@@ -1765,7 +1774,7 @@ function makevmx()
 	#remove any existing VMX files
 	rm "$simpath"/*.vmx &>/dev/null
 	touch "$vmxfile"
-	
+
 	#Write a new VMX header
 	echo "#!/usr/bin/vmware" >> "$vmxfile"
 	echo "#" >> "$vmxfile"
@@ -1804,7 +1813,7 @@ function makevmx()
 	setvmx uuid.action create
 	setvmx checkpoint.disableCpuCheck TRUE
 	setvmx "answer.msg.serial.pipe.posix.bind.open.pipeExists" "Overwrite Pipe"
-	
+
 	#maybe its better to always fix this
 	#Only causes a problem on 8.0.0 so patched elswhere in that case
 	setvmx pciBridge0.present 		TRUE
@@ -1823,41 +1832,41 @@ function makevmx()
 
 	#IDE Drives
 	if [ -n "$ide00" ];then
-		setvmx "ide0:0.present"  "TRUE" 
-		setvmx "ide0:0.fileName" "$ide00" 
+		setvmx "ide0:0.present"  "TRUE"
+		setvmx "ide0:0.fileName" "$ide00"
 	fi
 	if [ -n "$ide01" ];then
-		setvmx "ide0:1.present"  "TRUE" 
-		setvmx "ide0:1.fileName" "$ide01" 
+		setvmx "ide0:1.present"  "TRUE"
+		setvmx "ide0:1.fileName" "$ide01"
 	fi
 	if [ -n "$ide10" ];then
-		setvmx "ide1:0.present"  "TRUE" 
-		setvmx "ide1:0.fileName" "$ide10" 
+		setvmx "ide1:0.present"  "TRUE"
+		setvmx "ide1:0.fileName" "$ide10"
 	fi
 	if [ -n "$ide11" ];then
-		setvmx "ide1:1.present"  "TRUE" 
-		setvmx "ide1:1.fileName" "$ide11" 
+		setvmx "ide1:1.present"  "TRUE"
+		setvmx "ide1:1.fileName" "$ide11"
 	fi
 
 	#Insert LSISAS cards if vscsi=true
 	if $vscsi; then
-		setvmx scsi0.present 	TRUE		 
-		setvmx scsi0.virtualDev	lsisas1068 
-		setvmx scsi1.present 	TRUE	 
-		setvmx scsi1.virtualDev lsisas1068 
-		setvmx scsi2.present	TRUE	 
-		setvmx scsi2.virtualDev lsisas1068 
-		setvmx scsi3.present	TRUE	 
-		setvmx scsi3.virtualDev lsisas1068 
+		setvmx scsi0.present 	TRUE
+		setvmx scsi0.virtualDev	lsisas1068
+		setvmx scsi1.present 	TRUE
+		setvmx scsi1.virtualDev lsisas1068
+		setvmx scsi2.present	TRUE
+		setvmx scsi2.virtualDev lsisas1068
+		setvmx scsi3.present	TRUE
+		setvmx scsi3.virtualDev lsisas1068
 	fi #vSCSI Adapters
-	
+
 	#Add NICs
 	i="0"
 	while [ $i -lt $nics ]; do
 		addnic
 		i=$[$i+1]
 	done
-	
+
 	#not sure this is still required - tbd
 	setvmx virtualHW.productCompatibility hosted
 
@@ -1865,7 +1874,7 @@ function makevmx()
   	setvmx toolScripts.beforeSuspend FALSE
 	setvmx toolScripts.afterResume FALSE
 	# Sometimes these are set in lowercase
-	unsetvmx toolscripts.beforesuspend 
+	unsetvmx toolscripts.beforesuspend
 	unsetvmx toolscripts.afterresume
 
 	echo >> "$vmxfile"
@@ -1878,10 +1887,10 @@ function newsysid()
 	min=$((15*2**28))
 	max=$((2**32-1))
 	if ! [ -f "$VSIMHOME/.sysid" ]; then
-		touch "$VSIMHOME/.sysid" 
+		touch "$VSIMHOME/.sysid"
 		echo "$min" > "$VSIMHOME/.sysid"
 	fi
-	
+
 	sysid=$(cat "$VSIMHOME/.sysid")
 	sysid=$(expr $sysid + 1)
 	if [ "$sysid" -gt "$max" ]; then sysid="$min";fi
@@ -1919,7 +1928,7 @@ function newvsimenv() #$1=envfile
 	if [ "$(uname)" = "Linux" ];then
 		_part=$(fdisk -o device,type -l "$simpath/$_flat"  | grep FAT | sed "s^$simpath/$_flat^^" | cut -d' ' -f1)
 	fi
-	if [ -n "$_part" ];then 
+	if [ -n "$_part" ];then
 		_part=$((0+$_part))
 		_slice="s$_part"
 	else _part=0;fi
@@ -1935,7 +1944,7 @@ function newvsimenv() #$1=envfile
 	# if the diskmodel is really "standard" then /var is on ad1s1
 	_vardev="/dev/ad0s2"
 	if [ "$_vardev" = "$_cfdevice" ];then _vardev="/dev/ad1s1";fi
-	
+
 	newenv="$1"
 	rm "$1"
 	touch "$1"
@@ -1975,8 +1984,8 @@ function newvsimenv() #$1=envfile
 	setenv "bootarg.vm.data_diskmodel" 	"vha" 			"$1"
 	setenv "bootarg.vm.rapidsavecore" 	"false" 		"$1"
 	setenv "bootarg.setup.auto.internal" 	"true" 		"$1"
-	
-	
+
+
 	if [ "$diskmodel" = "standard" ]; then
 		setenv "bootarg.vm.sys_diskmodel" 	"standard" 		"$1"
 		setenv "currdev" 					"$_currdev" 	"$1"
@@ -1996,7 +2005,7 @@ function newvsimenv() #$1=envfile
 	fi
 }
 
-#Placeholder - not working yet 
+#Placeholder - not working yet
 function newvsaenv() #$1=env file
 {
 	newenv="$1"
@@ -2004,7 +2013,7 @@ function newvsaenv() #$1=env file
 	touch "$1"
 	setenv "AUTOBOOT" 					"true" 			"$1"
 	setenv "BIOS_VERSION" 				"245" 			"$1"
-	setenv "BOARDNAME" 					"VM" 		    "$1"	
+	setenv "BOARDNAME" 					"VM" 		    "$1"
 	setenv "LOADER_VERSION" 			"1.0" 			"$1"
 	setenv "MOBO_REV" 					"01" 			"$1"
 	setenv "MOBO_SERIAL_NUM" 			"221901" 		"$1"
@@ -2017,10 +2026,10 @@ function newvsaenv() #$1=env file
 	setenv "bootarg.dblade.wafl_use_delete_log"	"false"	"$1"
 	setenv "bootarg.init.auto_cluster_lif.disable" "true"  "$1"
 	setenv "bootarg.init.boot_clustered" 	"false" 	"$1"
-	setenv "bootarg.init.cfdevice" 		"/dev/ad0s2" 	"$1"	
+	setenv "bootarg.init.cfdevice" 		"/dev/ad0s2" 	"$1"
 	setenv "bootarg.init.dhcp.disable" 	"true" 			"$1"
 	setenv "bootarg.mgwd.autoconf.disable" 	"true" 		"$1"
-	setenv "bootarg.srm.nvram.setup_sim" 	"true" 		"$1"		
+	setenv "bootarg.srm.nvram.setup_sim" 	"true" 		"$1"
 	setenv "bootarg.vm" 				"true" 			"$1"
 	setenv "bootarg.vm.vsa" 			"true" 			"$1"
 	setenv "console" 					"comconsole" 	"$1"
@@ -2049,7 +2058,7 @@ function ntap2ic() #$1=ontap port
 		"e0i"	) result=10;;
 		"e0j"	) result=11;;
 	esac
-	echo "$result"	
+	echo "$result"
 }
 
 #convert IC port number to ntap port name
@@ -2068,13 +2077,13 @@ function ic2ntap() #$1=icport
 		10	) result="e0i";;
 		11	) result="e0j";;
 	esac
-	echo "$result"	
+	echo "$result"
 }
 
 #convert ntap port name to vmx ethernet number
 function ntap2vmx() #$1=ontap port
 {
-	result="" 
+	result=""
 	case "$1" in
 		"e0a"	) result=0;;
 		"e0b"	) result=1;;
@@ -2087,8 +2096,8 @@ function ntap2vmx() #$1=ontap port
 		"e0i"	) result=8;;
 		"e0j"	) result=9;;
 	esac
-	if ! [ -z "$result" ]; then 
-		echo "$result"	
+	if ! [ -z "$result" ]; then
+		echo "$result"
 	fi
 }
 
@@ -2107,7 +2116,7 @@ function vmx2ntap() #$1=icport
 		8	) result="e0i";;
 		9	) result="e0j";;
 	esac
-	echo "$result"	
+	echo "$result"
 }
 
 
@@ -2117,10 +2126,10 @@ function pullticket()
 	local loc_ticket
 
 	if ! [ -f "$VSIMHOME/.ticket" ]; then
-		touch "$VSIMHOME/.ticket" 
+		touch "$VSIMHOME/.ticket"
 		echo "0" > "$VSIMHOME/.ticket"
 	fi
-	
+
 	loc_ticket=$(cat "$VSIMHOME/.ticket")
 	loc_ticket=$(expr $loc_ticket + 1)
 	if [ "$loc_ticket" -lt "10" ]; then loc_ticket="0$loc_ticket";fi
@@ -2139,7 +2148,7 @@ function setdefaults()
   		#FullSteam
   		mode="C"
   		if [ -z "$ram" ]; 	  then ram=5120; fi
-  		if [ -z "$vnvsize" ]; then vnvsize=256;fi 
+  		if [ -z "$vnvsize" ]; then vnvsize=256;fi
   		if [ -z "$nvmode" ];  then nvmode="panic"; fi
 		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
 		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
@@ -2147,7 +2156,7 @@ function setdefaults()
   		#FullSteam
   		mode="C"
   		if [ -z "$ram" ]; 	  then ram=4096; fi
-  		if [ -z "$vnvsize" ]; then vnvsize=256;fi 
+  		if [ -z "$vnvsize" ]; then vnvsize=256;fi
   		if [ -z "$nvmode" ];  then nvmode="panic"; fi
 		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
 		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
@@ -2155,24 +2164,24 @@ function setdefaults()
   		#FullSteam
   		mode="C"
   		if [ -z "$ram" ]; 	  then ram=3072; fi
-  		if [ -z "$vnvsize" ]; then vnvsize=256;fi 
+  		if [ -z "$vnvsize" ]; then vnvsize=256;fi
   		if [ -z "$nvmode" ];  then nvmode="panic"; fi
 		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
 		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
-	elif [ $baseversion -ge 820 ]; then 
+	elif [ $baseversion -ge 820 ]; then
 		#Sierra Nevada
 		if [ -z "$ram" ]; 	  then ram=1600; fi
-  		if [ -z "$vnvsize" ]; then vnvsize=64;fi 
+  		if [ -z "$vnvsize" ]; then vnvsize=64;fi
   		if [ -z "$nvmode" ];  then nvmode="panic"; fi
 		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
 		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
-	elif [ $baseversion -ge 810 ]; then 
+	elif [ $baseversion -ge 810 ]; then
 		#RollingRock
 		if [ -z "$ram" ]; 	  then ram=1600; fi
   		if [ -z "$nvmode" ];  then nvmode="fake"; fi
 		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
 		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
-  	elif [ $baseversion -ge 802 ]; then 
+  	elif [ $baseversion -ge 802 ]; then
   		#BoilerMaker
 		if [ -z "$ram" ]; 	  then ram=1600; fi
   		if [ -z "$nvmode" ];  then nvmode="fake"; fi
@@ -2189,10 +2198,10 @@ function setdefaults()
 
   	#default number of nics
   	if [ -z "$nics" ];then
-  		#if one of these is set we will need an extra nic 
+  		#if one of these is set we will need an extra nic
   		if [ -n "$icmac" ] || [ -n "$fodname" ]; then
   			nics=5
-  		else 
+  		else
   			nics=4
   		fi
   	fi
@@ -2203,7 +2212,7 @@ function setdefaults()
   		if [ $ram -lt 3072 ]; then membsd="512";fi
   	fi
 
-  	if [ -z "$console" ];then 
+  	if [ -z "$console" ];then
   		console="comconsole,vidconsole"
   		consport=1
   	fi
@@ -2221,7 +2230,7 @@ function setdefaults()
 }
 
 #Setenv in specified $env
-function setenv()	#$1=variable $2=value $3=envfile 
+function setenv()	#$1=variable $2=value $3=envfile
 {
 
 	local _var="$1"
@@ -2234,22 +2243,22 @@ function setenv()	#$1=variable $2=value $3=envfile
 	if   [ -z "$_var" ]; then echo "setenv:env variable not specified" >&2;return 1;fi
 	if   [ -z "$_val" ]; then echo "setenv:env value not specified"    >&2;return 1;fi
 	#echo "setenv $_var $_val $_env" >&2
-	
+
 	#Set/Update variable
-	if [ -z "$(getenv $_var "$_env")" ];then 
+	if [ -z "$(getenv $_var "$_env")" ];then
 		echo "setenv $_var $_val" >>"$_env"
 	else
 		sed "s~^\(setenv $_var \).*~\1$_val~" "$_env" > "$_env.sed"
 		cp "$_env.sed" "$_env"
 		rm "$_env.sed"
-	fi	
+	fi
 
 	return 0
 
 }
 
 #Setvmx in specified $vmxfile
-function setvmx()	#$1=variable $2=value $3=vmxfile 
+function setvmx()	#$1=variable $2=value $3=vmxfile
 {
 
 	local _var="$1"
@@ -2272,14 +2281,14 @@ function setvmx()	#$1=variable $2=value $3=vmxfile
 		#sed "s~^\($_var =\).*~\1 $_val~" "$_vmx" > "$_vmx.sed"
 		# It occasionally corrupts the file in linux sed
 
-		# Instead remove and reappend the line 
+		# Instead remove and reappend the line
 		sed "s/^\($_var \).*//" "$_vmx" > "$_vmx.sed"
-		cp "$_vmx.sed" "$_vmx" 
+		cp "$_vmx.sed" "$_vmx"
 		rm "$_vmx.sed"
 		echo "$_var = $_val" >> "$_vmx"
 	fi
 
-	return 0	
+	return 0
 }
 
 #unsetenv in specified $env
@@ -2316,7 +2325,7 @@ function unsetvmx()	#$1=variable $2=vmxvfile
 
 	#echo "unsetvmx $1"
  	sed "s/^\($_var \).*//" "$_vmx" > "$_vmx.sed"
- 	cp "$_vmx.sed" "$_vmx" 
+ 	cp "$_vmx.sed" "$_vmx"
 	rm "$_vmx.sed"
 
  	return 0
@@ -2342,7 +2351,7 @@ function vsimconfigure()
 	if ! [ -d "$simpath" ];then echo "vsimconfigure: simpath not found";exit 1;fi
 	if ! [ -d "$simpath/isoroot" ];then mkdir "$simpath/isoroot";fi
 	#user defined where specified
-	if [ -n "$cluster" ];then _cluster_name="$cluster";fi 
+	if [ -n "$cluster" ];then _cluster_name="$cluster";fi
 	if [ -n "$cluster" ];then _node_name="$cluster""-01";fi #if user provided a cluster name, follow traditional cdot node naming
     if [ -n "$nodename" ];then _node_name="$nodename";fi #if user provided a node name use that instead
     if [ -n "$serno" ];then _serial_number="$serno";fi
@@ -2360,7 +2369,7 @@ function vsimconfigure()
 	if [ -z "$SDOT_BUILTIN_LICENSES" ];then
 		echo "Builtin licenses not found.  Please import an ONTAP Select Evaluation OVA or manually set the following option:"
 		echo "vsim options SDOT_BUILTIN_LICENSES <comma seperated list of keys>"
-		echo 
+		echo
 	fi
 
 	#echo "VSIMCONFIGURE:  $_sdotconf"
@@ -2401,7 +2410,7 @@ function vsimconfigure()
 	fi
 
 	#We've created the file, now lets wrap it in an ISO if the VM has a cdrom
-	if [ -n "$(getcdrom)" ];then 
+	if [ -n "$(getcdrom)" ];then
 		#echo "cdrom detected"
 		if ! [ -d "$simpath/isoroot" ];then echo "isoroot not found";fi
 		#build the config.iso
@@ -2412,12 +2421,12 @@ function vsimconfigure()
 		#fi
 		#Attach the ISO
 		if ! [ -f "$simpath/config.iso" ];then echo "config.iso not found";fi
-		if   [ -f "$simpath/config.iso" ];then 
+		if   [ -f "$simpath/config.iso" ];then
 			setvmx "$_cdrom.startConnected" "TRUE"
 			setvmx "$_cdrom.fileName" "config.iso"
 			setvmx "$_cdrom.deviceType" "cdrom-image"
 			unsetvmx "$_cdrom.autodetect"
-			unsetvmx "$_cdrom.clientDevice"			
+			unsetvmx "$_cdrom.clientDevice"
 		fi
 	fi
 
@@ -2448,14 +2457,14 @@ function vsimexport()
 	#if IsVM;then echo "ISVM";else echo "NOTVM";fi
 
 	# Some operations need it mounted
-	if IsVM;then 
+	if IsVM;then
 		cfmount
 
 		_version1=$(cat "$simpath/mnt/x86_64/freebsd/image1/VERSION" 2>/dev/null)
 		_version2=$(cat "$simpath/mnt/x86_64/freebsd/image2/VERSION" 2>/dev/null)
 
   		if $image1;then
-  			if [ -z "$_version1" ]; then 
+  			if [ -z "$_version1" ]; then
   				echo "Image1 not present in $name" >&2
   			else
   				_build=$(cat "$simpath/mnt/x86_64/freebsd/image1/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
@@ -2470,7 +2479,7 @@ function vsimexport()
 		fi
 
 		if $image2;then
-  			if [ -z "$_version2" ]; then 
+  			if [ -z "$_version2" ]; then
   				echo "Image2 not present in $name" >&2
   			else
   				_build=$(cat "$simpath/mnt/x86_64/freebsd/image2/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
@@ -2484,31 +2493,31 @@ function vsimexport()
 			fi
 		fi
 
-		if $esx; then 
+		if $esx; then
 			cp "$vmxfile" "$vmxfile".bak
 				#Nics should minic the configuration in the vmx
-				if [ "$(getvmx ethernet0.present)" = "TRUE" ]; then 
+				if [ "$(getvmx ethernet0.present)" = "TRUE" ]; then
 					unsetvmx ethernet0.connectionType
 					setvmx ethernet0.networkName "Cluster Network";fi
-				if [ "$(getvmx ethernet1.present)" = "TRUE" ]; then 
+				if [ "$(getvmx ethernet1.present)" = "TRUE" ]; then
 					unsetvmx ethernet1.connectionType
 					setvmx ethernet1.networkName "Cluster Network";fi
-				if [ "$(getvmx ethernet2.present)" = "TRUE" ]; then 
+				if [ "$(getvmx ethernet2.present)" = "TRUE" ]; then
 					unsetvmx ethernet2.connectionType
 					setvmx ethernet2.networkName "VM Network";fi
-				if [ "$(getvmx ethernet3.present)" = "TRUE" ]; then 
+				if [ "$(getvmx ethernet3.present)" = "TRUE" ]; then
 					unsetvmx ethernet3.connectionType
 					setvmx ethernet3.networkName "VM Network";fi
-				if [ "$(getvmx ethernet4.present)" = "TRUE" ]; then 
+				if [ "$(getvmx ethernet4.present)" = "TRUE" ]; then
 					unsetvmx ethernet4.connectionType
 					setvmx ethernet4.networkName "VM Network";fi
-				if [ "$(getvmx ethernet5.present)" = "TRUE" ]; then 
+				if [ "$(getvmx ethernet5.present)" = "TRUE" ]; then
 					unsetvmx ethernet5.connectionType
 					setvmx ethernet5.networkName "VM Network";fi
-				if [ "$(getvmx ethernet6.present)" = "TRUE" ]; then 
+				if [ "$(getvmx ethernet6.present)" = "TRUE" ]; then
 					unsetvmx ethernet6.connectionType
 					setvmx ethernet6.networkName "VM Network";fi
-				if [ "$(getvmx ethernet7.present)" = "TRUE" ]; then 
+				if [ "$(getvmx ethernet7.present)" = "TRUE" ]; then
 					unsetvmx ethernet7.connectionType
 					setvmx ethernet7.networkName "VM Network";fi
 		fi
@@ -2523,7 +2532,7 @@ function vsimexport()
   			echo "building $name.tgz"
   			tar -C "$simpath/.." -zcf "$name.tgz" "$name"
   		fi
-  		
+
   		#if -makeova then exportova
   		if $makeova; then
   			echo "building $name.ova"
@@ -2536,7 +2545,7 @@ function vsimexport()
   			exportvbox
   		fi
 
-  		if $esx; then 
+  		if $esx; then
   			cp "$vmxfile".bak "$vmxfile";fi
 
   	fi #IsVM
@@ -2581,11 +2590,11 @@ function vsimimport()
 
 	# Figure out what we are importing
 	case $_ext in
-		ova | OVA | ovf | OVF ) 
+		ova | OVA | ovf | OVF )
 			_importmode="ova";;
-		zip | ZIP ) 
+		zip | ZIP )
 			_importmode="archive";;
-		tgz | TGZ ) 
+		tgz | TGZ )
 			_importmode="image"
 			_version=$(tar -xzOf "$filename" VERSION 2>/dev/null)
 			if [ -z "$_version" ];then _importmode="archive";fi
@@ -2607,11 +2616,11 @@ function vsimimport()
 			echo "Extracting archive"
 			mkdir -p "$simpath"
 			tar -C "$simpath" -vxzSf "$filename" --strip=1 &>/dev/null
-			if IsVM "$simpath";then 
+			if IsVM "$simpath";then
 				cfmount   "$simpath"
 				cfunmount "$simpath"
 				echo "Completed successfully"
-			else 
+			else
 				echo "Import failed: VM not found at: $simpath"
 			fi;;
 		ova )
@@ -2620,17 +2629,17 @@ function vsimimport()
 			rm -rf "$simpath"
 			mkdir -p "$simpath"
 			vmxfile="$simpath/DataONTAP.vmx"
-			"$OVFTOOL" "--allowAllExtraConfig" "--allowExtraConfig" "--acceptAllEulas" "$filename" "$simpath/DataONTAP.vmx" 
-			if IsVM "$simpath";then 
+			"$OVFTOOL" "--allowAllExtraConfig" "--allowExtraConfig" "--acceptAllEulas" "$filename" "$simpath/DataONTAP.vmx"
+			if IsVM "$simpath";then
 				cfmount   "$simpath"
 				cfunmount "$simpath"
-				echo "Completed successfully"
+				echo "Import Completed"
 				#Now if its SDOT eval we want to grab the keys from the OVF so we can use them when we run configure
 				if [ -z "$SDOT_BUILTIN_LICENSES" ];then
 					SDOT_BUILTIN_LICENSES="$(tar -xzOf "$filename" "DataONTAPv.ovf" | grep builtin_license | sed 's^["<>/]^^g' | cut -d= -f5)"
 					if [ -n "$SDOT_BUILTIN_LICENSES" ];then saveoptions;fi
 				fi
-			else 
+			else
 				echo "Import failed: VM not found at: $simpath"
 			fi;;
 		image )
@@ -2638,7 +2647,7 @@ function vsimimport()
 			echo "Package: $_file"
 			echo "Version: $_version"
 			cp "$filename" "$_repository/$_file"
-			if [ -f "$_repository/$_file" ];then 
+			if [ -f "$_repository/$_file" ];then
 				echo "Imported: $_repository/$_file"
 				echo "Completed successfully"
 			fi;;
@@ -2651,7 +2660,7 @@ function vsimimport()
   	if [ "$maketgz" == "true" ]; then
   		tar -C "$simpath/.." -zcf "$name.tgz" "$name"
   	fi
-  	
+
   	#if -makeova then exportova
   	if [ "$makeova" == "true" ]; then
   		exportova "$vmx" "$SIMDIR" "$name.ova"
@@ -2677,12 +2686,12 @@ function vsimlist()
 		IFS=$(echo -en "\n\b")
   		for i in $(find "$SIMDIR" -mindepth 1 -maxdepth 1 -type d)
 		do
-			if IsVM "$i"; then	
+			if IsVM "$i"; then
 				shortname=`basename  "$i" | sed 's/.vmwarevm//'`
 				echo "$shortname"
 			fi
 		done
-		IFS=$OLDIFS		
+		IFS=$OLDIFS
 		return 0
 	fi
 
@@ -2701,7 +2710,7 @@ function vsimlist()
 #	echo "VMs in $SIMDIR:"
 #	echo
 	{
-	if ! $list;then 
+	if ! $list;then
 		echo "Vsim/VM;State;Version;Mode;System Id;Serial Number"
 		echo "------------------------;----------;--------;----;----------;-------------"
 	fi
@@ -2716,7 +2725,7 @@ function vsimlist()
 		_mode="-"
 		sysid="-"
 		serialno="-"
-		if IsVM "$i"; then 
+		if IsVM "$i"; then
 			fullname=`basename "$i"`
 			shortname=`basename  "$i" | sed 's/.vmwarevm//'`
 			vmxfile=$(getvmxfile "$i")
@@ -2733,21 +2742,21 @@ function vsimlist()
 
 			_boot_clustered=$(getenv bootarg.init.boot_clustered "$_cfcard/env/env")
 			case $_boot_clustered in
-				true | TRUE ) 
+				true | TRUE )
 					_mode="C";;
-				false | FALSE ) 
+				false | FALSE )
 					_mode="7";;
-				* ) 
+				* )
 					if   [ "$_version" = "-" ];then _mode="-"
 					elif [ "$(getbaseversion $_version)" -lt 830 ];then _mode="7"
 					else _mode="C"
 					fi;;
 			esac
 
-			sysid=$(getenv "bootarg.nvram.sysid" "$_cfcard/env/env") || sysid="-" 
+			sysid=$(getenv "bootarg.nvram.sysid" "$_cfcard/env/env") || sysid="-"
 
 			serialno=$(getenv "SYS_SERIAL_NUM" "$_cfcard/env/env") || serialno="-"
-	
+
 			if $list;then 	echo "$shortname"
 			else 			echo "$shortname;$state;$_version;$_mode;$sysid;$serialno"
 			fi
@@ -2781,7 +2790,7 @@ function vsimlist()
 function vsimmake()
 {
   	local _image
-	local _version	
+	local _version
 	local _baseVersion
 	local _template
 	local _ide11
@@ -2794,7 +2803,7 @@ function vsimmake()
   	if [ -z "$mode" ];then mode="C";fi
 
 	# Are we done yet?
-  	if [ -n "$fodname" ] && [ -z "$name" ];then makefod "$fodname" "$vdevinit";return 0;fi	
+  	if [ -n "$fodname" ] && [ -z "$name" ];then makefod "$fodname" "$vdevinit";return 0;fi
 	if [ -z "$name" ] || [ "$name" = "?" ];then help "create";exit;fi
   	if [ -z "$image$release" ];then echo "An image file or release version must be specified.";echo;help "create";return 1;fi
   	if ! [ -f "$_image" ];then echo "vsimmake:image not found:$image$release" >&2;return 1;fi
@@ -2802,9 +2811,9 @@ function vsimmake()
 
   	# Default fod name
   	if [ -z "$fodname" ] && [ -n "$partner" ];then fodname="ha_$name""_$partner";fi
-  	if [ -n "$fodname" ];then makefod "$fodname" "$vdevinit";fi	
+  	if [ -n "$fodname" ];then makefod "$fodname" "$vdevinit";fi
 
-	env="$simpath/mnt/env/env" 
+	env="$simpath/mnt/env/env"
 	vmx="$simpath/DataONTAP.vmx"
     vmxfile="$simpath/DataONTAP.vmx" #$vmxfile is global
 
@@ -2837,7 +2846,7 @@ function vsimmake()
 
 	#Build a clean vmx file
 	echo "VMX File : $vmxfile"
-  	makevmx 
+  	makevmx
 
   	# fixme - only do this for universal
   	# or if $esx is true
@@ -2864,14 +2873,14 @@ function vsimmake()
 
   	#mount the CF card vmdk
 #	echo "mounting boot device."
-  	cfmount "$simpath"  	
+  	cfmount "$simpath"
 
 	#Build a clean env file
 	echo "ENV File : $env"
 	newvsimenv "$env"
 
   	#Install DataONTAP image
-	vsimupdate	
+	vsimupdate
 
 	#Made it this far, so probably safe to pull a ticket
   	ticket=$(pullticket)
@@ -2879,7 +2888,7 @@ function vsimmake()
   	sysid=$(newsysid)
 
   	#Generate serial number from sysid unless it was specified by the user
-  	#if [ -z "$serno" ]; then 
+  	#if [ -z "$serno" ]; then
   	#	serno=$sysid
 	#	sysid=${serno//[!0-9]/}
 	#else
@@ -2908,31 +2917,31 @@ function vsimmake()
 		if [ -z "$bsdip" ]; then
 				icaddr="$(echo "$fodhost" | cut -d'.' -f1).$(echo "$fodhost" \
 							  | cut -d'.' -f2).$(echo "$fodhost" \
-							  | cut -d'.' -f3).1${sysid:(-2)}"	
+							  | cut -d'.' -f3).1${sysid:(-2)}"
 				#-auto does not work if hostname if populated
-				#bsdip="$name:$icaddr:$vmnet1_netmask"	
+				#bsdip="$name:$icaddr:$vmnet1_netmask"
 				bsdip=":$icaddr:$vmnet1_netmask"
 		fi
 
 		if [ -z "$nvmode" ] || [ "$nvmode" == "fake" ]; then
 			nvmode="panic"
 		fi
-		
-		#join the FOD		
-		partnersysid=$(head -n 1 "$FODDIR/$fodname/node$cfopartner/,serialno")		
+
+		#join the FOD
+		partnersysid=$(head -n 1 "$FODDIR/$fodname/node$cfopartner/,serialno")
 		octet5="${partnersysid:(-2)}"
-		if [ -z "$octet5" ]; then octet5="${sysid:(-2)}";fi		
-		if [ -z "$icmac" ]; then 
+		if [ -z "$octet5" ]; then octet5="${sysid:(-2)}";fi
+		if [ -z "$icmac" ]; then
 			icmac="00:50:56:00:$octet5:0$cfonode,00:50:56:00:$octet5:0$cfopartner"
-		fi		
+		fi
 
 		#populate ,serialno
 		echo "$sysid" > "$FODDIR/$fodname/node$cfonode/,serialno"
-		if ! [ -z "$partnersysid" ];then 
+		if ! [ -z "$partnersysid" ];then
 			echo "$partnersysid" >> "$FODDIR/$fodname/node$cfonode/,serialno"
 			echo "$partnersysid" > "$FODDIR/$fodname/node$cfopartner/,serialno"
-			echo "$sysid" >> "$FODDIR/$fodname/node$cfopartner/,serialno"	
-		fi	
+			echo "$sysid" >> "$FODDIR/$fodname/node$cfopartner/,serialno"
+		fi
   	fi
 
   	#If we have an ICMAC, create the HA IC
@@ -2941,14 +2950,14 @@ function vsimmake()
 		#default to last port unless specified
 		portnum=$(expr "$nics" + 1)
 		if ! [ -z "$icport" ];then
-  			portnum=$(ntap2ic "$icport")			
+  			portnum=$(ntap2ic "$icport")
 		fi
 
   		#portnum=$(ntap2ic "$icport")
   		localmac=$(echo "$icmac" | cut -d',' -f1)
   		partnermac=$(echo "$icmac" | cut -d',' -f2)
-		setenv "bootarg.ic_mac" "$portnum:$partnermac" "$env" 
-  		
+		setenv "bootarg.ic_mac" "$portnum:$partnermac" "$env"
+
   		#get the vmx eth# for the icport
   		eth=$(expr "$portnum" - 2 )
   		#remove any existing Ethernet config
@@ -2964,19 +2973,19 @@ function vsimmake()
 		setvmx "ethernet$eth.addressType" "static" "$vmx"
 		setvmx "ethernet$eth.connectionType" "hostonly" "$vmx"
 		setvmx "ethernet$eth.address" "$localmac" "$vmx"
-		
+
 		#The watchdog seems to misbehave in this HA model
 		setenv "bootarg.nodewatchdog.level" "disabled" "$env"
 
-  	fi #icmac  	
+  	fi #icmac
 
 
   	#pick a telnet port for the comconsole
   	if [ "$consport" == "1" ];then consport=$(expr "2200" + "$ticket"); fi
 
-	#update the env 
+	#update the env
 	echo "Applying configuration"
-	vsimmodify 
+	vsimmodify
 
 	#Version Specific Fixes
 	if [ "$_baseVersion" = "800" ]; then
@@ -3000,9 +3009,9 @@ function vsimmake()
   		#sysids are [2^26]+x, which changes in 8.0.2
   		#So using it prevents upgrades from working
   		#because newer kernels will calculate the sysid
-  		#differently which breaks disk ownership 
+  		#differently which breaks disk ownership
  		unsetenv "bootarg.nvram.sysid" "$env"
- 	fi 		
+ 	fi
 
 
  	#FIXME:  This hack leaves the loader in a clean state for vsa
@@ -3011,17 +3020,17 @@ function vsimmake()
 
  	# This patches vidconsole for 9.1 and later, must happen after vsa env check
   	if [ "$_baseVersion" -ge "910" ] && [ "$console" = "vidconsole" ];then
-  		#As of 9.1RC1 console=vidconsole will panic at boot 
+  		#As of 9.1RC1 console=vidconsole will panic at boot
   		#The workaround is to use console=vidconsole,comconsole instead
   		echo "console = $console"
  		setenv "console" "vidconsole,comconsole"
- 	fi 	
+ 	fi
 
 
   	#detach and cleanup
   	echo "unmounting boot device"
   	cfunmount "$simpath" -zero
-  	  	
+
   	#RM the sim vmdk if data disk model = VSCSI
   	if $vscsi; then
   		ide11=$(getvmx "ide1:1.fileName" "$vmx")
@@ -3031,16 +3040,16 @@ function vsimmake()
   		simvmdk="$SIMDIR/$name/$ide11"
   		deleteme="$SIMDIR/$name/deleteme.vmdk"
   		"$VDISKMANAGER" -n "$simvmdk" "$deleteme"
-  		rm "$SIMDIR/$name/deleteme-"*.* 
+  		rm "$SIMDIR/$name/deleteme-"*.*
   		rm "$deleteme"
-  	fi	
+  	fi
 
   	# If we are making it for esx, convert the disks to thick
   	if $esx; then convertvmdk2esx;fi
 
   	echo "Vsim $name created."
   	echo ""
-  	
+
   	#Make a few adjustments and spawn the partner
   	if [ -n "$partner" ];then
   		echo "Creating HA partner: $partner"
@@ -3076,13 +3085,13 @@ function vsimoptions()
 
 	# Otherwise, display them all
 	echo "FODDIR=$FODDIR"
-	echo "ITGZPATH=$ITGZPATH"	
+	echo "ITGZPATH=$ITGZPATH"
 	echo "OVFTOOL=$OVFTOOL"
 	echo "SIMDIR=$SIMDIR"
 	echo "VDISKMANAGER=$VDISKMANAGER"
 	echo "VSIMLICENSE=$VSIMLICENSE"
 	echo "SDOT_BUILTIN_LICENSES=$SDOT_BUILTIN_LICENSES"
-	echo "VMRUN=$VMRUN"	
+	echo "VMRUN=$VMRUN"
 	echo "VSIMHOME=$VSIMHOME"
 	echo "VSIMPASSWORD=$VSIMPASSWORD"
 	echo "NAT_SUBNET=$NAT_SUBNET"
@@ -3092,7 +3101,7 @@ function vsimoptions()
 
 #add a telnet console to a vsim
 function vsimmakecons()
-{	
+{
 	#make sure its not running
 	vsimstop
 
@@ -3108,21 +3117,21 @@ function vsimmakecons()
   	sed "/serial0/d" "$vmxfile" > "$vmxfile.sed"
   	cp "$vmxfile.sed" "$vmxfile"
 	rm "$vmxfile.sed"
-  	
-  	#add the serial port 
-  	setvmx  "serial0.present" "TRUE" 
-  	setvmx  "serial0.fileType" "network" 
-  	setvmx  "serial0.fileName" "telnet://0.0.0.0:$consport" 
-  	setvmx  "serial0.network.endPoint" "server" 
-  	setvmx  "serial0.startConnected" "TRUE"	
-	
+
+  	#add the serial port
+  	setvmx  "serial0.present" "TRUE"
+  	setvmx  "serial0.fileType" "network"
+  	setvmx  "serial0.fileName" "telnet://0.0.0.0:$consport"
+  	setvmx  "serial0.network.endPoint" "server"
+  	setvmx  "serial0.startConnected" "TRUE"
+
   	#modify the env
   	if [ -f "$simpath/mnt/env/env" ];then
   		setenv "console" "comconsole,vidconsole" "$simpath/mnt/env/env"
   	else
   		cfmount   "$simpath"
   		setenv "console" "comconsole,vidconsole" "$simpath/mnt/env/env"
-  		cfunmount "$simpath" 
+  		cfunmount "$simpath"
   	fi
 }
 
@@ -3152,17 +3161,17 @@ function vsimmodify()
 	case $mode in
 		7 )		setenv "bootarg.init.boot_clustered" "false" "$env";;
 		C )		setenv "bootarg.init.boot_clustered" "true" "$env";;
-	esac 
+	esac
 
 	# -serno, $serno
-	if ! [ -z "$serno" ];then 
+	if ! [ -z "$serno" ];then
 		# Format the serial number
   		serno=${serno//[!0-9]/}
   		serno="$(expr $serno / 1000)-${serno:(-3):2}-${serno:(-1)}"
 		setenv "SYS_SERIAL_NUM" "$serno" "$env";fi
 
 	# $sysid
-	# If its never booted use the sysid=serial 
+	# If its never booted use the sysid=serial
 #	if ! [ -z "$serno" ] && [ -z "$sysid" ] && [ -z "$(cat "$env" | grep smbio)" ] && [ -z "$(getenv bootarg.nfssimdev)" ];then
 #		sysid=${serno//[!0-9]/};fi
 	if ! [ -z "$sysid" ]; then
@@ -3174,7 +3183,7 @@ function vsimmodify()
 	if [ -z "$bsdportname" ];then bsdportname=$(getenv bootarg.bsdportname "$env");fi
 	if [ -z "$nfssimdev" ];then nfssimdev=$(getenv bootarg.nfssimdev "$env");fi
 	if [ -z "$bsdip" ]; then bsdip=$(getenv "bootarg.bsd_ip" "$env");fi
-	#Update bsdportname	
+	#Update bsdportname
 	if [ -n "$bsdportname" ];then
 		setenv "bootarg.bsdportname" "$bsdportname" "$env"
 	fi
@@ -3187,7 +3196,7 @@ function vsimmodify()
 	fi
 
 	#If we have an NFSSimdev, fix put the bsdport on hostonly network
-	if [ -n "$nfssimdev" ];then 
+	if [ -n "$nfssimdev" ];then
 		#Turns out these are needed or ad3 will not fdisk at boot
 		#vdevinit="" #no need as these are built with the fod
 		#setenv "bootarg.vm.sim.vdevinit" "false" "$env"
@@ -3195,7 +3204,7 @@ function vsimmodify()
 		setenv "bootarg.nfssimdev"  "$nfssimdev" "$env"
 		bsdeth=$(ntap2vmx "$bsdportname")
 		setvmx "ethernet$bsdeth.connectionType" "hostonly" "$vmx"
-		unsetvmx "ethernet$bsdeth.networkName" "$vmx"		
+		unsetvmx "ethernet$bsdeth.networkName" "$vmx"
 	fi
 
 	#If the BSD port has an IP, activate the port
@@ -3228,7 +3237,7 @@ function vsimmodify()
 	if [ -n "$vscsidisks" ];then
 		OLDIFS=$IFS
 		IFS=","
-		for i in $vscsidisks 
+		for i in $vscsidisks
 		do
 			t=$(echo $i | cut -d':' -f1)
 			n=$(echo $i | cut -d':' -f2)
@@ -3238,7 +3247,7 @@ function vsimmodify()
 		IFS=$OLDIFS
 	fi
 
-	# -simdisks, $vdevinit 
+	# -simdisks, $vdevinit
 	if ! [ -z "$vdevinit" ]; then
 		setenv "bootarg.vm.sim.vdevinit" "$vdevinit" "$env"
 		setenv "bootarg.sim.vdevinit" "$vdevinit" "$env"
@@ -3249,7 +3258,7 @@ function vsimmodify()
 		setenv "AUTOBOOT" "$ab" "$env";fi
 
 	# -vidconsole, -pcons, $console
-	if ! [ -z "$console" ];then 
+	if ! [ -z "$console" ];then
 		setenv "console" "$console" "$env";fi
 
 	#Set VNVRAM Mode
@@ -3294,7 +3303,7 @@ function vsimmodify()
 			setenv "nvram_discard" "true" "$env"
 			setenv "bootarg.srm.nvram.setup_sim" "true" "$env"
 			setenv "bootarg.srm.nvram.vnvram" "true" "$env"
-	esac #$nvmode 
+	esac #$nvmode
 
 	#dhcp
 	if $dhcp; then setenv "bootarg.init.dhcp.disable" "false" "$env";fi
@@ -3303,7 +3312,7 @@ function vsimmodify()
 	if ! [ -z "$icmac" ]; then
 		setenv "bootarg.vm.ha" "TRUE" "$env"
 		setenv "bootarg.srm.vm.ha" "TRUE" "$env"
-		#These showed up in 9.0RC1.  Not making them version dependant since they should 
+		#These showed up in 9.0RC1.  Not making them version dependant since they should
 		#be innocuous in older kernels
 		#9.x HA on NFS hangs if this is not set
 		setenv "bootarg.cg.cg_mode_disabled" "true" "$env"
@@ -3322,7 +3331,7 @@ function vsimmodify()
 
 	#When adjusting the ram, move the PCI Hole if required
 	if ! [ -z "$ram" ];then
-		if [ "$ram" -ge 3072 ];then 
+		if [ "$ram" -ge 3072 ];then
 			setvmx "pciHole.start" "1024" "$vmx"
 		else
 			setvmx "pciHole.start" "3072" "$vmx"
@@ -3366,8 +3375,8 @@ function vsimmodify()
 	#-bridged
 	if [ -n "$bridged" ];then connectnics "bridged" "$bridged" "$vmx";fi
 
-	# Toggle the default image 
-	if $setdefault; then 
+	# Toggle the default image
+	if $setdefault; then
 		if $image1 || $image2;then vsimupdate;fi
 	fi
 
@@ -3377,7 +3386,7 @@ function vsimmodify()
 }
 
 # run commands against a vsim
-# This needs a lot of cleanup and 
+# This needs a lot of cleanup and
 # error checking
 function vsimrun()
 {
@@ -3385,9 +3394,9 @@ function vsimrun()
 	# Need to add a check for comconsole
 
 	# If all we need is an interactive shell then power on if needed
-	if ! IsRunning && [ -z "$cmd" ];then 
+	if ! IsRunning && [ -z "$cmd" ];then
 		password="" # Don't try loggin in, just watch it boot
-		vsimstart;fi	
+		vsimstart;fi
 
 	# We can't send it commands if its not running
 	if ! IsRunning;then echo "vsimrun:vsim is not running: $name";return 1;fi
@@ -3414,9 +3423,9 @@ function vsimrun()
 	# Am I admin or am I root?
 	username="admin"
 	case $(getenv bootarg.init.boot_clustered "$simpath/cfcard/env/env") in
-		true | TRUE ) 
+		true | TRUE )
 			username="admin";;
-		false | FALSE ) 
+		false | FALSE )
 			username="root";;
 	#	* ) #Need to circle back to factoring in the code version
 	#		if   [ "$_version" = "-" ];then _mode="-"
@@ -3435,12 +3444,12 @@ function vsimrun()
 		expect_after eof { break }
 
 		# Tell the user how to interrupt
-		if { \"$cmd\" == \"\" } { 
+		if { \"$cmd\" == \"\" } {
 			puts \"Type Ctrl-G to exit.\"
 			puts \"\r\" }
 
 		#clear the yy% control code from the buffer
-		send \"\r\"	
+		send \"\r\"
 		expect \"\r\"
 
 		# Wait for a prompt
@@ -3451,56 +3460,56 @@ function vsimrun()
 		}
 
 		# an empty password means we just want the interactive console
-		if { \"$password\" == \"\" } { 	
-			send \"\r\"			
+		if { \"$password\" == \"\" } {
+			send \"\r\"
 			interact
 			puts \"\r\"
-			exit 0 }	
+			exit 0 }
 
 		# Attempt to log in
 		# puts \"Attempting Login\r\"
 		log_user 0
 		set timeout 6
 		send \"\r\"
-		expect { 							
-			-ex \"> \" { 
+		expect {
+			-ex \"> \" {
 				send \"\r\"
-			} 
-			-ex \"login: \"   { 
+			}
+			-ex \"login: \"   {
 		  		#puts \"\rbranch: login: \r\"
-		  		send \"$username\r\" 
-		        expect -exact \"Password:\" 
+		  		send \"$username\r\"
+		        expect -exact \"Password:\"
 		        send \"$password\r\"
-				expect { 
-					-ex \"> \" { 
-						send \"\r\"
-					}
-					-ex \"Login incorrect\" {
-						if { \"$cmd\" != \"\" } { 
-							puts \"Login failed.\"
-							exit 1 
-						}
-						expect \"\r\"
-					} 
-				} 
-			} 
-			-ex \"Password:\" { 
-		  		#puts \"\rbranch: Password: \r\"
-		  		send   \"$password\r\"
-		  		expect { 
+				expect {
 					-ex \"> \" {
 						send \"\r\"
 					}
 					-ex \"Login incorrect\" {
-						if { \"$cmd\" != \"\" } { 
+						if { \"$cmd\" != \"\" } {
 							puts \"Login failed.\"
-							exit 1 
+							exit 1
 						}
 						expect \"\r\"
-					} 
-				} 
-			} 	  
-		} 	
+					}
+				}
+			}
+			-ex \"Password:\" {
+		  		#puts \"\rbranch: Password: \r\"
+		  		send   \"$password\r\"
+		  		expect {
+					-ex \"> \" {
+						send \"\r\"
+					}
+					-ex \"Login incorrect\" {
+						if { \"$cmd\" != \"\" } {
+							puts \"Login failed.\"
+							exit 1
+						}
+						expect \"\r\"
+					}
+				}
+			}
+		}
 		set timeout 1
 
 		# No command to run so go interactive
@@ -3508,12 +3517,12 @@ function vsimrun()
 			#send \"\r\"
 			interact
 			puts \"\r\"
-			exit 0 }			
+			exit 0 }
 
 		# Determine the prompt
 		log_user 0
 		set pattern {}
-		send \"\r\"	
+		send \"\r\"
 		expect \"> \"
 		set prompt \"\$expect_out(buffer)\"
 
@@ -3525,7 +3534,7 @@ function vsimrun()
 		log_user 0
 		if { \"$username\" == \"admin\" } {
 			send \"rows 0\r\"
-			expect \"rows 0\r\" 
+			expect \"rows 0\r\"
 		}
 
 		# A longer timeout ensures we get all the output
@@ -3533,7 +3542,7 @@ function vsimrun()
 
 		# Send the command and remove it from the buffer
 		send \"$cmd\r\r\"
-		expect \"$cmd\r\" 
+		expect \"$cmd\r\"
 
 		# Wait for the prompt
 		log_user 1
@@ -3543,10 +3552,10 @@ function vsimrun()
 		puts \"\r\"
 
 		# clean up
-		log_user 0 
+		log_user 0
 		if { \"$username\" == \"admin\" } {
 			send \"rows 24\r\"
-			expect \"rows 24\r\" 
+			expect \"rows 24\r\"
 		}
 		exit 0
 
@@ -3566,7 +3575,7 @@ function vsimrunscript()
 
 	while read p; do
 		cmd=$(echo $p | sed '/^#/d' | sed '/^\s*$/d')
-  		if [ -n "$cmd" ];then 
+  		if [ -n "$cmd" ];then
   			echo "$cmd"
   			filename=""
   			vsimrun;fi
@@ -3588,7 +3597,7 @@ function vsimsoftware()
 		local _dismount=false
 
 		if [ -n "$name" ];then
-			if ! IsRunning && ! IsMounted;then 
+			if ! IsRunning && ! IsMounted;then
 				cfmount
 				_dismount=true
 			fi
@@ -3602,7 +3611,7 @@ function vsimsoftware()
 		fi
 
 		# -itgz
-		if [ -n "$image" ] && ! $all && ! $list;then 
+		if [ -n "$image" ] && ! $all && ! $list;then
 			_defaultImage=$(getimagepath "$image")
 			if [ -n "$_defaultImage" ];then echo "$_defaultImage";return 0;fi
 			return 1
@@ -3615,22 +3624,22 @@ function vsimsoftware()
 			_version1=$(cat "$_cfcard/x86_64/freebsd/image1/VERSION" 2>/dev/null)
 			_version2=$(cat "$_cfcard/x86_64/freebsd/image2/VERSION" 2>/dev/null)
 			if [ -z "$_version1" ];then _version1="-";fi
-			if [ -z "$_version2" ];then _version2="-";fi	
-			if $setdefault && IsMounted;then 
-				if $image1 && [ "$_version1" != "-" ];then 
+			if [ -z "$_version2" ];then _version2="-";fi
+			if $setdefault && IsMounted;then
+				if $image1 && [ "$_version1" != "-" ];then
 					setenv NETAPP_PRIMARY_KERNEL_URL "x86_64/freebsd/image1/kernel" "$_cfcard/env/env"
 					setenv NETAPP_BACKUP_KERNEL_URL "x86_64/freebsd/image2/kernel" "$_cfcard/env/env"
 					setenv USE_SECONDARY "true" "$_cfcard/env/env"
 				fi
-				if $image2 && [ "$_version2" != "-" ];then 
+				if $image2 && [ "$_version2" != "-" ];then
 					setenv NETAPP_PRIMARY_KERNEL_URL "x86_64/freebsd/image2/kernel" "$_cfcard/env/env"
 					setenv NETAPP_BACKUP_KERNEL_URL "x86_64/freebsd/image1/kernel" "$_cfcard/env/env"
-					setenv USE_SECONDARY "true"	"$_cfcard/env/env"		
+					setenv USE_SECONDARY "true"	"$_cfcard/env/env"
 				fi
 			fi
 
 			if [ -z "$_version1" ];then _version1="-";fi
-			if [ -z "$_version2" ];then _version2="-";fi	
+			if [ -z "$_version2" ];then _version2="-";fi
 			_default1="false"
 			_default2="false"
 			if [ "$(getenv NETAPP_PRIMARY_KERNEL_URL "$_cfcard/env/env")" = "x86_64/freebsd/image1/kernel" ];then _default1="true";fi
@@ -3657,7 +3666,7 @@ function vsimsoftware()
 			IFS=";"
 			for i in $ITGZPATH
 			do
-				if [ -d "$i" ];then 
+				if [ -d "$i" ];then
 					echo "Repository: $i:"
 					ls "$i" | grep "tgz" | column
 					echo
@@ -3672,12 +3681,12 @@ function vsimsoftware()
 			IFS=";"
 			for i in $ITGZPATH
 			do
-				if [ -d "$i" ] && [ -z "$release" ] && [ -z "$image" ];then 
+				if [ -d "$i" ] && [ -z "$release" ] && [ -z "$image" ];then
 					ls -d -1 "$i/"*.tgz | sort
 				elif [ -d "$i" ] && [ -n "$release" ] && [ -z "$image" ];then
 					ls -d -1 "$i/"*.tgz | grep "$_prefix""_._image.tgz"
 				elif [ -d "$i" ] && [ -n "$image" ];then
-					ls -d -1 "$i/$image" 2>/dev/null | sort 
+					ls -d -1 "$i/$image" 2>/dev/null | sort
 				fi
 			done
 			IFS=$OLDIFS
@@ -3691,7 +3700,7 @@ function vsimsoftware()
 			do
 				if [ -d "$i" ];then
 					OLDPWD="$PWD"
-					cd "$i" 
+					cd "$i"
 					ls *.tgz | sort
 					PWD="$OLDPWD"
 				fi
@@ -3707,7 +3716,7 @@ function vsimsoftware()
 			do
 				if [ -d "$i" ];then
 					OLDPWD="$PWD"
-					cd "$i" 
+					cd "$i"
 					ls *.tgz | cut -d'_' -f1
 					PWD="$OLDPWD"
 				fi
@@ -3736,7 +3745,7 @@ function vsimshow()
 	local _mode
 
 	#Experimental;
-	# vsim show -package 
+	# vsim show -package
 	if [ -z "$name" ] && [ -n "$image" ];then vsimsoftware;return 0;fi
 	# vsim show -version
 	if [ -z "$name" ] && [ -n "$version" ];then vsimsoftware;return 0;fi
@@ -3751,15 +3760,15 @@ function vsimshow()
 	if [ -n "$(getvmx checkpoint.vmState)" ];then _status="suspended";fi
 
 	if IsMounted;then
-		_status="Mounted" 
+		_status="Mounted"
 		_unmount=false
 	fi
 
 	if IsRunning;then
-		_status="Running" 
+		_status="Running"
 		_unmount=false
-	elif $quick;then 
-		_unmount=false		
+	elif $quick;then
+		_unmount=false
 	else
 		cfmount
 	fi
@@ -3778,24 +3787,24 @@ function vsimshow()
 
 	# -mode
 	case $(getenv bootarg.init.boot_clustered "$_cfcard/env/env") in
-		true | TRUE ) 
+		true | TRUE )
 			_mode="C";;
-		false | FALSE ) 
+		false | FALSE )
 			_mode="7";;
-		* ) 
+		* )
 			if   [ "$_version" = "-" ];then _mode="-"
 			elif [ "$(getbaseversion $_version)" -lt 830 ];then _mode="7"
 			else _mode="C"
 			fi;;
 	esac
-	
+
 	# -vnvram
 	_vnvram=$(getenv "bootarg.vm.vnvram" "$_env")
 	if [ -z "$_vnvram" ];then _vnvram="default";fi
 	if [ -n "$(getenv "fake-vnram?")" ];then _vnvram="fake";fi
 
 	# -nics
-	_nics=$(countnics)	
+	_nics=$(countnics)
 
 	# -nat, -hostonly, -bridged
 	i=0
@@ -3826,7 +3835,7 @@ function vsimshow()
 	echo "mode     : $_mode"
 	echo "sysid    : $(getenv bootarg.nvram.sysid "$_env")"
 	echo "serial   : $(getenv SYS_SERIAL_NUM "$_env")"
-	echo "image1   : $(cat "$_cfcard/x86_64/freebsd/image1/VERSION" 2>/dev/null)"	
+	echo "image1   : $(cat "$_cfcard/x86_64/freebsd/image1/VERSION" 2>/dev/null)"
 	echo "image2   : $(cat "$_cfcard/x86_64/freebsd/image2/VERSION" 2>/dev/null)"
 	echo "memsize  : $(getvmx memsize)"
 	echo "vcpus    : $(getvmx numvcpus)"
@@ -3838,9 +3847,9 @@ function vsimshow()
 	echo "nics     : $_nics"
 	echo "hostonly : $_hostonly"
 	echo "nat      : $_nat"
-	echo "bridged  : $_bridged"	
+	echo "bridged  : $_bridged"
 	# HA Configuration details
-	if [ -z "$(getenv bootarg.vm.ha "$_env")" ] || [ "$(getenv bootarg.vm.ha "$_env")" = "false" ]; then 
+	if [ -z "$(getenv bootarg.vm.ha "$_env")" ] || [ "$(getenv bootarg.vm.ha "$_env")" = "false" ]; then
 	echo "HA Mode  : false"
 	else
 	echo "HA Mode  : true"
@@ -3883,11 +3892,11 @@ function vsimstart()
   	setvmx toolScripts.beforeSuspend FALSE
 	setvmx toolScripts.afterResume FALSE
 	# Sometimes these are set in lowercase
-	unsetvmx toolscripts.beforesuspend 
+	unsetvmx toolscripts.beforesuspend
 	unsetvmx toolscripts.afterresume
 
 	#Handling for SDOT parameters
-#	if [ -n "$(getcdrom)" ];then 
+#	if [ -n "$(getcdrom)" ];then
 #		echo "cdrom detected"
 #		if ! [ -d "$simpath/isoroot" ];then echo "isoroot not found";fi
 #		#build the config.iso
@@ -3897,12 +3906,12 @@ function vsimstart()
 #		fi
 #		#Attach the ISO
 #		if ! [ -f "$simpath/config.iso" ];then echo "config.iso not found";fi
-#		if   [ -f "$simpath/config.iso" ];then 
+#		if   [ -f "$simpath/config.iso" ];then
 #			setvmx "$_cdrom.startConnected" "TRUE"
 #			setvmx "$_cdrom.fileName" "config.iso"
 #			setvmx "$_cdrom.deviceType" "cdrom-image"
 #			unsetvmx "$_cdrom.autodetect"
-#			unsetvmx "$_cdrom.clientDevice"			
+#			unsetvmx "$_cdrom.clientDevice"
 #		fi
 #	fi
 
@@ -3927,7 +3936,7 @@ function vsimstop()
 		echo "Stopping vsim: $name"
   		"$VMRUN" -T fusion stop "$vmxfile" $_hard &>/dev/null
   		cfmount
-  		cfunmount &>/dev/null		
+  		cfunmount &>/dev/null
   	fi
 }
 
@@ -3948,7 +3957,7 @@ function vsimtest()
 	fi
 	echo "$_flat"
 	_part=$(fdisk "$simpath/$_flat" | grep DOS | cut -d: -f1)
-	if [ -n "$_part" ];then 
+	if [ -n "$_part" ];then
 		_part=$((0+$_part))
 		_slice="s$_part"
 	else _part=0;fi
@@ -3983,7 +3992,7 @@ function vsimupdate()
 
   	# If we have no _image we are done
   	if ! [ -f "$_image" ];then echo "vsimupdate:image not found:$image$release" >&2;return 1;fi
-	
+
 	IsMounted && _unmount=false || _unmount=true
 	cfmount
 
@@ -4003,7 +4012,7 @@ function vsimupdate()
 	#FIXME:  new netboot images need some cleanup
 	# Detection is handled, but subdir still get extracted
 	if [ "$(tar -tzf $_image | grep netboot/VERSION)" = "netboot/VERSION" ];then _netboot=true;fi
-	if $_netboot;then 
+	if $_netboot;then
 		echo "NETBOOT"
 		file_list="netboot/BUILD netboot/CHECKSUM netboot/COMPAT.TXT netboot/INSTALL netboot/VERSION netboot/cap.xml netboot/fw.tgz netboot/kernel netboot/metadata.xml"
 		file_list="$file_list netboot/platform.ko netboot/platfs.img netboot/rootfs.img netboot/pmroot_late.tgz"
@@ -4014,15 +4023,15 @@ function vsimupdate()
 
 		#tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" "netboot"
 		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" $file_list 2>&1 | grep -v tar
-	else 
-		tar -C "$simpath/mnt/$_primary" -vxzSf "$_image"	
+	else
+		tar -C "$simpath/mnt/$_primary" -vxzSf "$_image"
 	fi
 
 	# Old netboot trap
 	if [ -d "$simpath/mnt/$_primary/netboot" ];then
 		echo "netboot image detected"
 		rm -rf "$simpath/mnt/$_primary/netboot/"*/
-		mv "$simpath/mnt/$_primary/netboot/"* "$simpath/mnt/$_primary" 
+		mv "$simpath/mnt/$_primary/netboot/"* "$simpath/mnt/$_primary"
 		rm -rf "$simpath/mnt/$_primary/netboot"
 	fi
 
@@ -4035,7 +4044,7 @@ function vsimupdate()
 		if $image2;then
 			setenv NETAPP_PRIMARY_KERNEL_URL x86_64/freebsd/image2/kernel
 			setenv NETAPP_BACKUP_KERNEL_URL x86_64/freebsd/image1/kernel
-			setenv USE_SECONDARY "true"			
+			setenv USE_SECONDARY "true"
 		fi
 	fi
 
@@ -4044,7 +4053,7 @@ function vsimupdate()
 	if [ "$_baseversion" -ge 910 ] && [ "$_console" = "vidconsole" ];then
 		setenv console "vidconsole,comconsole"
 	fi
-	
+
 	#unmount the boot device
 	if $_unmount; then cfunmount;fi
 
@@ -4053,7 +4062,7 @@ function vsimupdate()
 ###########################################################
 #process parameters
 #if none, print help
-if [ $# = 0 ]; then 
+if [ $# = 0 ]; then
 	help
 	exit
 fi
@@ -4107,30 +4116,30 @@ esac
 
 # Positional Syntax Handling
 # because OSX bash is prehistoric
-case $action in 
-	setenv | setvmx | printenv | printvmx | unsetenv | unsetvmx ) 
-		# <command> $name $variable [ $value ]	
+case $action in
+	setenv | setvmx | printenv | printvmx | unsetenv | unsetvmx )
+		# <command> $name $variable [ $value ]
 		if [ "$1" = "-vsim" ];then shift;fi
 		if IsValue "$1"; then name="$1";shift;fi
-		if [ "$1" = "-variable" ];then shift;fi	
+		if [ "$1" = "-variable" ];then shift;fi
 		if IsValue "$1"; then variable="$1";shift;fi
 		if IsValue "$1"; then value="$1";shift;fi
 		;;
-	mkfod | makefod	)   
+	mkfod | makefod	)
 		# makefod $fodname
 		if IsValue "$1"; then fodname="$1";shift;fi
 		;;
-	options ) 
+	options )
 		# options $variable $value
-		if [ "$1" = "-variable" ];then shift;fi	
+		if [ "$1" = "-variable" ];then shift;fi
 		if IsValue "$1"; then variable="$1";shift;fi
 		if IsValue "$1"; then value="$1";shift;fi
-		;;		
+		;;
 	rename 	)
 		# rename $oldname $newname
 		if [ "$1" = "-vsim" ];then shift;fi
 		if IsValue "$1"; then name="$1";shift;fi
-		if IsValue "$1"; then newname="$1";shift;fi	
+		if IsValue "$1"; then newname="$1";shift;fi
 		;;
 	run     )
 		# Run a command againt a VSIM
@@ -4141,7 +4150,7 @@ case $action in
 	import	)
 		# import $filename $name
 		if IsValue "$1"; then filename="$1";shift;fi
-		if IsValue "$1"; then name="$1";shift;fi		
+		if IsValue "$1"; then name="$1";shift;fi
 		;;
 	configure | console | create | delete | deploy | export | image | make | modify | mount | poweroff | kill | update | show | start | stop | suspend | test | unmount)
 		# command $name
@@ -4165,10 +4174,10 @@ while [ "X$1" != "X" ]; do
     	-7m                   )	mode="7";;
 		-all 				  ) all="$argv";;
 		-list 				  ) list="$argv";;
-    	-auto                 )	auto="$argv";; 
+    	-auto                 )	auto="$argv";;
     	-bsdip                ) bsdip="$argv";;
     	-bsdmgmt | -bsdport   )	bsdportname="$argv";;
-    	-cmode                )	mode="C";; 
+    	-cmode                )	mode="C";;
 		-command 			  ) cmd="$argv";;
 		-dhcp    			  ) dhcp="$argv";;
     	-create | -cluster	  ) if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="create";fi;;
@@ -4195,18 +4204,18 @@ while [ "X$1" != "X" ]; do
     	-icmac				  ) icmac="$argv"
     							if [ -n "$(echo "$icmac" | cut -d'=' -f2)" ]; then
     								icport="$(echo "$icmac" | cut -d'=' -f1)"
-    								icmac="$(echo "$icmac" | cut -d'=' -f2)" 
+    								icmac="$(echo "$icmac" | cut -d'=' -f2)"
     							fi;;
     	-icport				  ) icport="$argv";;
     	-ir | -itgzpath 	  ) ITGZPATH="$argv";;
 		-listfod			  ) listfod="$argv";;
 		-listpackages		  ) listpackages="$argv";;
 		-listversions		  ) listversions="$argv";;
-       	-m | -ram | -mem | -memsize )	
+       	-m | -ram | -mem | -memsize )
 								if IsNumber "$argv";then ram=$argv;fi;;
-    	-membsd               ) if IsNumber "$argv";then membsd=$argv;fi;;  
+    	-membsd               ) if IsNumber "$argv";then membsd=$argv;fi;;
     	-mode 				  ) mode=$(echo "$argv" | tr 'c' 'C' | colrm 2 | grep -E 'C|7');;
-       	-nics | --nics        )	if IsNumber "$argv";then nics=$argv;fi;; 
+       	-nics | --nics        )	if IsNumber "$argv";then nics=$argv;fi;;
     	-nat 				  ) nat="$argv";;
 		-hostonly			  ) hostonly="$argv";;
 		-bridged			  ) bridged="$argv";;
@@ -4219,11 +4228,11 @@ while [ "X$1" != "X" ]; do
 								;;
 		-quick				  )	quick=true;diskmodel="classic";;
 		-release | -version   ) release="$argv";;
-		-setdefault | -isdefault ) 
+		-setdefault | -isdefault )
 								setdefault="$argv";;
-    	-serno | -sn | -serial ) serno="$argv";;   
+    	-serno | -sn | -serial ) serno="$argv";;
        	-simdisks | -vdevinit )	vdevinit="$argv";;
-        -simdir               )	SIMDIR="$argv";;   
+        -simdir               )	SIMDIR="$argv";;
 		-vidcons | -vidconsole ) console="vidconsole"
 								# console="vidconsole,comconsole"  #Some versions of ontap don't behave correctly with this setting
 								# but now 9.1RC2 will crash with "console=vidconsole" so make a version based hack elsewhere
@@ -4231,8 +4240,8 @@ while [ "X$1" != "X" ]; do
         -name | -vsim | -node ) name="$argv";;
 		-node-name			  ) nodename="$argv";;
 		-vnvram 	          )	nvmode="$argv";;
-		-pnvr				  ) nvmode="full";;  	
-       	-vnvsize              )	if IsNumber "$argv";then vnvsize=$argv;fi;;         	
+		-pnvr				  ) nvmode="full";;
+       	-vnvsize              )	if IsNumber "$argv";then vnvsize=$argv;fi;;
         -vcpus                )	if IsNumber "$argv";then vcpus=$argv;fi;;
         -ab | -autoboot       )	ab="$argv";;
         -vbox 				  ) vbox="$argv";;
@@ -4268,7 +4277,7 @@ done
 
 # Handle a couple of special cases
 # If variable=value syntax was used split them out here
-if [ -n "$variable" ] && [ -z "$value" ];then 
+if [ -n "$variable" ] && [ -z "$value" ];then
 	value=$(echo "$variable=" | cut -d'=' -f 2)
 	if [ -z "$value" ] && [ -n "$(echo "$variable" | grep =$)" ];then unsetvariable=true;fi
 	variable=$(echo "$variable=" | cut -d'=' -f 1)
@@ -4288,7 +4297,7 @@ fi
 
 #Figure out the NAME in a way that is syntactically forgiving:
 # For convenience, it might be the first arg
-# if [ -z "$name" ] && ! IsParameter "$arg2"; then name="$arg2";fi 
+# if [ -z "$name" ] && ! IsParameter "$arg2"; then name="$arg2";fi
 
 #For compatability, it might be the last arg
 # if [ -z "$name" ] && [ -n "$arg2" ] && ! IsParameter "$arglast"; then name="$arglast"; fi
@@ -4309,27 +4318,27 @@ if ! [ -z "$name" ];then simpath=$(getvsimpath "$name" 2>/dev/null);fi
 if [ -n "$name" ];then vmxfile=$(getvmxfile "$name" 2>/dev/null);fi
 
 #For these commands, invoke help if name is empty or set to ?
-case $action in 
+case $action in
 	configure | console|cons|export|deploy|mount|modify|poweroff|printenv|printvmx|kill|run|setenv|setvmx|start|stop|suspend|unmount|unsetenv|unsetvmx|update )
 		if [ -z "$name" ] || [ "$name" = "?" ];then help "$action";exit;fi;;
 esac
 
 # For these commands, invoke help if variable or value is missing
-case $action in 
+case $action in
 	setenv | setvmx )
 		if [ -z "$variable" ] || [ -z "$value" ];then help "$action";exit;fi;;
 esac
 
 #For these commands, error if $vmxfile does not exist
 if [ -n "$name" ] && ! [ "$name" = "?" ];then #These will invoke help anyway
-	case $action in 
+	case $action in
 		configure | console|cons|mount|unmount|printenv|printvmx|poweroff|kill|rename|run|setenv|setvmx|show|start|stop|suspend|unsetenv|unsetvmx|update )
 			if ! [ -f "$vmxfile" ]; then echo "error:vsim not found: $SIMDIR/$name";exit;fi;;
 	esac
 fi
 
 #For these commands, exit if the VM is still running
-case $action in 
+case $action in
 	export|create|modify|setenv|setvmx|start|unsetenv|unsetvmx|update )
 		if IsRunning; then echo "error: vsim is still running: $simpath";exit;fi;;
 esac
@@ -4352,10 +4361,10 @@ case $action in
 		if [ -z "$arg2" ] || [ "$name" = "?" ];then help "delete";exit;fi
 
 		#If its a VM then stop & delete it
-		if [ -f "$vmxfile" ];then 
-			"$VMRUN" -T fusion stop "$vmxfile" hard &>/dev/null 
+		if [ -f "$vmxfile" ];then
+			"$VMRUN" -T fusion stop "$vmxfile" hard &>/dev/null
 			"$VMRUN" -T fusion deleteVM "$vmxfile"
-  			rm -rf "$simpath" 
+  			rm -rf "$simpath"
   		fi
 
   		#The Failover disks could turn up in a few places
@@ -4384,16 +4393,16 @@ case $action in
 		# Minor speedup - don't call IsRunning if we want answers quick
 		# IsRUnning makes a slow call to VMRUN which slows down compgen
 		if ! $quick;then
-			if ! IsRunning;then 
+			if ! IsRunning;then
 				env="$simpath/mnt/env/env"
 				cfmount
 			fi
 		fi
 
 		if $list;then
-			grep setenv "$env" | cut -d' ' -f2			 
+			grep setenv "$env" | cut -d' ' -f2
 		elif [ -z "$variable" ];then
-			grep setenv "$env" | sort | sed 's^setenv ^^' | sed 's^ ^=^' | sed 's^"^^g'		
+			grep setenv "$env" | sort | sed 's^setenv ^^' | sed 's^ ^=^' | sed 's^"^^g'
 		else
 			value=$(getenv "$variable" "$env")
 			if [ -n "$value" ];then echo "$value";fi
@@ -4405,11 +4414,11 @@ case $action in
 	printvmx 	)
 		if $list;then
 			grep "=" "$vmxfile" | cut -d'=' -f1 | sort
-		elif [ -z "$variable" ];then 
+		elif [ -z "$variable" ];then
 			grep "=" "$vmxfile" | sort
-		else 
+		else
 			value=$(getvmx "$variable")
-			if [ -n "$value" ];then echo "$value";fi			
+			if [ -n "$value" ];then echo "$value";fi
 		fi;;
 	poweroff | kill	)
 		if $vbox;then vboxmanage controlvm "$name" poweroff;exit;fi
@@ -4421,7 +4430,7 @@ case $action in
 		if [ -z "$name" ] || [ -z "$newname" ] || [ "$name" = "?" ];then help "rename";exit;fi
 
 		#New name must not already exist
-		if [ -f "$SIMDIR/$newname" ] || [ -d "$SIMDIR/$newname" ];then 
+		if [ -f "$SIMDIR/$newname" ] || [ -d "$SIMDIR/$newname" ];then
 			echo "rename: file already exists: $SIMDIR/$newname"
 			exit
 		fi
@@ -4451,7 +4460,7 @@ case $action in
 	unsetvmx    ) 	unsetvmx "$variable" "$vmxfile";;
 	usage 		)	help "usage";;
 	test 		) 	vsimtest;;
-    * 			)	echo "Invalid Command";;	
+    * 			)	echo "Invalid Command";;
 esac
 
 exit

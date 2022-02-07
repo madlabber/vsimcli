@@ -24,7 +24,7 @@ if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware OVF Tool/ovftool";fi
 
 #If they aren't in default locations check the path
 if ! [ -f "$OVFTOOL" ];then OVFTOOL=$(which ovftool);fi
-if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER=$(which ovftool);fi
+if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER=$(which vmware-vdiskmanager);fi
 if ! [ -f "$VMRUN" ];then VMRUN=$(which vmrun);fi
 
 if ! [ -f "$OVFTOOL" ] || ! [ -f "$VDISKMANAGER" ] || ! [ -f "$VMRUN" ];then
