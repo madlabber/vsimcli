@@ -2143,8 +2143,7 @@ function setdefaults()
 	if ! [ -z "$1" ];then baseversion="$1";fi
 
 	#Set version specific defaults
-		if [ $baseversion -ge 9101 ]; then
-			#FullSteam
+		if [ $baseversion -ge 991 ]; then
 			mode="C"
 			if [ -z "$ram" ]; 	  then ram=6144; fi
 			if [ -z "$vnvsize" ]; then vnvsize=256;fi
