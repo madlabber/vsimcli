@@ -2643,7 +2643,7 @@ function vsimimport()
 				echo "Import Completed"
 				#Now if its SDOT eval we want to grab the keys from the OVF so we can use them when we run configure
 				if [ -z "$SDOT_BUILTIN_LICENSES" ];then
-					SDOT_BUILTIN_LICENSES="$(tar -xzOf "$filename" "DataONTAPv.ovf" | grep builtin_license | sed 's^["<>/]^^g' | cut -d= -f5)"
+					SDOT_BUILTIN_LICENSES="$(tar -xzOf "$filename" "DataONTAPv.ovf" 2>/dev/null | grep builtin_license | sed 's^["<>/]^^g' | cut -d= -f5)"
 					if [ -n "$SDOT_BUILTIN_LICENSES" ];then saveoptions;fi
 				fi
 			else
