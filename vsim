@@ -628,8 +628,7 @@ function cfmount() # $1=vsimpath
 	if   [ -z "$_simpath" ];        then echo "cfmount:simpath not specified";return 1;fi
 	if ! [ -d "$_simpath" ];        then echo "cfmount:directory not found:$_simpath";return 1;fi
 	if ! [ -f "$_simpath/$_vmdk" ]; then echo "cfmount:vmdk not found:$_simpath/$_vmdk";return 1;fi
-  echo "make thick"
-	echo "VDISKMANAGER: $VDISKMANAGER"
+
 	#If its not thick we must convert it
 	if [ -f "$_simpath/$_vmdk" ] && ! [ -f "$_simpath/$_flat" ]; then
 		rm "$_simpath/tmp.vmdk" 2>/dev/null
@@ -639,7 +638,7 @@ function cfmount() # $1=vsimpath
 		rm "$_simpath/tmp.vmdk" 2>/dev/null
 		rm "$_simpath/tmp-flat.vmdk" 2>/dev/null
 	fi
-  echo "create mnt"
+
 	#Create the mount point
 	mkdir "$_simpath/mnt" &> /dev/null
 
@@ -2144,7 +2143,15 @@ function setdefaults()
 	if ! [ -z "$1" ];then baseversion="$1";fi
 
 	#Set version specific defaults
-  	if [ $baseversion -ge 940 ]; then
+		if [ $baseversion -ge 9101 ]; then
+			#FullSteam
+			mode="C"
+			if [ -z "$ram" ]; 	  then ram=6144; fi
+			if [ -z "$vnvsize" ]; then vnvsize=256;fi
+			if [ -z "$nvmode" ];  then nvmode="panic"; fi
+		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
+		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
+	  elif [ $baseversion -ge 940 ]; then
   		#FullSteam
   		mode="C"
   		if [ -z "$ram" ]; 	  then ram=5120; fi
@@ -3112,7 +3119,7 @@ function vsimmakecons()
   		consport=$(expr "2200" + "$ticket")
   	fi
 
-	cp "$vmxfile" "test1"
+	#cp "$vmxfile" "test1"
   	#remove any existing serial0 config
   	sed "/serial0/d" "$vmxfile" > "$vmxfile.sed"
   	cp "$vmxfile.sed" "$vmxfile"
