@@ -120,6 +120,12 @@ else
 	echo "Done."
 fi
 
+echo "Creating $HOME/vsims directories"
+mkdir -p "$HOME/vsims"
+chmod -R 777 "$HOME/vsims"
+mkdir -p "$HOME/vsims/ontap"
+chmod -R 777 "$HOME/vsims/ontap"
+
 #Plan is to dynamically build the standard.tgz/classic.tgz from these sources:
 #810
 #http://mysupport.netapp.com/NOW/cgi-bin/simulatorlic8.cgi/download/tools/simulator/ontap/8.1/vsim-DOT81-cm-esx.zip
@@ -130,8 +136,6 @@ fi
 #Build standard.tgz from the ova
 if ! [ -f "standard.tgz" ];then
 	echo "Building standard diskmodel template."
-	mkdir -p "$HOME/vsims"
-	chmod -R 777 "$HOME/vsims"
 	./vsim delete standard
 	./vsim import -file "$ovafile" -name "standard"
 	echo "Mounting CF Card"
@@ -151,8 +155,6 @@ fi
 
 #templates go here
 echo "Copying files to $HOME/vsims:"
-mkdir -p "$HOME/vsims"
-chmod -R 777 "$HOME/vsims"
 cp standard.tgz $HOME/vsims 2>/dev/null
 if [ -f "$HOME/vsims/standard.tgz" ];then
 	echo "+ $HOME/vsims/standard.tgz"
