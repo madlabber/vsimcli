@@ -168,6 +168,7 @@ fi
 mkdir -p /Library/WebServer/Documents/ontap
 #or here
 mkdir -p "$HOME/vsims/ontap"
+mkdir -p "$HOME/vsims/cfcard"
 
 failed=0
 if ! [ -f "/usr/local/bin/vsim" ]; then failed=1;fi

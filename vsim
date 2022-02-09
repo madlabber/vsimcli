@@ -2638,6 +2638,10 @@ function vsimimport()
 			"$OVFTOOL" "--allowAllExtraConfig" "--allowExtraConfig" "--acceptAllEulas" "$filename" "$simpath/DataONTAP.vmx"
 			if IsVM "$simpath";then
 				cfmount   "$simpath"
+				if [ -d "$simpath/mnt/files" ];then
+					mkdir -p "$VSIMHOME/cfcard/files"
+					cp -R "$simpath/mnt/files/" "$VSIMHOME/cfcard/files/"
+				fi
 				cfunmount "$simpath"
 				echo "Import Completed"
 				#Now if its SDOT eval we want to grab the keys from the OVF so we can use them when we run configure
@@ -2880,6 +2884,9 @@ function vsimmake()
   	#mount the CF card vmdk
 #	echo "mounting boot device."
   	cfmount "$simpath"
+
+    #copy the template cfcard into the new vSIM
+		if [ -d "$VSIMHOME/cfcard/" ];then cp -R "$VSIMHOME/cfcard/" "$simpath/mnt";fi
 
 	#Build a clean env file
 	echo "ENV File : $env"
@@ -3344,12 +3351,26 @@ function vsimmodify()
 		fi
 	fi
 
-
 	#Telnet console
 	if ! [ -z "$consport" ];then vsimmakecons;fi
 
 	#if -auto was set, enable autosetup
   	if $auto; then autosetup; fi
+
+  #if dhcp is used, and files are present on ONTAP 9.7 or later, then use vsim default autosetup
+	  if [ $dhcp ] && [ "$baseversion" -ge 970 ] && [ -f "$simpath/mnt/files/setup.ngsh" ];then
+			echo "DHCP Enabled"
+			setenv "bootarg.dblade.wafl_use_delete_log" "false" "$env"
+			setenv "bootarg.init.auto_cluster_lif.disable" "false" "$env"
+			setenv "bootarg.bootmenu.allow_opts" "true" "$env"
+			setenv "bootarg.bootmenu.args" "4a" "$env"
+			setenv "bootarg.init.bootmenu" "true" "$env"
+			setenv "bootarg.setup.auto" "true" "$env"
+			setenv "bootarg.setup.auto.file" "/cfcard/files/setup.ngsh" "$env"
+			setenv "bootarg.setup.auto.internal" "true" "$env"
+			unsetenv "bootarg.init.dhcp.disable" "$env"
+			unsetenv "fake-nvram?" "$env"
+    fi
 
 	# -ev, $ev : Process these last so they function as overides
 	if ! [ -z "$ev" ];then evparse "$ev" "$env"; fi
@@ -4185,7 +4206,7 @@ while [ "X$1" != "X" ]; do
     	-bsdmgmt | -bsdport   )	bsdportname="$argv";;
     	-cmode                )	mode="C";;
 		-command 			  ) cmd="$argv";;
-		-dhcp    			  ) dhcp="$argv";;
+		-dhcp    			  ) dhcp=true;;
     	-create | -cluster	  ) if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="create";fi;;
 		-join 				  ) if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="join";fi;;
 		-license 			  ) VSIMLICENSE="$argv";;
