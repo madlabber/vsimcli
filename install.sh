@@ -41,6 +41,10 @@ if ! [ -f "standard.tgz" ];then
 	ovafile=`ls vsim-netapp-DOT9.9.1-cm_nodar.ova | sort | head -1`
 fi
 
+if [ -z "$ovafile" ];then
+  ovafile=`ls ~/Downloads/vsim-netapp-DOT9.9.1-cm_nodar.ova | sort | head -1`
+fi
+
 if [ -z "$ovafile" ] && ! [ -f "standard.tgz" ];then
 		echo "An existing 9.9.1 vsim OVA file is required."
 		echo "Plase download vsim-netapp-DOT9.9.1-cm_nodar.ova and "
