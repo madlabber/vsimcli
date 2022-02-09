@@ -33,6 +33,7 @@ Help:
 vsim help <command>
 
 Available Commands:
+
     console                     Connect to a vsim console
     configure                   configure an ONTAP Select VM (experimental)
     create                      Create a vsim
