@@ -70,70 +70,89 @@ vsim help <command>
 ## Examples
 
 Import some Data ONTAP images into the repository:
+
     cd ~/Downloads
     vsim import 824_q_image.tgz
     vsim import 832_q_image.tgz
 
 Show the available software images:
+
     vsim image -list
 
-Make a simple 7mode vsim
+Make a simple 7mode vsim:
+
     vsim create -vsim myvsim1 -version 8.2.4 -mode 7
 
-Make a 7mode vsim that will auto configure itself on first boot
+Make a 7mode vsim that will auto configure itself on first boot:
+
     vsim create -vsim myvsim1 -version 8.2.4 -mode 7 -auto
 
 Change the serial number to match an available license key set:
+
     vsim modify myvsim1 -serial 4082367544
 
 Start the vsim:
+
     vsim start myvsim1
 
 Connect to a vsim's console:
+
     vsim console myvsim1
 
 To exit the console, press ctrl-G
 
 Make an HA pair of vsims:
+
     vsim create -vsim 7mode1 -partner 7mode2 -version 8.2.4 -mode 7 -auto
 
 Make a Cmode vsim that automatically creates a new cluster
+
     vsim create -vsim cluster1-01 -version 8.3.2 -cluster cluster1
 
 Make a Cmode vsim that automatically joins an existing cluster
+
     vsim create -vsim cluster1-02 -version 8.3.2 -join cluster1
 
 Make a cDOT HA pair:
+
     vsim create -vsim cluster2-01 -partner cluster2-02 -version 8.3.2 -cluster cluster2
 
-Show a list of vsims and failover disks
+Show a list of vsims and failover disks:
+
     vsim show
 
-Clean up the 7mode HA pair
+Clean up the 7mode HA pair:
+
     vsim stop 7mode1
     vsim stop 7mode2
     vsim delete 7mode1
     vsim delete 7mode2
 
 Delete the shared failover disks from the 7mode1/7mode2 ha pair
+
     vsim delete ha_7mode1_7mode2
 
 ## Working with ONTAP Select VMs:
 Note: Support for ONTAP Select VMs is limited and experimental
 
 To import an ONTAP Select standalone evluation OVA:
+
     vsim import ~/Downloads/9.5_DataONTAPv-esx-standalone-nodar.ova -vsim ONTAPSelect
 
-To modify the ONTAP Select VM to fit within the VMware Fusion environment
+To modify the ONTAP Select VM to fit within the VMware Fusion environment:
+
     vsim modify -vsim ONTAPSelect -memsize 6144 -vcpus 2 -nat e0a,e0b,e0c -comconsole
 
 To configure the ONTAP Select VM prior to first boot:
+
     vsim configure -vsim ONTAPSelect
 
 To start the ONTAP Select VM:
+
     vsim start -vsim ONTAPSelect
 
 To connect to the console of the ONTAP Select VM:
+
     vsim console -vsim ONTAPSelect
 
 ## Notes:
