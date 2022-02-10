@@ -3358,7 +3358,7 @@ function vsimmodify()
   	if $auto; then autosetup; fi
 
   #if dhcp is used, and files are present on ONTAP 9.7 or later, then use vsim default autosetup
-	  if [ $dhcp ] && [ "$baseversion" -ge 970 ] && [ -f "$simpath/mnt/files/setup.ngsh" ];then
+	  if [ !$auto ] && [ $dhcp ] && [ "$baseversion" -ge 970 ] && [ -f "$simpath/mnt/files/setup.ngsh" ];then
 			echo "DHCP Enabled"
 			setenv "bootarg.dblade.wafl_use_delete_log" "false" "$env"
 			setenv "bootarg.init.auto_cluster_lif.disable" "false" "$env"
