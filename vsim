@@ -4199,105 +4199,105 @@ while [ "X$1" != "X" ]; do
 
     case $arg in
     	-7m                   )	mode="7";;
-		-all 				  ) all="$argv";;
-		-list 				  ) list="$argv";;
+      -all                  ) all="$argv";;
+		  -list                 ) list="$argv";;
     	-auto                 )	auto="$argv";;
     	-bsdip                ) bsdip="$argv";;
     	-bsdmgmt | -bsdport   )	bsdportname="$argv";;
     	-cmode                )	mode="C";;
-		-command 			  ) cmd="$argv";;
-		-dhcp    			  ) dhcp=true;;
+      -command              ) cmd="$argv";;
+      -dhcp                 ) dhcp=true;;
     	-create | -cluster	  ) if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="create";fi;;
-		-join 				  ) if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="join";fi;;
-		-license 			  ) VSIMLICENSE="$argv";;
-        -ev                   ) ev="$argv";;
-        -esx                  ) esx="$argv";;
-		-gui 				  ) gui="$argv";;
-        -host 				  ) host="$argv";;
-		-ds | -datastore	  ) datastore="$argv";;
-        -f  | -force          ) force="$argv";;
-        -fod                  ) fodname="$argv";;
-        -partner 			  ) if [ -n "$argv" ];then partner="$argv"; cfonode="a"; cfopartner="b"; prompt="VLOADER-A>";fi;;
-        -fa                   ) if [ -n "$argv" ];then fodname="$argv"; cfonode="a"; cfopartner="b"; prompt="VLOADER-A>";fi;;
-        -fb                   ) if [ -n "$argv" ];then fodname="$argv"; cfonode="b"; cfopartner="a"; prompt="VLOADER-B>";fi;;
-        -file | -script       ) filename="$argv";;
-    	-i | -itgz | -package ) image="$argv";;  #need to rename all the image references
-		-get 				  ) ;;
-		-image 				  ) if [ "$(echo "$argv" | tr '[:upper:]' '[:lower:]')" = "image1" ];then image1=true;fi
-								if [ "$(echo "$argv" | tr '[:upper:]' '[:lower:]')" = "image2" ];then image2=true;fi
-								;;
-    	-image1				  ) image1="$argv";;
-		-image2				  ) image2="$argv";;
-    	-icmac				  ) icmac="$argv"
-    							if [ -n "$(echo "$icmac" | cut -d'=' -f2)" ]; then
-    								icport="$(echo "$icmac" | cut -d'=' -f1)"
-    								icmac="$(echo "$icmac" | cut -d'=' -f2)"
-    							fi;;
-    	-icport				  ) icport="$argv";;
-    	-ir | -itgzpath 	  ) ITGZPATH="$argv";;
-		-listfod			  ) listfod="$argv";;
-		-listpackages		  ) listpackages="$argv";;
-		-listversions		  ) listversions="$argv";;
-       	-m | -ram | -mem | -memsize )
-								if IsNumber "$argv";then ram=$argv;fi;;
+      -join                 ) if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="join";fi;;
+      -license              ) VSIMLICENSE="$argv";;
+      -ev                   ) ev="$argv";;
+      -esx                  ) esx="$argv";;
+      -gui                  ) gui="$argv";;
+      -host                 ) host="$argv";;
+      -ds | -datastore      ) datastore="$argv";;
+      -f  | -force          ) force="$argv";;
+      -fod                  ) fodname="$argv";;
+      -partner              ) if [ -n "$argv" ];then partner="$argv"; cfonode="a"; cfopartner="b"; prompt="VLOADER-A>";fi;;
+      -fa                   ) if [ -n "$argv" ];then fodname="$argv"; cfonode="a"; cfopartner="b"; prompt="VLOADER-A>";fi;;
+      -fb                   ) if [ -n "$argv" ];then fodname="$argv"; cfonode="b"; cfopartner="a"; prompt="VLOADER-B>";fi;;
+      -file | -script       ) filename="$argv";;
+      -i | -itgz | -package ) image="$argv";;  #need to rename all the image references
+      -get                  ) ;;
+      -image                ) if [ "$(echo "$argv" | tr '[:upper:]' '[:lower:]')" = "image1" ];then image1=true;fi
+                              if [ "$(echo "$argv" | tr '[:upper:]' '[:lower:]')" = "image2" ];then image2=true;fi
+                              ;;
+      -image1               ) image1="$argv";;
+      -image2               ) image2="$argv";;
+      -icmac                ) icmac="$argv"
+                              if [ -n "$(echo "$icmac" | cut -d'=' -f2)" ]; then
+                                icport="$(echo "$icmac" | cut -d'=' -f1)"
+																icmac="$(echo "$icmac" | cut -d'=' -f2)"
+                              fi;;
+    	-icport               ) icport="$argv";;
+    	-ir | -itgzpath       ) ITGZPATH="$argv";;
+      -listfod              ) listfod="$argv";;
+      -listpackages         ) listpackages="$argv";;
+      -listversions         ) listversions="$argv";;
+      -m | -ram | -mem | -memsize )
+                              if IsNumber "$argv";then ram=$argv;fi;;
     	-membsd               ) if IsNumber "$argv";then membsd=$argv;fi;;
-    	-mode 				  ) mode=$(echo "$argv" | tr 'c' 'C' | colrm 2 | grep -E 'C|7');;
-       	-nics | --nics        )	if IsNumber "$argv";then nics=$argv;fi;;
-    	-nat 				  ) nat="$argv";;
-		-hostonly			  ) hostonly="$argv";;
-		-bridged			  ) bridged="$argv";;
-       	-newname              )	newname="$argv";;
-       	-password | -pw | -pass ) VSIMPASSWORD="$argv";;
-		-comconsole | -comcons | -cons | -consport | makecons )	# undecided
-								console="comconsole,vidconsole"
-								consport=1
-								if IsNumber "$argv";then consport="$argv";fi
-								;;
-		-quick				  )	quick=true;diskmodel="classic";;
-		-release | -version   ) release="$argv";;
-		-setdefault | -isdefault )
-								setdefault="$argv";;
-    	-serno | -sn | -serial ) serno="$argv";;
-       	-simdisks | -vdevinit )	vdevinit="$argv";;
-        -simdir               )	SIMDIR="$argv";;
-		-vidcons | -vidconsole ) console="vidconsole"
+    	-mode                 ) mode=$(echo "$argv" | tr 'c' 'C' | colrm 2 | grep -E 'C|7');;
+      -nics | --nics        )	if IsNumber "$argv";then nics=$argv;fi;;
+      -nat                  ) nat="$argv";;
+      -hostonly             ) hostonly="$argv";;
+      -bridged              ) bridged="$argv";;
+      -newname              )	newname="$argv";;
+      -password | -pw | -pass ) VSIMPASSWORD="$argv";;
+      -comconsole | -comcons | -cons | -consport | makecons )	# undecided
+                              console="comconsole,vidconsole"
+                              consport=1
+                              if IsNumber "$argv";then consport="$argv";fi
+                              ;;
+      -quick                )	quick=true;diskmodel="classic";;
+      -release | -version   ) release="$argv";;
+      -setdefault | -isdefault )
+                              setdefault="$argv";;
+      -serno | -sn | -serial ) serno="$argv";;
+      -simdisks | -vdevinit )	vdevinit="$argv";;
+      -simdir               )	SIMDIR="$argv";;
+      -vidcons | -vidconsole ) console="vidconsole"
 								# console="vidconsole,comconsole"  #Some versions of ontap don't behave correctly with this setting
 								# but now 9.1RC2 will crash with "console=vidconsole" so make a version based hack elsewhere
 								;;
-        -name | -vsim | -node ) name="$argv";;
-		-node-name			  ) nodename="$argv";;
-		-vnvram 	          )	nvmode="$argv";;
-		-pnvr				  ) nvmode="full";;
-       	-vnvsize              )	if IsNumber "$argv";then vnvsize=$argv;fi;;
-        -vcpus                )	if IsNumber "$argv";then vcpus=$argv;fi;;
-        -ab | -autoboot       )	ab="$argv";;
-        -vbox 				  ) vbox="$argv";;
-		-vscsi  		      )	vscsi=true
+      -name | -vsim | -node ) name="$argv";;
+      -node-name			  ) nodename="$argv";;
+      -vnvram 	          )	nvmode="$argv";;
+      -pnvr				  ) nvmode="full";;
+      -vnvsize              )	if IsNumber "$argv";then vnvsize=$argv;fi;;
+      -vcpus                )	if IsNumber "$argv";then vcpus=$argv;fi;;
+      -ab | -autoboot       )	ab="$argv";;
+      -vbox 				  ) vbox="$argv";;
+      -vscsi  		      )	vscsi=true
 								vscsidisks="$argv";;
-		-vsa       			  )	vsa="$argv"
+      -vsa       			  )	vsa="$argv"
 								vscsi="$argv"
 		                        ;;
-		-makeova | -ova       )	makeova="$argv";;
-		-maketgz | -tgz       )	maketgz="$argv";;
-		-makevbox | -vbox     ) makevbox="$argv";;
-		-? | "?" | -h | -help ) name="?";; ##assorted cries for help
-		-value | -val         )	value="$argv";;
-		-variable | -var      )	variable="$argv";;
-		-vsimha 			  )	ram=4096
-								nics=8
-								nvmode="panic"
-								vnvsize=256
-								vscsi=true
-								makeova=true
-								vdevinit="false"
-								console="comconsole,vidconsole"
-								esx=true;;
-		-zero 				  ) zero=true;;
-		*					  ) if [ -z "$name" ] && [ "$#" -eq "1" ];then
-									name=$(validate "$arg")
-								else
-								echo "invalid option: $arg"
-								fi;;
+      -makeova | -ova       )	makeova="$argv";;
+      -maketgz | -tgz       )	maketgz="$argv";;
+      -makevbox | -vbox     ) makevbox="$argv";;
+      -? | "?" | -h | -help ) name="?";; ##assorted cries for help
+      -value | -val         )	value="$argv";;
+      -variable | -var      )	variable="$argv";;
+      -vsimha               )	ram=4096
+                              nics=8
+                              nvmode="panic"
+                              vnvsize=256
+                              vscsi=true
+                              makeova=true
+                              vdevinit="false"
+                              console="comconsole,vidconsole"
+                              esx=true;;
+      -zero                 ) zero=true;;
+      *                     ) if [ -z "$name" ] && [ "$#" -eq "1" ];then
+                                name=$(validate "$arg")
+                              else
+                                echo "invalid option: $arg"
+                              fi;;
     esac
     shift
 done
@@ -4305,9 +4305,9 @@ done
 # Handle a couple of special cases
 # If variable=value syntax was used split them out here
 if [ -n "$variable" ] && [ -z "$value" ];then
-	value=$(echo "$variable=" | cut -d'=' -f 2)
-	if [ -z "$value" ] && [ -n "$(echo "$variable" | grep =$)" ];then unsetvariable=true;fi
-	variable=$(echo "$variable=" | cut -d'=' -f 1)
+	value=$(echo "$variable" | cut -d'=' -f 2 -s)
+	variable=$(echo "$variable" | cut -d'=' -f 1)
+	if [ -z "$value" ];then unsetvariable=true;fi
 fi
 
 #If we aren't setting options then the options must be checked
