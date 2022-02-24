@@ -4418,8 +4418,8 @@ case $action in
   		if [ -d "$FODDIR/$fodname/nodea" ];then rm -rf "$FODDIR/$fodname";fi
   		if [ -d "$FODDIR/$name/nodea" ];then rm -rf "$FODDIR/$name";fi;;
 	deploy		)   if [ -z "$nat" ];then nat="VM Network";fi
-					if [ -z "$hostonly" ];then hostonly="Cluster Network";fi
-					"$OVFTOOL" --allowAllExtraConfig --datastore="$datastore" --net:nat="$nat" --net:hostonly="$hostonly" -dm=thin "$(getvmxfile $name)" vi://"$host";;
+					if [ -z "$hostonly" ];then hostonly="VM Network";fi
+					"$OVFTOOL" --allowExtraConfig --allowAllExtraConfig --noSSLVerify --datastore="$datastore" --net:nat="$nat" --net:hostonly="$hostonly" -dm=thin "$(getvmxfile $name)" vi://"$host";;
 	export 		)	vsimexport;;
 	help 		)	help "$arg2";;
 	import 		)	vsimimport;;
