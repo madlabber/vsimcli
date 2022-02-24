@@ -244,6 +244,7 @@ function help() # $1=subcommand
 					echo "   -auto                                Enable Auto setup"
 					echo "   -create <cluster name>               Create a new cluster"
 					echo "   -join <cluster name>                 Join an existing cluster"
+					echo "   -cluster-mgmt-ip <ip address>        Cluster Management IP Address"
 					echo "   -fa <fod name>                       Join a FOD based HA Pair as Node A"
 					echo "   -fb <fod name>                       Join a FOD based HA Pair as Node B";;esac
 	case $1 in usage|create|delete|rm )
@@ -432,6 +433,9 @@ function autosetup()
 		ticket2=$(pullticket)
 		clusterip="$nodeip"
 		nodeip="$(echo "$vmnet8_subnet" | cut -d'.' -f1-3).1$ticket2"
+
+		#if IP was specific at the CLI, use that one instead
+		if [ -z "$cluster_mgmt_ip" ]; then clusterip="$cluster_mgmt_ip";fi
 	fi
 
 	dns_info="$vmnet8_domain;$vmnet8_gateway"
@@ -2943,7 +2947,7 @@ function vsimmake()
 		#join the FOD
 		partnersysid=$(head -n 1 "$FODDIR/$fodname/node$cfopartner/,serialno")
 		octet5="${partnersysid:(-2)}"
-		if [ -z "$octet5" ]; then octet5="${sysid:(-2)}";fi
+		if [ -z "$octet5" ]; then octet5=${sysid:(-2)};fi
 		if [ -z "$icmac" ]; then
 			icmac="00:50:56:00:$octet5:0$cfonode,00:50:56:00:$octet5:0$cfopartner"
 		fi
@@ -3066,12 +3070,12 @@ function vsimmake()
   	#Make a few adjustments and spawn the partner
   	if [ -n "$partner" ];then
   		echo "Creating HA partner: $partner"
-  		name="$partner"
-		cfonode="b"
-		cfopartner="a"
-		prompt="VLOADER-B>"
+      name="$partner"
+      cfonode="b"
+      cfopartner="a"
+      prompt="VLOADER-B>"
 		if [ "$operation" = "create" ];then operation="join";fi
-		consport="1"
+      consport="1"
   		partner=""
   		icmac=""
   		serno=""
@@ -4207,8 +4211,11 @@ while [ "X$1" != "X" ]; do
     	-cmode                )	mode="C";;
       -command              ) cmd="$argv";;
       -dhcp                 ) dhcp=true;;
-    	-create | -cluster	  ) if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="create";fi;;
+    	-create | -cluster | -clustername	  )
+			                        if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="create";fi;;
       -join                 ) if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="join";fi;;
+			-cluster-mgmt-ip | -mgmt-ip )
+			                        cluster_mgmt_ip="$argv";;
       -license              ) VSIMLICENSE="$argv";;
       -ev                   ) ev="$argv";;
       -esx                  ) esx="$argv";;
