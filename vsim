@@ -435,8 +435,7 @@ function autosetup()
 		nodeip="$(echo "$vmnet8_subnet" | cut -d'.' -f1-3).1$ticket2"
 
 		#if IP was specific at the CLI, use that one instead
-		echo "cluster_mgmt_ip: $cluster_mgmt_ip"
-		if [ -z "$cluster_mgmt_ip" ]; then clusterip="$cluster_mgmt_ip";fi
+		if [ -n "$cluster_mgmt_ip" ]; then clusterip="$cluster_mgmt_ip";fi
 	fi
 
 	dns_info="$vmnet8_domain;$vmnet8_gateway"
