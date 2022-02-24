@@ -246,6 +246,8 @@ function help() # $1=subcommand
 					echo "   -join <cluster name>                 Join an existing cluster"
 					echo "   -cluster-mgmt-ip <ip address>        Cluster Management IP Address"
 					echo "   -node-mgmt-ip <ip address>           Node Management IP Address"
+					echo "   -mgmt-netmask <netmask>              Management Network Subnet Mask"
+					echo "   -mgmt-gateway <ip address>           Management network Gateway"
 					echo "   -fa <fod name>                       Join a FOD based HA Pair as Node A"
 					echo "   -fb <fod name>                       Join a FOD based HA Pair as Node B";;esac
 	case $1 in usage|create|delete|rm )
@@ -441,6 +443,8 @@ function autosetup()
 
   # If node_mgmt_ip was specified, apply it now.
 	if [ -n "$node_mgmt_ip" ]; then nodeip="$node_mgmt_ip";fi
+	if [ -z "$mgmt_netmask" ]; then mgmt_netmask="$vmnet8_netmask";fi
+	if [ -z "$mgmt_gateway" ]; then mgmt_gateway="$vmnet8_gateway";fi
 
 	dns_info="$vmnet8_domain;$vmnet8_gateway"
 
@@ -457,12 +461,12 @@ function autosetup()
 	echo "Node IP  : $nodeip"
 	echo "Node Name: $_node_name"
 	setenv "bootarg.setup.auto" "true" "$env"
-	setenv "bootarg.setup.default_gateway" "$vmnet8_gateway" "$env"
+	setenv "bootarg.setup.default_gateway" "$mgmt_gateway" "$env"
 	setenv "bootarg.setup.admin_password" "$password" "$env"
 	setenv "bootarg.setup.tmz" "$timezone" "$env"
 	setenv "bootarg.setup.filer_location" "$(hostname)"  "$env"
 	setenv "bootarg.setup.hostname" "$name" "$env"
-	setenv "bootarg.setup.nic_e0d" "$nodeip;$vmnet8_netmask;;full;n"  "$env"
+	setenv "bootarg.setup.nic_e0d" "$nodeip;$mgmt_netmask;;full;n"  "$env"
 	if [ -n "$fodname" ];then
 		setenv "bootarg.setup.nic_e0d_failover_ip" "e0d" "$env"
 	fi
@@ -504,8 +508,8 @@ function autosetup()
 	#set the timezone
 	echo "ngsh -c timezone -timezone $timezone" >> $setupfile
 	#put node mgmt on e0d in case e0c is in use for the FOD
-	echo "ngsh -c network interface create -lif mgmt1 -role node-mgmt -home-node $_node_name -home-port e0d -status-admin up -address $nodeip -netmask $vmnet8_netmask" >> $setupfile
-	echo "ngsh -c network route create -gateway $vmnet8_gateway -vserver Default -metric 10" >> $setupfile
+	echo "ngsh -c network interface create -lif mgmt1 -role node-mgmt -home-node $_node_name -home-port e0d -status-admin up -address $nodeip -netmask $mgmt_netmask" >> $setupfile
+	echo "ngsh -c network route create -gateway $mgmt_gateway -vserver Default -metric 10" >> $setupfile
 	#fix the systemshell  - old burt or just cosmic
 	#echo "ngsh -c set diag;debug system regenerate-systemshell-key-pair" >> $setupfile
 
@@ -532,7 +536,7 @@ function autosetup()
 				echo "ngsh -c date "`date +%Y%m%d%H%M` >> $setupfile
 			fi
 			#Create the cluster_mgmt lif
-			echo "ngsh -c network interface create -vserver $cluster -lif cluster_mgmt -role cluster-mgmt -home-node $_node_name -home-port e0d -address $clusterip -netmask $vmnet8_netmask"  >> $setupfile
+			echo "ngsh -c network interface create -vserver $cluster -lif cluster_mgmt -role cluster-mgmt -home-node $_node_name -home-port e0d -address $clusterip -netmask $mgmt_netmask"  >> $setupfile
 			#Jumbos don't work in Fusion, so fix the Cluster ports
 			echo "ngsh -c network port broadcast-domain modify -broadcast-domain Cluster -ipspace Cluster -mtu 1500"  >> $setupfile
 			#If HA, then reboot now to enable HA
@@ -4222,6 +4226,8 @@ while [ "X$1" != "X" ]; do
 			                        cluster_mgmt_ip="$argv";;
 			-node-mgmt-ip | -node-ip )
 			                        node_mgmt_ip="$argv";;
+			-mgmt-netmask         ) mgmt_netmask="$argv";;
+			-mgmt-gateway         ) mgmt_gateway="$argv";;
       -license              ) VSIMLICENSE="$argv";;
       -ev                   ) ev="$argv";;
       -esx                  ) esx="$argv";;
