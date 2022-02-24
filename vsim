@@ -245,6 +245,7 @@ function help() # $1=subcommand
 					echo "   -create <cluster name>               Create a new cluster"
 					echo "   -join <cluster name>                 Join an existing cluster"
 					echo "   -cluster-mgmt-ip <ip address>        Cluster Management IP Address"
+					echo "   -node-mgmt-ip <ip address>           Node Management IP Address"
 					echo "   -fa <fod name>                       Join a FOD based HA Pair as Node A"
 					echo "   -fb <fod name>                       Join a FOD based HA Pair as Node B";;esac
 	case $1 in usage|create|delete|rm )
@@ -437,6 +438,9 @@ function autosetup()
 		#if IP was specific at the CLI, use that one instead
 		if [ -n "$cluster_mgmt_ip" ]; then clusterip="$cluster_mgmt_ip";fi
 	fi
+
+  # If node_mgmt_ip was specified, apply it now.
+	if [ -n "$node_mgmt_ip" ]; then nodeip="$node_mgmt_ip";fi
 
 	dns_info="$vmnet8_domain;$vmnet8_gateway"
 
@@ -4216,6 +4220,8 @@ while [ "X$1" != "X" ]; do
       -join                 ) if [ -n "$argv" ];then cluster="$argv"; auto=true; operation="join";fi;;
 			-cluster-mgmt-ip | -mgmt-ip )
 			                        cluster_mgmt_ip="$argv";;
+			-node-mgmt-ip | -node-ip )
+			                        node_mgmt_ip="$argv";;
       -license              ) VSIMLICENSE="$argv";;
       -ev                   ) ev="$argv";;
       -esx                  ) esx="$argv";;
