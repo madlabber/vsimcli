@@ -1300,6 +1300,13 @@ function getreleaseimage() #$1=release
 		echo "image_v_""$prefix"".tgz"
 	elif [ -f "$(getimagepath "$prefix""_q_image.tgz")" ]; then
 		echo "$prefix""_q_image.tgz"
+	# and now there are _sim_ and nodar variants
+  elif [ -f "$(getimagepath "$prefix""_q_nodar_image.tgz")" ]; then
+	  echo "$prefix""_q_image_nodar.tgz"
+  elif [ -f "$(getimagepath "$prefix""_sim_image.tgz")" ]; then
+		echo "$prefix""_sim_image.tgz"
+  elif [ -f "$(getimagepath "$prefix""_sim_image_nodar.tgz")" ]; then
+		echo "$prefix""_sim_image_nodar.tgz"
 	fi
 }
 
@@ -1308,12 +1315,18 @@ function getrelease() #$1=release
 {
 	local _prefix=${1//.}
 	local _qimage=$(getimagepath "$_prefix""_q_image.tgz")
+	local _qimagenodar=$(getimagepath "$_prefix""_q_nodar_image.tgz")
 	local _vimage=$(getimagepath "$_prefix""_v_image.tgz")
 	local _vimagenew=$(getimagepath "image_v_""$_prefix"".tgz")
+	local _simimage=$(getimagepath "$_prefix""_sim_image.tgz")
+	local _simimagenodar=$(getimagepath "$_prefix""_sim_image_nodar.tgz")
 
 	if [ -f "$_vimage" ];then echo "$_vimage";return 0;fi
 	if [ -f "$_vimagenew" ];then echo "$_vimagenew";return 0;fi
 	if [ -f "$_qimage" ];then echo "$_qimage";return 0;fi
+	if [ -f "$_simimage" ];then echo "$_simimage";return 0;fi
+	if [ -f "$_qimagenodar" ];then echo "$_qimagenodar";return 0;fi
+	if [ -f "$_simimagenodar" ];then echo "$_simimagenodar";return 0;fi
 
 	return 1
 }
