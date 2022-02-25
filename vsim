@@ -2486,8 +2486,14 @@ function vsimexport()
   				echo "Image1 not present in $name" >&2
   			else
   				_build=$(cat "$simpath/mnt/x86_64/freebsd/image1/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
-  				if [ "$_build" = "SIMOVF" ] || [ "$_build" = "SIM" ] || [ "$_build" = "OVF" ];then _type="v";fi
-				_file="$(echo $_version1|sed -e 's/\.//g')_""$_type""_image.tgz"
+					_nodar=$(echo "$_build" | grep "NODAR")
+					echo "_build = $_build"
+					if [ "$_build" = "SIMOVF" ] || [ "$_build" = "SIM" ] || [ "$_build" = "SIMNODAR" ];then _type="sim";fi
+  				if [ "$_build" = "OVF" ] || [ "$_build" = "OVFNODAR" ];then _type="v";fi
+				  _file="$(echo $_version1|sed -e 's/\.//g')_""$_type""_image.tgz"
+				if [ -n "$_nodar" ];then
+				  _file="$(echo $_version1|sed -e 's/\.//g')_""$_type""_image_nodar.tgz"
+				fi
 				echo "Image1 Version: $_version1"
 				echo "Image1 Type   : $_build"
 				echo "Exporting File: $_file"
@@ -2497,12 +2503,17 @@ function vsimexport()
 		fi
 
 		if $image2;then
-  			if [ -z "$_version2" ]; then
-  				echo "Image2 not present in $name" >&2
-  			else
-  				_build=$(cat "$simpath/mnt/x86_64/freebsd/image2/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
-  				if [ "$_build" = "SIMOVF" ] || [ "$_build" = "SIM" ];then _type="v";fi
-				_file="$(echo $_version2|sed -e 's/\.//g')_""$_type""_image.tgz"
+  		if [ -z "$_version2" ]; then
+  			echo "Image2 not present in $name" >&2
+  		else
+  			_build=$(cat "$simpath/mnt/x86_64/freebsd/image2/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
+				_nodar=$(echo "$_build" | grep "NODAR")
+  			if [ "$_build" = "SIMOVF" ] || [ "$_build" = "SIM" ] || [ "$_build" = "SIMNODAR" ];then _type="sim";fi
+  			if [ "$_build" = "OVF" ] || [ "$_build" = "OVFNODAR" ];then _type="v";fi
+			  _file="$(echo $_version2|sed -e 's/\.//g')_""$_type""_image.tgz"
+				if [ -n "$_nodar" ];then
+				  _file="$(echo $_version1|sed -e 's/\.//g')_""$_type""_image_nodar.tgz"
+				fi
 				echo "Image2 Version: $_version2"
 				echo "Image2 Type   : $_build"
 				echo "Exporting File: $_file"
