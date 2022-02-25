@@ -138,6 +138,8 @@ if ! [ -f "standard.tgz" ];then
 	echo "Building standard diskmodel template."
 	./vsim delete standard
 	./vsim import -file "$ovafile" -name "standard"
+  ./vsim export -vsim standard -image image1
+  ./vsim import 991_sim_image_nodar.tgz
 	echo "Mounting CF Card"
 	./vsim mount standard
 	echo "Cleaning CF Card"
