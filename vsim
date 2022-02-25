@@ -2487,7 +2487,6 @@ function vsimexport()
   			else
   				_build=$(cat "$simpath/mnt/x86_64/freebsd/image1/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
 					_nodar=$(echo "$_build" | grep "NODAR")
-					echo "_build = $_build"
 					if [ "$_build" = "SIMOVF" ] || [ "$_build" = "SIM" ] || [ "$_build" = "SIMNODAR" ];then _type="sim";fi
   				if [ "$_build" = "OVF" ] || [ "$_build" = "OVFNODAR" ];then _type="v";fi
 				  _file="$(echo $_version1|sed -e 's/\.//g')_""$_type""_image.tgz"
