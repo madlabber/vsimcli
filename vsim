@@ -4287,7 +4287,8 @@ while [ "X$1" != "X" ]; do
       -nics | --nics        )	if IsNumber "$argv";then nics=$argv;fi;;
       -nat                  ) nat="$argv";;
       -hostonly             ) hostonly="$argv";;
-      -bridged              ) bridged="$argv";;
+      -bridged              ) bridged="$argv"
+			                        if [ -z "$argv" ];then bridged="e0c,e0d";fi;;
       -newname              )	newname="$argv";;
       -password | -pw | -pass ) VSIMPASSWORD="$argv";;
       -comconsole | -comcons | -cons | -consport | makecons )	# undecided
