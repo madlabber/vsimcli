@@ -110,7 +110,7 @@ src="source /usr/local/bin/.vsim-completion.sh"
 if [ -f "$HOME/.bash_profile" ];then bashrc="$HOME/.bash_profile";fi
 if [ -f "$HOME/.bashrc" ];then bashrc="$HOME/.bashrc";fi
 if ! [ -f "$bashrc" ];then
-  bashrc="$HOME/.bash_profile"
+  bashrc="$HOME/.bashrc"
   touch "$bashrc"
 fi
 if cat "$bashrc" | grep "$src";then
