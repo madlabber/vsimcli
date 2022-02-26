@@ -4285,41 +4285,40 @@ while [ "X$1" != "X" ]; do
     	-membsd               ) if IsNumber "$argv";then membsd=$argv;fi;;
     	-mode                 ) mode=$(echo "$argv" | tr 'c' 'C' | colrm 2 | grep -E 'C|7');;
       -nics | --nics        )	if IsNumber "$argv";then nics=$argv;fi;;
-      -nat                  ) nat="$argv";;
-      -hostonly             ) hostonly="$argv";;
-      -bridged              ) bridged="$argv"
-			                        if [ -z "$argv" ];then bridged="e0c,e0d";fi;;
-      -newname              )	newname="$argv";;
-      -password | -pw | -pass ) VSIMPASSWORD="$argv";;
-      -comconsole | -comcons | -cons | -consport | makecons )	# undecided
-                              console="comconsole,vidconsole"
-                              consport=1
-                              if IsNumber "$argv";then consport="$argv";fi
-                              ;;
-      -quick                )	quick=true;diskmodel="classic";;
-      -release | -version   ) release="$argv";;
-      -setdefault | -isdefault )
-                              setdefault="$argv";;
-      -serno | -sn | -serial ) serno="$argv";;
-      -simdisks | -vdevinit )	vdevinit="$argv";;
-      -simdir               )	SIMDIR="$argv";;
-      -vidcons | -vidconsole ) console="vidconsole"
-								# console="vidconsole,comconsole"  #Some versions of ontap don't behave correctly with this setting
-								# but now 9.1RC2 will crash with "console=vidconsole" so make a version based hack elsewhere
-								;;
-      -name | -vsim | -node ) name="$argv";;
-      -node-name			  ) nodename="$argv";;
-      -vnvram 	          )	nvmode="$argv";;
-      -pnvr				  ) nvmode="full";;
-      -vnvsize              )	if IsNumber "$argv";then vnvsize=$argv;fi;;
-      -vcpus                )	if IsNumber "$argv";then vcpus=$argv;fi;;
-      -ab | -autoboot       )	ab="$argv";;
-      -vbox 				  ) vbox="$argv";;
-      -vscsi  		      )	vscsi=true
-								vscsidisks="$argv";;
-      -vsa       			  )	vsa="$argv"
-								vscsi="$argv"
-		                        ;;
+      -nat                     )  nat="$argv";;
+      -hostonly                )  hostonly="$argv";;
+      -bridged                 )  bridged="$argv"
+			                            if [ -z "$argv" ];then bridged="e0c,e0d";fi;;
+      -newname                 )  newname="$argv";;
+      -password | -pw | -pass  )  VSIMPASSWORD="$argv";;
+      -comconsole | -comcons | -cons | -consport | -makecons )	# undecided
+                                  console="comconsole,vidconsole"
+                                  consport=1
+                                  if IsNumber "$argv";then consport="$argv";fi
+                                  ;;
+      -quick                   )  quick=true;diskmodel="classic";;
+      -release | -version      )  release="$argv";;
+      -setdefault | -isdefault )  setdefault="$argv";;
+      -serno | -sn | -serial   )  serno="$argv";;
+      -simdisks | -vdevinit    )  vdevinit="$argv";;
+      -simdir                  )  SIMDIR="$argv";;
+      -vidcons | -vidconsole   )  console="vidconsole"
+                                # console="vidconsole,comconsole"  #Some versions of ontap don't behave correctly with this setting
+                                # but now 9.1RC2 will crash with "console=vidconsole" so make a version based hack elsewhere
+                                  ;;
+      -name | -vsim | -node   )  name="$argv";;
+      -node-name			        )  nodename="$argv";;
+      -vnvram 	              )  nvmode="$argv";;
+      -pnvr				            )  nvmode="full";;
+      -vnvsize                )  if IsNumber "$argv";then vnvsize=$argv;fi;;
+      -vcpus                  )  if IsNumber "$argv";then vcpus=$argv;fi;;
+      -ab | -autoboot         )  ab="$argv";;
+      -vbox                   )  vbox="$argv";;
+      -vscsi                  )  vscsi=true
+                                 vscsidisks="$argv";;
+      -vsa                    )  vsa="$argv"
+		                             vscsi="$argv"
+                                 ;;
       -makeova | -ova       )	makeova="$argv";;
       -maketgz | -tgz       )	maketgz="$argv";;
       -makevbox | -vbox     ) makevbox="$argv";;
@@ -4442,10 +4441,25 @@ case $action in
   		if [ -d "$FODDIR/$fodname/nodea" ];then rm -rf "$FODDIR/$fodname";fi
   		if [ -d "$FODDIR/$name/nodea" ];then rm -rf "$FODDIR/$name";fi;;
 	deploy		)   if [ -z "$nat" ];then nat="VM Network";fi
-					if [ -z "$hostonly" ];then hostonly="VM Network";fi
-					"$OVFTOOL" --allowExtraConfig --allowAllExtraConfig --noSSLVerify --datastore="$datastore" --net:nat="$nat" --net:hostonly="$hostonly" -dm=thin "$(getvmxfile $name)" vi://"$host";;
+					      if [ -z "$hostonly" ];then hostonly="VM Network";fi
+
+                #set OVFTOOL options
+                extraConfig[0]="--allowAllExtraConfig"
+                extraConfig[1]="--allowExtraConfig"
+                extraConfig[2]="--extraConfig:disk.EnableUUID=TRUE"
+                extraConfig[3]="--extraConfig:monitor_control.pseudo_perfctr=TRUE"
+                extraConfig[4]="--extraConfig:timeTracker.forceMonotonicTTAT=TRUE"
+                extraConfig[5]="--extraConfig:monitor_control.disable_tsc_offsetting=TRUE"
+                extraConfig[6]="--extraConfig:monitor_control.disable_rdtscopt_bt=TRUE"
+                extraConfig[7]="--extraConfig:pciHole.start=1024"
+                extraConfig[8]="--noSSLVerify"
+                extraConfig[9]="--diskMode=thin"
+
+                #Call ovftool
+                "$OVFTOOL" ${extraConfig[@]} --datastore="$datastore" --net:nat="$nat" --net:hostonly="$hostonly" "$(getvmxfile $name)" vi://"$host"
+								;;
 	export 		)	vsimexport;;
-	help 		)	help "$arg2";;
+	help 		  ) help "$arg2";;
 	import 		)	vsimimport;;
 	makecons 	)	vsimmakecons;;
 	mkfod 		)	makefod "$name" "$vdevinit";;
