@@ -107,18 +107,17 @@ fi
 
 echo "Adding tab completion to bash environment"
 src="source /usr/local/bin/.vsim-completion.sh"
-if [ -f "$HOME/.bash_profile" ];then bashrc="$HOME/.bash_profile";fi
-if [ -f "$HOME/.bashrc" ];then bashrc="$HOME/.bashrc";fi
-if ! [ -f "$bashrc" ];then
-  bashrc="$HOME/.bashrc"
-  touch "$bashrc"
-fi
-if cat "$bashrc" | grep "$src";then
-	echo "Installed."
-else
-	echo "$src" >> "$bashrc"
-	echo "Done."
-fi
+
+bashrc="$HOME/.bashrc"
+if ! [ -f "$bashrc" ];then touch "$bashrc";fi
+if ! cat "$bashrc" | grep "$src";then	echo "$src" >> "$bashrc";fi
+
+echo "Adding tab completion to zsh environment"
+zshrc="$HOME/.zshrc"
+if ! [ -f "$zshrc" ];then touch "$zshrc";fi
+if ! cat "$zshrc" | grep "compinit";then echo "autoload -U +X compinit && compinit" >> "$zshrc";fi
+if ! cat "$zshrc" | grep "bashcompinit";then echo "autoload -U +X bashcompinit && bashcompinit" >> "$zshrc";fi
+if ! cat "$zshrc" | grep "$src";then echo "$src" >> "$zshrc";fi
 
 echo "Creating $HOME/vsims directories"
 mkdir -p "$HOME/vsims"
