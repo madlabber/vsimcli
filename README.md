@@ -155,17 +155,18 @@ To connect to the console of the ONTAP Select VM:
 
     vsim console -vsim ONTAPSelect
 
-## Notes:
+## Known Issues:
 - HA NVRAM mirroring stopped working in VMware Fusion 11, but the code is retained in case a workaround is eventually discovered.
 
+- Automatic cluster join is no longer working as of ONTAP 9.2.
+
+- ONTAP9 vsims in an HA configuration panic during shutdown or reboot, but otherwise function normally.
+
+## Notes:
 - When using -auto to configure vsims the default password for root or admin is set to : netapp1!
   The default can be changed with the command 'vsim options VSIMPASSWORD <new password>'
 
 - Auto configuration (-cluster, -join) is not implemented for versions of Clustered Data ONTAP prior to 8.3
-
-- Automatic cluster join is not longer working as of ONTAP 9.2.
-
-- ONTAP9 vsims in an HA configuration panic during shutdown or reboot, but otherwise function normally.
 
 - When using -create and -join, allow the create node to completely stabilize before starting the subsequent nodes
 
