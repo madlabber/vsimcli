@@ -12,6 +12,7 @@ ENV_FODDIR="$FODDIR"
 ENV_ITGZPATH="$ITGZPATH"
 ENV_VSIMPASSWORD="$VSIMPASSWORD"
 ENV_VSIMHOME="$VSIMHOME"
+ENV_VSIMSERIAL="$VSIMSERIAL"
 
 #Defaults:
 #OVFTOOL="/Applications/VMware OVF Tool/ovftool"
@@ -27,6 +28,7 @@ VSIMPASSWORD="netapp1!"
 # Cluster base is deprecated now so leaving 99 here since it was the first result in google for "cluster base license key"
 VSIMLICENSE="UJBGVLVQJHOJKBAAAAAAAAAAAAAA"
 SDOT_BUILTIN_LICENSES="" #These can be found in the eval .ova
+VSIMSERIAL="4082368-50-7"
 
 #If those failed, maybe it is a tech preview of Fusion:
 if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware Fusion Tech Preview.app/Contents/Library/VMware OVF Tool/ovftool";fi
@@ -55,6 +57,10 @@ if [ -n "$ENV_SIMDIR" ];then SIMDIR="$ENV_SIMDIR";fi
 if [ -n "$ENV_FODDIR" ];then FODDIR="$ENV_FODDIR";fi
 if [ -n "$ENV_ITGZPATH" ];then ITGZPATH="$ENV_ITGZPATH";fi
 if [ -n "$ENV_VSIMHOME" ];then VSIMHOME="$ENV_VSIMHOME";fi
+if [ -n "$ENV_VSIMSERIAL" ];then VSIMSERIAL="$ENV_VSIMSERIAL";fi
+
+# Apply defaults
+if [ -n "$VSIMSERIAL" ];then serno="$VSIMSERIAL";fi
 
 # Networking is managed by VMware
 vmnet_file="/Library/Preferences/VMware Fusion/networking"
@@ -655,7 +661,7 @@ function cfmount() # $1=vsimpath
 	mkdir "$_simpath/mnt" &> /dev/null
 
 	#Make sure we have hdiutil available
-	# - as a concesion to exprimental linux/workstation support
+	# - as a concesion to exprimental Linux/workstation support
 	if [ -n "$(which hdiutil 2>/dev/null)" ];then
 		hdiutil attach -imagekey diskimage-class=CRawDiskImage  "$simpath/$_flat" -mountpoint "$_simpath/mnt" >/dev/null
 	elif [ -n "$(which vmware-mount 2>/dev/null)" ];then
@@ -1097,19 +1103,20 @@ function getenv() # $1=variable [ $2=envfile ]
 function getoption() # $1=option
 {
 	case $1 in
-		OVFTOOL | ovftool ) 			echo "$OVFTOOL";;
-		SIMDIR  | simdir  ) 			echo "$SIMDIR";;
-		VSIMHOME | vsimhome ) 			echo "$VSIMHOME";;
-		VSIMPASSWORD | vsimpassword ) 	echo "$VSIMPASSWORD";;
-		ITGZPATH | itgzpath ) 			echo "$ITGZPATH";;
-		FODDIR | foddir ) 			    echo "$FODDIR";;
-		VMRUN | vmrun ) 				echo "$VMRUN";;
-		VDISKMANAGER | vdiskmanager ) 	echo "$VDISKMANAGER";;
-		VSIMLICENSE | vsimlicense )		echo "$VSIMLICENSE";;
+		OVFTOOL | ovftool )            echo "$OVFTOOL";;
+		SIMDIR  | simdir  )            echo "$SIMDIR";;
+		VSIMHOME | vsimhome )          echo "$VSIMHOME";;
+		VSIMPASSWORD | vsimpassword )  echo "$VSIMPASSWORD";;
+		ITGZPATH | itgzpath )          echo "$ITGZPATH";;
+		FODDIR | foddir )              echo "$FODDIR";;
+		VMRUN | vmrun )                echo "$VMRUN";;
+		VDISKMANAGER | vdiskmanager )  echo "$VDISKMANAGER";;
+		VSIMLICENSE | vsimlicense )    echo "$VSIMLICENSE";;
 		SDOT_BUILTIN_LICENSES | sdot_builtin_licenses ) echo "$SDOT_BUILTIN_LICENSES";;
-		NAT_SUBNET 	| nat_subnet  )		echo "$NAT_SUBNET";;
-		NAT_NETMASK | nat_netmask )		echo "$NAT_NETMASK";;
-		NAT_GATEWAY | nat_gateway )		echo "$NAT_GATEWAY";;
+		VSIMSERIAL | VSIMSERIAL )        echo "$VSIMSERIAL";;
+		NAT_SUBNET 	| nat_subnet  )    echo "$NAT_SUBNET";;
+		NAT_NETMASK | nat_netmask )    echo "$NAT_NETMASK";;
+		NAT_GATEWAY | nat_gateway )    echo "$NAT_GATEWAY";;
 	esac
 }
 
@@ -1125,6 +1132,7 @@ function unsetoption() #$1=option
 	saveoptions
 
 }
+
 function setoption() #$1=option $2=value
 {
 	case $1 in
@@ -3129,8 +3137,6 @@ function vsimoptions()
 	#if a value was set, then set it
 	if [ -n "$variable" ] && [ -n "$value" ];then setoption "$variable" "$value";return;fi
 
-
-
 	# Otherwise, display them all
 	echo "FODDIR=$FODDIR"
 	echo "ITGZPATH=$ITGZPATH"
@@ -3142,6 +3148,7 @@ function vsimoptions()
 	echo "VMRUN=$VMRUN"
 	echo "VSIMHOME=$VSIMHOME"
 	echo "VSIMPASSWORD=$VSIMPASSWORD"
+	echo "VSIMSERIAL"="$VSIMSERIAL"
 	echo "NAT_SUBNET=$NAT_SUBNET"
 	echo "NAT_NETMASK=$NAT_NETMASK"
 	echo "NAT_GATEWAY=$NAT_GATEWAY"
@@ -3237,11 +3244,12 @@ function vsimmodify()
 	fi
 
 	#Set old bsdport to nat network
-	if [ -n "$oldbsdport" ] && ! $esx;then
-		bsdeth=$(ntap2vmx "$oldbsdport")
-		setvmx "ethernet$bsdeth.connectionType" "nat" "$vmx"
-		unsetvmx "ethernet$bsdeth.networkName" "$vmx"
-	fi
+	# if [ -n "$oldbsdport" ] && ! $esx;then
+	# 	echo "OLDBSDPORT"
+	# 	bsdeth=$(ntap2vmx "$oldbsdport")
+	# 	setvmx "ethernet$bsdeth.connectionType" "nat" "$vmx"
+	# 	unsetvmx "ethernet$bsdeth.networkName" "$vmx"
+	# fi
 
 	#If we have an NFSSimdev, fix put the bsdport on hostonly network
 	if [ -n "$nfssimdev" ];then
@@ -4172,7 +4180,8 @@ shift
 
 # Command substitutions
 case $action in
-	"?" ) action="help";;
+	"?"     ) action="help";;
+	"-help" ) action="help";;
 esac
 
 
