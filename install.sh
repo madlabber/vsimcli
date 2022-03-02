@@ -151,7 +151,13 @@ if ! [ -f "standard.tgz" ];then
 	./vsim delete standard
 fi
 
-if [ -f "CMode_licenses_9.9.1.txt"];then sed 's/\t/ /g' CMode_licenses_9.9.1.txt | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>>"$HOME/vsims/cfcard/mfg_l_f"
+if [ -f "CMode_licenses_9.9.1.txt" ];then 
+	sed 's/\t/ /g' CMode_licenses_9.9.1.txt | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>"$HOME/vsims/cfcard/mfg_l_f"
+  base=$(cat ~/Downloads/CMode_licenses_9.8.txt | grep '=' | grep AAAA | cut -d'=' -f 2 | cut -d' ' -f 2)
+  ./vsim options VSIMLICENSE "$base"
+fi
+
+
 
 # Build Classic.tgz
 # At some point
