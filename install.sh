@@ -150,6 +150,9 @@ if ! [ -f "standard.tgz" ];then
 	./vsim export standard -tgz
 	./vsim delete standard
 fi
+
+if [ -f "CMode_licenses_9.9.1.txt"];then sed 's/\t/ /g' CMode_licenses_9.9.1.txt | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>>"$HOME/vsims/cfcard/mfg_l_f"
+
 # Build Classic.tgz
 # At some point
 # See prototype in make.sh
