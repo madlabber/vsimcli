@@ -3446,6 +3446,21 @@ function vsimmodify()
 		done
 	fi
 
+  if $vmxnet3;then
+		setenv "bootarg.vm.esx" "true" "$env"
+		setenv "bootarg.vm.vmx_load" "true" "$env"
+		if [ $niccount -gt 0 ];then setvmx "ethernet0.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 1 ];then setvmx "ethernet1.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 2 ];then setvmx "ethernet2.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 3 ];then setvmx "ethernet3.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 4 ];then setvmx "ethernet4.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 5 ];then setvmx "ethernet5.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 6 ];then setvmx "ethernet6.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 7 ];then setvmx "ethernet7.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 8 ];then setvmx "ethernet8.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 9 ];then setvmx "ethernet9.virtualDev" "vmxnet3" "$vmx";fi
+	fi
+
 	#FIXME: if nic connection flags are populated process those args
 	#-hostonly
 	if [ -n "$hostonly" ];then connectnics "hostonly" "$hostonly" "$vmx";fi
@@ -4178,6 +4193,7 @@ setdefault=false
 zero=false
 gui=false
 unsetvariable=false
+vmxnet3=false
 
 #Command abbreviations are nice to have
 commandlist="console\ncreate\nconfigure\ndelete\nexport\nhelp\nimport\nmodify\nmount\noptions\npoweroff\nprintenv\nprintvmx\nrename\nrun\nsetenv\nsetvmx\nshow\nsoftware\nstart\nstop\nsuspend\nunmount\nunsetenv\nunsetvmx\nupdate\n"
@@ -4343,6 +4359,7 @@ while [ "X$1" != "X" ]; do
       -? | "?" | -h | -help ) name="?";; ##assorted cries for help
       -value | -val         )	value="$argv";;
       -variable | -var      )	variable="$argv";;
+			-vmxnet3              ) vmxnet3=true
       -vsimha               )	ram=4096
                               nics=8
                               nvmode="panic"
