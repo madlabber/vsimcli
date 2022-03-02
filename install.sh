@@ -151,10 +151,13 @@ if ! [ -f "standard.tgz" ];then
 	./vsim delete standard
 fi
 
-if [ -f "CMode_licenses_9.9.1.txt" ];then 
-	sed 's/\t/ /g' CMode_licenses_9.9.1.txt | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>"$HOME/vsims/cfcard/mfg_l_f"
-  base=$(cat ~/Downloads/CMode_licenses_9.8.txt | grep '=' | grep AAAA | cut -d'=' -f 2 | cut -d' ' -f 2)
+license_file="CMode_licenses_9.9.1.txt"
+if [ -f "$license_file" ];then 
+	sed 's/\t/ /g' "$license_file" | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>"$HOME/vsims/cfcard/mfg_l_f"
+  base=$(cat "$license_file" | grep '=' | grep AAAA | cut -d'=' -f 2 | cut -d' ' -f 2)
   ./vsim options VSIMLICENSE "$base"
+  vsimserial=$(cat "$license_file" | grep '^Licenses' | cut -d' ' -f 8 | cut -d')' -f 1 | head -1)
+  ./vsim options VSIMSERIAL "$vsimserial"
 fi
 
 

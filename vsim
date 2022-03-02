@@ -1113,7 +1113,7 @@ function getoption() # $1=option
 		VDISKMANAGER | vdiskmanager )  echo "$VDISKMANAGER";;
 		VSIMLICENSE | vsimlicense )    echo "$VSIMLICENSE";;
 		SDOT_BUILTIN_LICENSES | sdot_builtin_licenses ) echo "$SDOT_BUILTIN_LICENSES";;
-		VSIMSERIAL | VSIMSERIAL )        echo "$VSIMSERIAL";;
+		VSIMSERIAL  | VSIMSERIAL )     echo "$VSIMSERIAL";;
 		NAT_SUBNET 	| nat_subnet  )    echo "$NAT_SUBNET";;
 		NAT_NETMASK | nat_netmask )    echo "$NAT_NETMASK";;
 		NAT_GATEWAY | nat_gateway )    echo "$NAT_GATEWAY";;
@@ -1229,6 +1229,9 @@ function setoption() #$1=option $2=value
 		VSIMLICENSE | vsimlicense )
 			VSIMLICENSE="$2"
 			echo "$1=$2";;
+		VSIMSERIAL | vsimserial )
+			VSIMSERIAL="$2"
+			echo "$1=$2";;
 		SDOT_BUILTIN_LICENSES | sdot_builtin_licenses )
 			SDOT_BUILTIN_LICENSES="$2"
 			echo "$1=$2";;
@@ -1266,6 +1269,9 @@ function saveoptions()
 	echo
 	echo "#This is the default cluster base license for vsims with cluster create enabled"
 	echo 'VSIMLICENSE="'$VSIMLICENSE'"'
+	echo
+	echo "#This is the default serial number for new vsims"
+	echo 'VSIMSERIAL="'$VSIMSERIAL'"'
 	echo
 	echo "#These are the licenses used to initialize ONTAP Select"
 	echo 'SDOT_BUILTIN_LICENSES="'$SDOT_BUILTIN_LICENSES'"'
@@ -3128,6 +3134,9 @@ function vsimmake()
 function vsimoptions()
 {
 
+    # echo "variable: $variable"
+    # echo "value:    $value"
+    # echo "unset:    $unsetvariable"
 	#if value is being unset, clear it
 	if $unsetvariable;then unsetoption "$variable";return;fi
 
@@ -4357,8 +4366,8 @@ done
 # If variable=value syntax was used split them out here
 if [ -n "$variable" ] && [ -z "$value" ];then
 	value=$(echo "$variable" | cut -d'=' -f 2 -s)
+	if [ -z "$value" ] && [[ "$variable" == *= ]];then unsetvariable=true;fi
 	variable=$(echo "$variable" | cut -d'=' -f 1)
-	if [ -z "$value" ];then unsetvariable=true;fi
 fi
 
 #If we aren't setting options then the options must be checked
