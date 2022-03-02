@@ -2857,38 +2857,38 @@ function vsimmake()
 
 	# Find a few things
 	if [ -n "$release" ];then _image=$(getrelease "$release");fi
-  	if [ -n "$image"   ];then _image=$(getimagepath "$image");fi
+  if [ -n "$image"   ];then _image=$(getimagepath "$image");fi
 	if [ -z "$simpath" ];then simpath="$SIMDIR/$name";fi
-  	if [ -z "$mode" ];then mode="C";fi
+  if [ -z "$mode" ];then mode="C";fi
 
 	# Are we done yet?
-  	if [ -n "$fodname" ] && [ -z "$name" ];then makefod "$fodname" "$vdevinit";return 0;fi
+  if [ -n "$fodname" ] && [ -z "$name" ];then makefod "$fodname" "$vdevinit";return 0;fi
 	if [ -z "$name" ] || [ "$name" = "?" ];then help "create";exit;fi
-  	if [ -z "$image$release" ];then echo "An image file or release version must be specified.";echo;help "create";return 1;fi
-  	if ! [ -f "$_image" ];then echo "vsimmake:image not found:$image$release" >&2;return 1;fi
-  	if ! $force && [ -d "$simpath" ];then echo "Vsim already exists: $simpath";return 1;fi
+  if [ -z "$image$release" ];then echo "An image file or release version must be specified.";echo;help "create";return 1;fi
+  if ! [ -f "$_image" ];then echo "vsimmake:image not found:$image$release" >&2;return 1;fi
+  if ! $force && [ -d "$simpath" ];then echo "Vsim already exists: $simpath";return 1;fi
 
-  	# Default fod name
-  	if [ -z "$fodname" ] && [ -n "$partner" ];then fodname="ha_$name""_$partner";fi
-  	if [ -n "$fodname" ];then makefod "$fodname" "$vdevinit";fi
+  # Default fod name
+  if [ -z "$fodname" ] && [ -n "$partner" ];then fodname="ha_$name""_$partner";fi
+  if [ -n "$fodname" ];then makefod "$fodname" "$vdevinit";fi
 
 	env="$simpath/mnt/env/env"
 	vmx="$simpath/DataONTAP.vmx"
-    vmxfile="$simpath/DataONTAP.vmx" #$vmxfile is global
+  vmxfile="$simpath/DataONTAP.vmx" #$vmxfile is global
 
-    #Need to check effective version of $_image and set defaults
-  	_version=$(tar -xzOf "$_image" VERSION)
-  	_baseVersion=$(getbaseversion "$_version")
-  	setdefaults $_baseVersion
+  #Need to check effective version of $_image and set defaults
+  _version=$(tar -xzOf "$_image" VERSION)
+  _baseVersion=$(getbaseversion "$_version")
+  setdefaults $_baseVersion
 
-  	# setdefaults also tries to determine the correct diskmodel
-  	# 8.1+ is standard, 8.0 is classic
-  	# but if that file is missing, try universal
-  	_template="$VSIMHOME/$diskmodel.tgz"
-  	if ! [ -f "$_template" ];then
-  		diskmodel="standard"
-  		_template="$VSIMHOME/universal.tgz"
-  	fi
+  # setdefaults also tries to determine the correct diskmodel
+  # 8.1+ is standard, 8.0 is classic
+  # but if that file is missing, try universal
+  _template="$VSIMHOME/$diskmodel.tgz"
+  if ! [ -f "$_template" ];then
+  	diskmodel="standard"
+  	_template="$VSIMHOME/universal.tgz"
+  fi
 
   	# Now if the template is missing, exit gracefully
   	if ! [ -f "$_template" ];then
@@ -2930,19 +2930,18 @@ function vsimmake()
   	# at 3gb and below set it to 3072
   	if [ $ram -le 3072 ]; then setvmx "pciHole.start" "3072" "$vmx";fi
 
-  	#mount the CF card vmdk
-#	echo "mounting boot device."
-  	cfmount "$simpath"
+  #mount the CF card vmdk
+  #	echo "mounting boot device."
+  cfmount "$simpath"
 
-    #copy the template cfcard into the new vSIM
-		if [ -d "$VSIMHOME/cfcard/" ];then cp -R "$VSIMHOME/cfcard/" "$simpath/mnt";fi
+  #copy the template cfcard into the new vSIM
+	if [ -d "$VSIMHOME/cfcard/" ];then cp -R "$VSIMHOME/cfcard/" "$simpath/mnt";fi
 
 	#Build a clean env file
 	echo "ENV File : $env"
 	newvsimenv "$env"
 
-  	#Install DataONTAP image
-		echo "vsimmake: calling vsimupdate"
+  #Install DataONTAP image
 	vsimupdate
 
 	#Made it this far, so probably safe to pull a ticket
@@ -4117,7 +4116,7 @@ function vsimupdate()
 		file_list="$file_list netboot/virtio.ko netboot/virtio_blk.ko netboot/virtio_pci.ko netboot/virtio_scsi.ko netboot/vmbus_pcib.ko netboot/xenhvm.ko"
 
 		#tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" "netboot"
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" $file_list 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" $file_list #2>&1 | grep -v tar
 	else
 		tar -C "$simpath/mnt/$_primary" -vxzSf "$_image"
 	fi
