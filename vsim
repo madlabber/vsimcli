@@ -2942,6 +2942,7 @@ function vsimmake()
 	newvsimenv "$env"
 
   	#Install DataONTAP image
+		echo "vsimmake: calling vsimupdate"
 	vsimupdate
 
 	#Made it this far, so probably safe to pull a ticket
