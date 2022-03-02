@@ -4110,15 +4110,42 @@ function vsimupdate()
 	if [ "$(tar -tzf $_image | grep netboot/VERSION)" = "netboot/VERSION" ];then _netboot=true;fi
 	if $_netboot;then
 		echo "NETBOOT"
-		file_list="netboot/BUILD netboot/CHECKSUM netboot/COMPAT.TXT netboot/INSTALL netboot/VERSION netboot/cap.xml netboot/fw.tgz netboot/kernel netboot/metadata.xml"
-		file_list="$file_list netboot/platform.ko netboot/platfs.img netboot/rootfs.img netboot/pmroot_late.tgz"
-		file_list="$file_list netboot/key_fingerprint.sig netboot/kernel.sig netboot/platform.ko.sig netboot/rootfs.img.sig"
-		file_list="$file_list netboot/hv_ata_pci_disengage.ko netboot/hv_netvsc.ko netboot/hv_storvsc.ko netboot/hv_utils.ko netboot/hv_vmbus.ko"
-		file_list="$file_list netboot/if_vmx.ko netboot/if_vtnet.ko netboot/mlxen.ko netboot/mpt.ko"
-		file_list="$file_list netboot/virtio.ko netboot/virtio_blk.ko netboot/virtio_pci.ko netboot/virtio_scsi.ko netboot/vmbus_pcib.ko netboot/xenhvm.ko"
+		# this dumb list is a bugfix for semi-broken tar in Monterey intermittently failing to parse a file list
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/VERSION 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/BUILD 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/CHECKSUM 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/COMPAT.TXT 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/INSTALL 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/cap.xml 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/fw.tgz 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/kernel 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/metadata.xml 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platform.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platfs.img 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/rootfs.img 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/pmroot_late.tgz 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/key_fingerprint.sig 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/kernel.sig 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platform.ko.sig 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/rootfs.img.sig 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_ata_pci_disengage.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_netvsc.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_storvsc.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_utils.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_vmbus.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/if_vmx.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/if_vtnet.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/mlxen.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/mpt.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_blk.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_pci.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_scsi.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/vmbus_pcib.ko 2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/xenhvm.ko 2>&1 | grep -v tar
 
 		#tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" "netboot"
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" "$file_list" #2>&1 | grep -v tar
+		#tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" $file_list #2>&1 | grep -v tar
 	else
 		tar -C "$simpath/mnt/$_primary" -vxzSf "$_image"
 	fi
