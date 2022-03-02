@@ -7,20 +7,18 @@ To install vsim4osx:
   1. Download the 9.9.1 version of the simulator from the NetApp support site:
      "https://mysupport.netapp.com/api/tools-service/toolsbinary/simulate-ontap/download/vsim-netapp-DOT9.9.1-cm_nodar.ova"
 
-  2. place the vsim-netapp-DOT9.9.1-cm_nodar.ova in the same directory as the install.sh script
+  2. place the vsim-netapp-DOT9.9.1-cm_nodar.ova and the CMode_licenses_9.9.1.txt files in the same directory as the install.sh script
 
   3. Run the install.sh script as sudo:
        sudo ./install.sh
 
-The vsim script and simlinks to some VMware components will be placed in:
-/usr/local/bin
+The vsim script and simlinks to some VMware components will be placed in: /usr/local/bin
 
-On recent versions of OSX this should already be in the path.
+Completions (tab complete for the vsim command) will be added to: ~/.bashrc and ~./zshrc
 
 Blank vsim templates will be placed in $HOME/vsims, which is also where managed vsims are placed by default.
 
-ONTAP software images will be stored in:
- $HOME/vsims/ontap
+ONTAP software images will be stored in: $HOME/vsims/ontap
 
 The local NFS server on OSX will be configured to export $HOME/vsims to the VMWare 'host only' subnet.  This is required for local vsim HA to function.
 
@@ -71,13 +69,34 @@ vsim help <command>
 
 Import some Data ONTAP images into the repository:
 
-    cd ~/Downloads
-    vsim import 824_q_image.tgz
-    vsim import 832_q_image.tgz
+    vsim import ~/Downloads/824_q_image.tgz
+    vsim import ~/Downloads/97_q_image.tgz
 
 Show the available software images:
 
     vsim image -list
+
+Make a simple vsim:
+
+    vsim create -vsim vsim1 -version 9.9.1
+
+Make a vsim that automatically creates a new cluster named 'demo':
+
+    vsim create -vsim demo-01 -version 9.9.1 -cluster demo
+
+Start vsim demo-01:
+
+    vsim start demo-01
+
+Connect to the console of demo-01:
+
+    vsim console demo-01
+
+To disconnect from the console, press ctrl-G
+
+Create a second node for cluster demo:
+
+    vsim create -vsim demo-02 -version 9.9.1 -serial 4034389062
 
 Make a simple 7mode vsim:
 
@@ -87,35 +106,9 @@ Make a 7mode vsim that will auto configure itself on first boot:
 
     vsim create -vsim myvsim1 -version 8.2.4 -mode 7 -auto
 
-Change the serial number to match an available license key set:
-
-    vsim modify myvsim1 -serial 4082367544
-
-Start the vsim:
-
-    vsim start myvsim1
-
-Connect to a vsim's console:
-
-    vsim console myvsim1
-
-To exit the console, press ctrl-G
-
-Make an HA pair of vsims:
+Make an 7mode HA pair of vsims (Fusion 10.x and older):
 
     vsim create -vsim 7mode1 -partner 7mode2 -version 8.2.4 -mode 7 -auto
-
-Make a Cmode vsim that automatically creates a new cluster
-
-    vsim create -vsim cluster1-01 -version 8.3.2 -cluster cluster1
-
-Make a Cmode vsim that automatically joins an existing cluster
-
-    vsim create -vsim cluster1-02 -version 8.3.2 -join cluster1
-
-Make a cDOT HA pair:
-
-    vsim create -vsim cluster2-01 -partner cluster2-02 -version 8.3.2 -cluster cluster2
 
 Show a list of vsims and failover disks:
 
