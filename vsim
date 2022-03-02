@@ -118,14 +118,13 @@ function help() # $1=subcommand
 					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
 					echo "Usage:";fi
 	case $1 in
-		console  )
-					echo "   vsim console <vsim name> [options]";;
+		console  )  echo "   vsim console <vsim name> [options]";;
 		create  | make )
-					echo "   vsim create <vsim name> -package <image.tgz> [options]"
-					echo "   vsim create <vsim name> -version <version> [options]";;
+                echo "   vsim create <vsim name> -package <image.tgz> [options]"
+                echo "   vsim create <vsim name> -version <version> [options]";;
 		configure )	echo "   vsim configure <vsim name> [options]";;
 		delete | rm  )
-					echo "   vsim delete <vsim name>|<fod name> [options]";;
+                echo "   vsim delete <vsim name>|<fod name> [options]";;
 		deploy   )	echo "   vsim deploy <vsim name> [options]";;
 		export   )	echo "   vsim export <vsim name> [options]";;
 		import   )  echo "   vsim import <filename> [options]";;
@@ -133,7 +132,7 @@ function help() # $1=subcommand
 		mount    )  echo "   vsim mount <vsim name> [options]";;
 		options  )  echo "   vsim options [variable] [value] [options]";;
 		poweroff | kill )
-					echo "   vsim poweroff <vsim name> [options]";;
+                echo "   vsim poweroff <vsim name> [options]";;
 		printenv )  echo "   vsim printenv <vsim name> [variable] [options]";;
 		printvmx )  echo "   vsim printvmx <vsim name> [options]";;
 		rename   )  echo "   vsim rename <vsim name> <new name> [options]";;
@@ -142,8 +141,8 @@ function help() # $1=subcommand
 		setvmx   )  echo "   vsim setvmx <vsim name> <variable> <value> [options]";;
 		show     )  echo "   vsim show [vsim name] [options]";;
 		software | image )
-					echo "   vsim image [options]"
-					echo "   vsim image <vsim name> [options]";;
+                echo "   vsim image [options]"
+                echo "   vsim image <vsim name> [options]";;
 		start    )  echo "   vsim start <vsim name> [options]";;
 		stop     )  echo "   vsim stop <vsim name> [options]";;
 		suspend  )	echo "   vsim suspend <vsim name> [options]";;
@@ -153,12 +152,12 @@ function help() # $1=subcommand
 		update   )  echo "   vsim update <vsim name> [options]";;
 					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
 		usage    )	echo # Detailed output with usage
-    				echo "vsim4osx - A vsim toolkit for OSX and VMware fusion"
-    				echo "Version: $VSIMVERSION"
-    				echo "Author : Sean Hatfield"
-    				echo
-    				echo "Usage:"
-    				echo "   vsim console  <vsim name> [options]"
+    			echo "vsim4osx - A vsim toolkit for OSX and VMware fusion"
+    			echo "Version: $VSIMVERSION"
+    			echo "Author : Sean Hatfield"
+    			echo
+    			echo "Usage:"
+    			echo "   vsim console  <vsim name> [options]"
 					echo "   vsim create   <vsim name> (-version <version>|-package <image.tgz>) [options]"
 					echo "   vsim delete   <vsim name>|<fod name> [options]"
 					echo "   vsim deploy   <vsim name> [options]"
@@ -186,26 +185,26 @@ function help() # $1=subcommand
 					echo "   vsim update   <vsim name> [options]";;
 					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
 				*)
-					echo # Summary output with command list
-    				echo "vsim4osx - A vsim toolkit for OSX and VMware fusion"
-    				echo "Version: $VSIMVERSION"
-    				echo "Author : Sean Hatfield"
-    				echo
-    				echo "Usage:"
-			   		echo "vsim <command> [options]"
-			   		echo ""
-			   		echo "Help:"
-			   		echo "vsim help <command>"
-    				echo ""
-    				echo "Available Commands:"
-    				echo "  console                     Connect to a vsim console"
-    				echo "  configure                   configure an ONTAP Select VM (experimental)"
-    				echo "  create                      Create a vsim"
+          echo # Summary output with command list
+          echo "vsim4osx - A vsim toolkit for OSX and VMware fusion"
+          echo "Version: $VSIMVERSION"
+          echo "Author : Sean Hatfield"
+          echo
+          echo "Usage:"
+          echo "vsim <command> [options]"
+          echo ""
+          echo "Help:"
+          echo "vsim help <command>"
+          echo ""
+          echo "Available Commands:"
+          echo "  console                     Connect to a vsim console"
+          echo "  configure                   configure an ONTAP Select VM (experimental)"
+          echo "  create                      Create a vsim"
 					echo "  delete                      Delete a vsim"
 					echo "  deploy                      Deploy a vsim to an ESXi host (experimental)"
 					echo "  export                      Export a vsim"
-    				echo "  help                        Display help"
-    				echo "  image                       Manage software images"
+          echo "  help                        Display help"
+          echo "  image                       Manage software images"
 					echo "  import                      Import a vsim or software package"
 					echo "  modify                      Modify a vsim"
 					echo "  mount                       Mount a vsim's cf card"
@@ -217,7 +216,7 @@ function help() # $1=subcommand
 					echo "  run                         Run commands in a vsim shell"
 					echo "  setenv                      Set a loader variable"
 					echo "  setvmx                      Set a vmx variable"
-    				echo "  show                        Display vsims"
+          echo "  show                        Display vsims"
 					echo "  start                       Start a vsim"
 					echo "  stop                        Stop a vsim (shutdown guest)"
 					echo "  suspend                     Suspend a vsim"
@@ -307,7 +306,8 @@ function help() # $1=subcommand
 					echo "   -dhcp                                Enable DHCP client"
 					echo "   -comconsole [tcp port]               Enable the comconsole and optional port"
 					echo "   -vidconsole                          Enable the vidconsole"
-					echo "   -ev <variable=value,...>             Set extra variables in the loader";;esac
+					echo "   -ev <variable=value,...>             Set extra variables in the loader"
+					echo "   -vmxnet3                             Use VMXNET3 virtual network adapters";;esac
 	case $1 in usage|rename )
 					echo "   -newname <new name>                  New name";;esac
 	case $1 in usage|options|printenv|setenv|setvmx|unsetenv|unsetvmx )
@@ -332,16 +332,16 @@ function addbridge
 
 	#remove any existing pciBridge entries
 	sed "/pciBridge/d" "$vmxfile" > "$vmxfile.sed"
-  	cp "$vmxfile.sed" "$vmxfile"
+  cp "$vmxfile.sed" "$vmxfile"
 	rm "$vmxfile.sed"
 
-  	#Clear any existing pci slot assignments
-  	sed "/pciSlotNumber/d" "$vmxfile" > "$vmxfile.sed"
-  	cp "$vmxfile.sed" "$vmxfile"
-	rm "$vmxfile.sed"
+  #Clear any existing pci slot assignments
+  sed "/pciSlotNumber/d" "$vmxfile" > "$vmxfile.sed"
+  cp "$vmxfile.sed" "$vmxfile"
+  rm "$vmxfile.sed"
 
-  	#Add the pciBridge
-  	setvmx pciBridge0.present 		TRUE
+  #Add the pciBridge
+  setvmx pciBridge0.present 		TRUE
 	setvmx pciBridge4.present 		TRUE
 	setvmx pciBridge4.virtualDev 	pcieRootPort
 	setvmx pciBridge4.functions 	8
