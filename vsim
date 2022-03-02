@@ -4104,7 +4104,7 @@ function vsimupdate()
 	mkdir -p "$simpath/mnt/$_primary" #in case CF is blank
 	mkdir -p "$simpath/mnt/x86_64/freebsd/image1"
 	mkdir -p "$simpath/mnt/x86_64/freebsd/image2"
-	
+
 	#FIXME:  new netboot images need some cleanup
 	# Detection is handled, but subdir still get extracted
 	if [ "$(tar -tzf $_image | grep netboot/VERSION)" = "netboot/VERSION" ];then _netboot=true;fi
@@ -4118,7 +4118,7 @@ function vsimupdate()
 		file_list="$file_list netboot/virtio.ko netboot/virtio_blk.ko netboot/virtio_pci.ko netboot/virtio_scsi.ko netboot/vmbus_pcib.ko netboot/xenhvm.ko"
 
 		#tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" "netboot"
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" $file_list #2>&1 | grep -v tar
+		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" "$file_list" #2>&1 | grep -v tar
 	else
 		tar -C "$simpath/mnt/$_primary" -vxzSf "$_image"
 	fi
