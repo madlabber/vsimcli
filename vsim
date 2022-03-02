@@ -4102,7 +4102,9 @@ function vsimupdate()
  	chflags nouchg "$simpath/mnt/$_primary/"* 2>/dev/null
  	rm "$simpath/mnt/$_primary/"* 2>/dev/null
 	mkdir -p "$simpath/mnt/$_primary" #in case CF is blank
-
+	mkdir -p "$simpath/mnt/x86_64/freebsd/image1"
+	mkdir -p "$simpath/mnt/x86_64/freebsd/image2"
+	
 	#FIXME:  new netboot images need some cleanup
 	# Detection is handled, but subdir still get extracted
 	if [ "$(tar -tzf $_image | grep netboot/VERSION)" = "netboot/VERSION" ];then _netboot=true;fi
