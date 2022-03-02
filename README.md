@@ -4,8 +4,9 @@ A vsim toolkit for building and managing ONTAP vsims on (Intel) MacOS and VMware
 ## Installation
 
 To install vsim4osx:
-  1. Download the 9.9.1 version of the simulator from the NetApp support site:
+  1. Download the 9.9.1 version of the simulator and license file from the NetApp support site:
      "https://mysupport.netapp.com/api/tools-service/toolsbinary/simulate-ontap/download/vsim-netapp-DOT9.9.1-cm_nodar.ova"
+     "https://mysupport.netapp.com/api/tools-service/toolsbinary/simulate-ontap/download/CMode_licenses_9.8.txt"
 
   2. place the vsim-netapp-DOT9.9.1-cm_nodar.ova and the CMode_licenses_9.9.1.txt files in the same directory as the install.sh script
 
