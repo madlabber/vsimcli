@@ -3446,19 +3446,41 @@ function vsimmodify()
 		done
 	fi
 
+#this needs logic to assert control of slot numbers:
+#here are the defaults:
+# ethernet0.pciSlotNumber = "1184" 0
+# ethernet1.pciSlotNumber = "1216" 3
+# ethernet2.pciSlotNumber = "1248" 6
+# ethernet3.pciSlotNumber = "1280" 8
+# ethernet4.pciSlotNumber = "2208" 1
+# ethernet5.pciSlotNumber = "2240" 4
+# ethernet6.pciSlotNumber = "2272" 7
+# ethernet7.pciSlotNumber = "2304" 9
+# ethernet8.pciSlotNumber = "3232" 2
+# ethernet9.pciSlotNumber = "3264" 5
   if $vmxnet3;then
 		setenv "bootarg.vm.esx" "true" "$env"
 		setenv "bootarg.vm.vmx_load" "true" "$env"
-		if [ $niccount -gt 0 ];then setvmx "ethernet0.virtualDev" "vmxnet3" "$vmx";fi
-		if [ $niccount -gt 1 ];then setvmx "ethernet1.virtualDev" "vmxnet3" "$vmx";fi
-		if [ $niccount -gt 2 ];then setvmx "ethernet2.virtualDev" "vmxnet3" "$vmx";fi
-		if [ $niccount -gt 3 ];then setvmx "ethernet3.virtualDev" "vmxnet3" "$vmx";fi
-		if [ $niccount -gt 4 ];then setvmx "ethernet4.virtualDev" "vmxnet3" "$vmx";fi
-		if [ $niccount -gt 5 ];then setvmx "ethernet5.virtualDev" "vmxnet3" "$vmx";fi
-		if [ $niccount -gt 6 ];then setvmx "ethernet6.virtualDev" "vmxnet3" "$vmx";fi
-		if [ $niccount -gt 7 ];then setvmx "ethernet7.virtualDev" "vmxnet3" "$vmx";fi
-		if [ $niccount -gt 8 ];then setvmx "ethernet8.virtualDev" "vmxnet3" "$vmx";fi
-		if [ $niccount -gt 9 ];then setvmx "ethernet9.virtualDev" "vmxnet3" "$vmx";fi
+		if [ $niccount -gt 0 ];then setvmx "ethernet0.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet0.pciSlotNumber" "1184" "$vmx";fi
+		if [ $niccount -gt 1 ];then setvmx "ethernet1.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet1.pciSlotNumber" "2208" "$vmx";fi
+		if [ $niccount -gt 2 ];then setvmx "ethernet2.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet2.pciSlotNumber" "3232" "$vmx";fi
+		if [ $niccount -gt 3 ];then setvmx "ethernet3.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet3.pciSlotNumber" "1216" "$vmx";fi
+		if [ $niccount -gt 4 ];then setvmx "ethernet4.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet4.pciSlotNumber" "2240" "$vmx";fi
+		if [ $niccount -gt 5 ];then setvmx "ethernet5.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet5.pciSlotNumber" "3264" "$vmx";fi
+		if [ $niccount -gt 6 ];then setvmx "ethernet6.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet6.pciSlotNumber" "1248" "$vmx";fi
+		if [ $niccount -gt 7 ];then setvmx "ethernet7.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet7.pciSlotNumber" "2272" "$vmx";fi
+		if [ $niccount -gt 8 ];then setvmx "ethernet8.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet8.pciSlotNumber" "1280" "$vmx";fi
+		if [ $niccount -gt 9 ];then setvmx "ethernet9.virtualDev" "vmxnet3" "$vmx"
+		                            setvmx "ethernet8.pciSlotNumber" "2304" "$vmx";fi
 	fi
 
 	#FIXME: if nic connection flags are populated process those args
