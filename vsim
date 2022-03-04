@@ -3035,6 +3035,7 @@ function vsimmake()
   			setenv "bootarg.ic_local_ip" "192.168.$octet5.4" "$env"
   			setenv "bootarg.ic_partner_ip" "192.168.$octet5.3" "$env"
   		fi
+		fi
 
       #NFS based HA is panic prone since at least 8.3, so disable coredump by default
   		setenv "dont-dump-core?" "true" "$env"
