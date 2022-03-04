@@ -3015,29 +3015,48 @@ function vsimmake()
   			portnum=$(ntap2ic "$icport")
 		fi
 
-  		#portnum=$(ntap2ic "$icport")
-  		localmac=$(echo "$icmac" | cut -d',' -f1)
-  		partnermac=$(echo "$icmac" | cut -d',' -f2)
-		setenv "bootarg.ic_mac" "$portnum:$partnermac" "$env"
+    #portnum=$(ntap2ic "$icport")
+    localmac=$(echo "$icmac" | cut -d',' -f1)
+    partnermac=$(echo "$icmac" | cut -d',' -f2)
+    setenv "bootarg.ic_mac" "$portnum:$partnermac" "$env"
 
-  		#get the vmx eth# for the icport
-  		eth=$(expr "$portnum" - 2 )
-  		#remove any existing Ethernet config
+    #unless this is ESX jumbo frames should be disabled
+		if ! $esx;then
+		  setenv "bootarg.vm.disable.jumbo.frames" "true" "$env"
+		  setenv "bootarg.ic_mvia_mtu" "1500" "$env"
 
-		# This 3 step processes avoids bugs in GNU sed and mv
-  		sed "/ethernet$eth/d" "$vmx" > "$vmx.sed"
-  		cp "$vmx.sed" "$vmx"
-		rm "$vmx.sed"
+      # Also build the ONTAP9 version
+      setenv "bootarg.vm.ic" "true" "$env"
+  		setenv "bootarg.ic_local_port" "$portnum" "$env"
+      setenv "bootarg.ic_local_netmask" "255.255.255.0" "$env"
+  		setenv "bootarg.ic_local_ip" "192.168.$octet5.3" "$env"
+  		setenv "bootarg.ic_partner_ip" "192.168.$octet5.4" "$env"
+  		if [ "$cfonode" == "b" ];then
+  			setenv "bootarg.ic_local_ip" "192.168.$octet5.4" "$env"
+  			setenv "bootarg.ic_partner_ip" "192.168.$octet5.3" "$env"
+  		fi
 
-		#recreate ethernet adapter with IC config
-		setvmx "ethernet$eth.present" "TRUE" "$vmx"
-		setvmx "ethernet$eth.virtualDev" "e1000" "$vmx"
-		setvmx "ethernet$eth.addressType" "static" "$vmx"
-		setvmx "ethernet$eth.connectionType" "hostonly" "$vmx"
-		setvmx "ethernet$eth.address" "$localmac" "$vmx"
+      #NFS based HA is panic prone since at least 8.3, so disable coredump by default
+  		setenv "dont-dump-core?" "true" "$env"
 
-		#The watchdog seems to misbehave in this HA model
-		setenv "bootarg.nodewatchdog.level" "disabled" "$env"
+    	#get the vmx eth# for the icport
+    	eth=$(expr "$portnum" - 2 )
+    	#remove any existing Ethernet config
+
+  		# This 3 step processes avoids bugs in GNU sed and mv
+      sed "/ethernet$eth/d" "$vmx" > "$vmx.sed"
+      cp "$vmx.sed" "$vmx"
+      rm "$vmx.sed"
+
+  		#recreate ethernet adapter with IC config
+  		setvmx "ethernet$eth.present" "TRUE" "$vmx"
+  		setvmx "ethernet$eth.virtualDev" "e1000" "$vmx"
+  		setvmx "ethernet$eth.addressType" "static" "$vmx"
+  		setvmx "ethernet$eth.connectionType" "hostonly" "$vmx"
+  		setvmx "ethernet$eth.address" "$localmac" "$vmx"
+
+  		#The watchdog seems to misbehave in this HA model
+  		setenv "bootarg.nodewatchdog.level" "disabled" "$env"
 
   	fi #icmac
 
