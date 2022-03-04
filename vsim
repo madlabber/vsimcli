@@ -3024,8 +3024,12 @@ function vsimmake()
 		if ! $esx;then
 		  setenv "bootarg.vm.disable.jumbo.frames" "true" "$env"
 		  setenv "bootarg.ic_mvia_mtu" "1500" "$env"
+		fi
 
+    if $vmxnet3;then
       # Also build the ONTAP9 version
+			#
+			unsetenv "bootarg.ic_mac" "$env"
       setenv "bootarg.vm.ic" "true" "$env"
   		setenv "bootarg.ic_local_port" "$portnum" "$env"
       setenv "bootarg.ic_local_netmask" "255.255.255.0" "$env"
