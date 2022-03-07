@@ -22,6 +22,9 @@ if ! [ -f "$VMRUN" ];then VMRUN="/Applications/VMware Fusion Tech Preview.app/Co
 #OVFTOOL Might be installed as a standalone package
 if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware OVF Tool/ovftool";fi
 
+#Or this might be linux:
+if ! [ -f "$OVFTOOL" ];then OVFTOOL="/usr/lib/vmware-ovftool/ovftool";fi
+
 #If they aren't in default locations check the path
 if ! [ -f "$OVFTOOL" ];then OVFTOOL=$(which ovftool);fi
 if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER=$(which vmware-vdiskmanager);fi
@@ -152,7 +155,7 @@ if ! [ -f "standard.tgz" ];then
 fi
 
 license_file="CMode_licenses_9.9.1.txt"
-if [ -f "$license_file" ];then 
+if [ -f "$license_file" ];then
 	sed 's/\t/ /g' "$license_file" | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>"$HOME/vsims/cfcard/mfg_l_f"
   base=$(cat "$license_file" | grep '=' | grep AAAA | cut -d'=' -f 2 | cut -d' ' -f 2)
   ./vsim options VSIMLICENSE "$base"
