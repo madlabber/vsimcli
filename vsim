@@ -3558,7 +3558,8 @@ function vsimrun()
 	fi
 
 	# If another process has the port then take it back
-	if [ -n "$(lsof -t -i :"$consport")" ]; then
+	# Don't do this on linux because it kills the vm process instead
+	if [ -n "$(lsof -t -i :"$consport")" ] && [ "$(uname)" != "Linux" ]; then
 		kill -9 $(lsof -t -i :"$consport")
 	fi
 
@@ -3578,12 +3579,13 @@ function vsimrun()
 
 	# Attempt to log in and run the command
 	# This odd construct lets interact work if no command was passed
+
 	expect <( echo "
 		set timeout 1
 		log_user 0
 		set stty_init \"-icanon -echo intr ^g\"
 		spawn nc 127.0.0.1 $consport
-		#expect_after eof { break }
+		expect_after eof { break }
 
 		# Tell the user how to interrupt
 		if { \"$cmd\" == \"\" } {
