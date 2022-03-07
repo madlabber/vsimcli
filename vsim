@@ -1173,7 +1173,7 @@ function setoption() #$1=option $2=value
 			#And it needs an export
 			newexport="$value -alldirs -mapall=root -network $vmnet1_subnet -mask $vmnet1_netmask"
 			if [ "$(uname)" = "Linux" ];then
-				newexport="$2 $vmnet1_subnet/$(getcidr "$vmnet1_netmask")(rw,sync,fsid=0,no_root_squash)";fi
+				newexport="$2 $vmnet1_subnet/$(getcidr "$vmnet1_netmask")(rw,sync,fsid=0,no_root_squash,insecure)";fi
 			oldexport=$(cat /etc/exports | grep "^$value")
 			if [ "$newexport" = "$oldexport" ];then
 				#The export already exists, so we are good to go
