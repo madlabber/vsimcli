@@ -1543,7 +1543,8 @@ function makedisks() #$1=type, $2=qty $3=adapter, $4=directory
 	do
 		#some slots are not valid, for reasons unknown
 		#must also add a check that the disk file isn't already there, but for my mkfod use case that can wait
-		if ! [[ "23 30 31"  =~ $slot ]];then
+		#if [ -n "$(ls $diskpath/,disks/v$3.$slot* 2>/dev/null)" ];then echo "slot $diskpath/,disks/v$3.$slot is NOT empty";fi
+		if ! [[ "23 30 31"  =~ $slot ]] && [ -z "$(ls $diskpath/,disks/v$3.$slot* 2>/dev/null)" ];then
 			#I can't think of an algorithm more elegent than this simple case
 			case $1 in
 				0)  diskid="v$3.$slot:NETAPP__:VD-16MB_________:8"`date +%M%S`"$3$slot:89216"
@@ -2829,7 +2830,7 @@ function vsimlist()
 	#	echo "FODs in $FODDIR:"
 		echo
 		{
-			echo "Failover Disks;Node-A;Node-B"
+			echo "Shared Disks;Node-A;Node-B"
 			echo "------------------------;----------;----------"
   			for i in $(find "$FODDIR" -mindepth 1 -maxdepth 1 -type d)
 			do
