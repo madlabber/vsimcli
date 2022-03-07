@@ -78,11 +78,11 @@ Show the available software images:
 
     vsim image -list
 
-Make a simple vsim:
+Create a simple vsim:
 
     vsim create -vsim vsim1 -version 9.9.1
 
-Make a vsim that automatically creates a new cluster named 'demo':
+Create a vsim that automatically creates a new cluster named 'demo':
 
     vsim create -vsim demo-01 -version 9.9.1 -cluster demo
 
@@ -100,15 +100,15 @@ Create a second node for cluster demo:
 
     vsim create -vsim demo-02 -version 9.9.1 -serial 4034389062
 
-Make a simple 7mode vsim:
+Create a simple 7mode vsim:
 
     vsim create -vsim myvsim1 -version 8.2.4 -mode 7
 
-Make a 7mode vsim that will auto configure itself on first boot:
+Create a 7mode vsim that will auto configure itself on first boot:
 
     vsim create -vsim myvsim1 -version 8.2.4 -mode 7 -auto
 
-Make an 7mode HA pair of vsims (Fusion 10.x and older):
+Create an 7mode HA pair of vsims (Fusion 10.x and older):
 
     vsim create -vsim 7mode1 -partner 7mode2 -version 8.2.4 -mode 7 -auto
 
@@ -151,11 +151,11 @@ To connect to the console of the ONTAP Select VM:
     vsim console -vsim ONTAPSelect
 
 ## Known Issues:
-- HA NVRAM mirroring stopped working in VMware Fusion 11, but the code is retained in case a workaround is eventually discovered.
+- HA NVRAM mirroring stopped working in VMware Fusion 11.  In later versions of VMware, HA can be re-enabled by using the -vmxnet3 cli switch to configure VMXNET3 type virtual network adapters.  This feature requires ONTAP version 9.5 or later.
 
 - Automatic cluster join is no longer working as of ONTAP 9.2.
 
-- ONTAP9 vsims in an HA configuration panic during shutdown or reboot, but otherwise function normally.
+- ONTAP9 vsims in an HA configuration panic during shutdown or reboot, but otherwise function normally.  For this reason core dump will be disabled by default on HA VSIMS.
 
 ## Notes:
 - When using -auto to configure vsims the default password for root or admin is set to : netapp1!
