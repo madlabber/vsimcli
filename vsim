@@ -2182,7 +2182,7 @@ function setdefaults()
 	if ! [ -z "$1" ];then baseversion="$1";fi
 
 	#Set version specific defaults
-		if [ $baseversion -ge 991 ]; then
+		if [ $baseversion -ge 991 ];then
 			mode="C"
 			if [ -z "$ram" ]; 	  then ram=6144; fi
 			if [ -z "$vnvsize" ]; then vnvsize=256;fi
@@ -2652,6 +2652,7 @@ function vsimimport()
 		tgz | TGZ )
 			_importmode="image"
 			_version=$(tar -xzOf "$filename" VERSION 2>/dev/null)
+			if [ -z "$_version" ];then _version=$(tar -xzOf "$filename" ./VERSION 2>/dev/null);fi
 			if [ -z "$_version" ];then _importmode="archive";fi
 			;;
 	esac
@@ -2877,7 +2878,8 @@ function vsimmake()
   vmxfile="$simpath/DataONTAP.vmx" #$vmxfile is global
 
   #Need to check effective version of $_image and set defaults
-  _version=$(tar -xzOf "$_image" VERSION)
+  _version=$(tar -xzOf "$_image" VERSION 2>/dev/null)
+	if [ -z "$_version" ];then _version=$(tar -xzOf "$_image" ./VERSION);fi
   _baseVersion=$(getbaseversion "$_version")
   setdefaults $_baseVersion
 
@@ -3581,7 +3583,7 @@ function vsimrun()
 		log_user 0
 		set stty_init \"-icanon -echo intr ^g\"
 		spawn nc 127.0.0.1 $consport
-		expect_after eof { break }
+		#expect_after eof { break }
 
 		# Tell the user how to interrupt
 		if { \"$cmd\" == \"\" } {
@@ -4138,7 +4140,8 @@ function vsimupdate()
 
 	# Get the installation folder ready
 	# and figure out which image to install to
- 	_version=$(tar -xzOf "$_image" VERSION)
+ 	_version=$(tar -xzOf "$_image" VERSION 2>/dev/null)
+	if [ -z "$_version" ];then _version=$(tar -xzOf "$_image" ./VERSION);fi
 	_baseversion=$(getbaseversion $_version)
  	_primary="$(dirname $(getenv NETAPP_PRIMARY_KERNEL_URL))"
  	if $image1;then _primary="x86_64/freebsd/image1";fi
@@ -4219,7 +4222,7 @@ function vsimupdate()
 
 	# Patch a uart bug in 9.1RC2
 	_console=$(getenv console)
-	if [ "$_baseversion" -ge 910 ] && [ "$_console" = "vidconsole" ];then
+	if [ $_baseversion -ge 910 ] && [ "$_console" = "vidconsole" ];then
 		setenv console "vidconsole,comconsole"
 	fi
 
