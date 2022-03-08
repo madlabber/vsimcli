@@ -4109,10 +4109,10 @@ function envcache()
 
 	# if the cfcard is mounted, copy the file directly
 	if IsMounted;then
-		cp "$simpath/mnt/env/env" "$simpath/cfcard/env" &>/dev/null
+		cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env" &>/dev/null
 		cp -R "$simpath/mnt/files/" "$simpath/cfcard/files/" &>/dev/null
-		cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
-		cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
+		cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
+		cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
   # if it is not mounted, but mtools are installed, use mcopy
 	elif [ -n "$(which mcopy)" ];then
 		#echo "mcopy mode"
@@ -4131,8 +4131,8 @@ function envcache()
 		export MTOOLS_SKIP_CHECK=1
 		mcopy -n ::/env/env "$simpath/cfcard/env/env" -i "$mdisk" &>/dev/null
 		mcopy -n ::/files/* "$simpath/cfcard/files/" -i "$mdisk" &>/dev/null
-		mcopy -n ::/x86_64/freebsd/image1/VERSION "$simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
-		mcopy -n ::/x86_64/freebsd/image2/VERSION "$simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
+		mcopy -n ::/x86_64/freebsd/image1/VERSION "$simpath/cfcard/x86_64/freebsd/image1/VERSION" -i "$mdisk" &>/dev/null
+		mcopy -n ::/x86_64/freebsd/image2/VERSION "$simpath/cfcard/x86_64/freebsd/image2/VERSION" -i "$mdisk" &>/dev/null
 
 		# if [ -f "$simpath/cfcard/env/_env" ];then
 		# 	mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
@@ -4141,10 +4141,10 @@ function envcache()
 	elif ! $quick;then
 		if ! IsRunning;then
 			cfmount
-			cp "$simpath/mnt/env/env" "$simpath/cfcard/env" &>/dev/null
+			cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env" &>/dev/null
 		  cp -R "$simpath/mnt/files/" "$simpath/cfcard/files/" &>/dev/null
-			cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
-			cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
+			cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
+			cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
 		  cfunmount
 		fi
 	fi
