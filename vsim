@@ -1089,6 +1089,7 @@ function getenv() # $1=variable [ $2=envfile ]
 
 	if   [ -z "$_var" ]; then return 1;fi
 	if   [ -z "$_env" ]; then _env="$simpath/mnt/env/env";fi
+	if ! [ -f "$_env" ]; then _env="$simpath/cfcard/env/env";fi
 	if ! [ -f "$_env" ]; then return 1;fi
 
 	_val=`cat "$_env" | sed 's^"^^g' | grep "setenv $_var " | sort | sed "s^setenv $_var^^" | sed 's^ ^^'`
@@ -3912,15 +3913,16 @@ function vsimshow()
 	if IsRunning;then
 		_status="Running"
 		_unmount=false
-	elif $quick;then
-		_unmount=false
-	else
-		cfmount
+	# elif $quick;then
+	# 	_unmount=false
+	# else
+	# 	cfmount
 	fi
 
 	#Use the cached copy if we are not mounted
+	envcache
 	_cfcard="$simpath/cfcard"
-	if IsMounted;then _cfcard="$simpath/mnt";fi
+	# if IsMounted;then _cfcard="$simpath/mnt";fi
 
 	_env="$_cfcard/env/env"
 	_image1=$(cat "$_cfcard/x86_64/freebsd/image1/VERSION" 2>/dev/null)
@@ -4010,7 +4012,7 @@ function vsimshow()
 	fi
 	echo
 
-	if $_unmount;then cfunmount "$simpath" &>/dev/null;fi
+	# if $_unmount;then cfunmount "$simpath" &>/dev/null;fi
 }
 
 #Start a vsim
@@ -4026,9 +4028,10 @@ function vsimstart()
   	if $vbox;then vboxmanage startvm "$name";return 0;fi
 
 	# See which console to use
-	cfmount
+  envcache
+#	cfmount
 	_console=$(getenv "console")
-  	cfunmount >/dev/null
+#  	cfunmount >/dev/null
 
   	[ "$_console" = "vidconsole" ] && _gui="gui"
   	[ "$_console" = "vidconsole,comconsole" ] && _gui="gui"
@@ -4080,8 +4083,9 @@ function vsimstop()
 	if IsRunning; then
 		echo "Stopping vsim: $name"
   		"$VMRUN" -T fusion stop "$vmxfile" $_hard &>/dev/null
-  		cfmount
-  		cfunmount &>/dev/null
+			envcache
+  		#cfmount
+  		#cfunmount &>/dev/null
   	fi
 }
 
@@ -4122,33 +4126,85 @@ function vsimtest()
 #update cached copy of a vsim env
 function envcache()
 {
+	#make sure cache directories exist
+	mkdir -p "$_simpath/cfcard/env" &>/dev/null
+	mkdir -p "$_simpath/cfcard/files" &>/dev/null
+	mkdir -p "$_simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
+	mkdir -p "$_simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
+
 	# if the cfcard is mounted, copy the file directly
 	if IsMounted;then
-		cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env"
+		cp "$_simpath/mnt/env/env" "$_simpath/cfcard/env" &>/dev/null
+		cp "$_simpath/mnt/x86_64/freebsd/image1/VERSION" "$_simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
+		cp "$_simpath/mnt/x86_64/freebsd/image2/VERSION" "$_simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
   # if it is not mounted, but mtools are installed, use mcopy
 	elif [ -n "$(which mcopy)" ];then
 		#echo "mcopy mode"
 		local _vmdk="$(getcfvmdk)"
 		local _flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
-		local _start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)"
+		local _start="66528"
+		if [ "$(uname)" = "Linux" ];then
+		  local _start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)";fi
+		if [ "$(uname)" = "Darwin" ];then
+		  local _start="$(fdisk -d $simpath/$_flat | grep 0x06 | cut -d, -f1)";fi
 		local _offset="$(echo $_start / 2 |bc)k"
 		mdisk="$simpath/$_flat@@$_offset"
 		#echo "$mdisk"
-		mkdir -p "$simpath/cfcard/env"
 
 		# allow read operations while VM is running
 		export MTOOLS_SKIP_CHECK=1
-		mcopy -n ::/env/env "$simpath/cfcard/env/_env" -i "$mdisk"
-		if [ -f "$simpath/cfcard/env/_env" ];then
-			mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
-		fi
+		mcopy -n ::/env/env "$simpath/cfcard/env/env" -i "$mdisk" &>/dev/null
+		mcopy -n ::/x86_64/freebsd/image1/VERSION "$_simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
+		mcopy -n ::/x86_64/freebsd/image2/VERSION "$_simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
+
+		# if [ -f "$simpath/cfcard/env/_env" ];then
+		# 	mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
+		# fi
 	# otherwise mount if possible to copy the env file
 	elif ! $quick;then
 		if ! IsRunning;then
 			cfmount
-		  cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env"
+			cp "$_simpath/mnt/env/env" "$_simpath/cfcard/env" &>/dev/null
+			cp "$_simpath/mnt/x86_64/freebsd/image1/VERSION" "$_simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
+			cp "$_simpath/mnt/x86_64/freebsd/image2/VERSION" "$_simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
 		  cfunmount
 		fi
+	fi
+}
+
+#save updates ack to the cfcard vmdk
+function envsave()
+{
+	# If the VM is running we are done
+	if IsRunning;then echo "envsave:vm is running";exit;fi
+	# if the cfcard is mounted, copy the file directly
+	if IsMounted;then
+		cp "$_simpath/cfcard/env/env" "$_simpath/mnt/env/env" &>/dev/null
+  # if it is not mounted, but mtools are installed, use mcopy
+	elif [ -n "$(which mcopy)" ];then
+		#echo "mcopy mode"
+		local _vmdk="$(getcfvmdk)"
+		local _flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
+		local _start="66528"
+		if [ "$(uname)" = "Linux" ];then
+		  local _start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)";fi
+		if [ "$(uname)" = "Darwin" ];then
+		  local _start="$(fdisk -d $simpath/$_flat | grep 0x06 | cut -d, -f1)";fi
+		local _offset="$(echo $_start / 2 |bc)k"
+		mdisk="$simpath/$_flat@@$_offset"
+		#echo "$mdisk"
+
+		# allow read operations while VM is running
+		export MTOOLS_SKIP_CHECK=1
+		mcopy -o "$simpath/cfcard/env/env" ::/env/env -i "$mdisk" #&>/dev/null
+		# if [ -f "$simpath/cfcard/env/_env" ];then
+		# 	mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
+		# fi
+	# otherwise mount if possible to copy the env file
+	else
+			cfmount
+			cp "$_simpath/cfcard/env/env" "$_simpath/mnt/env/env" &>/dev/null
+		  cfunmount
 	fi
 }
 
@@ -4619,39 +4675,9 @@ case $action in
 	unmount 	) 	cfunmount;;
 	printenv 	)
 	  envcache
-		# if IsMounted;then _dismount=false;fi
-		#
-		# if [ -n "$(which mcopy)" ];then
-		#   echo "mcopy mode"
-		# 	_vmdk="$(getcfvmdk)"
-		# 	_flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
-    #   _start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)"
-		# 	_offset="$(echo $_start / 2 |bc)k"
-		# 	mdisk="$simpath/$_flat@@$_offset"
-		# 	echo "$mdisk"
-		# 	mkdir -p "$simpath/cfcard/env"
-		#
-    #   # allow read operations while VM is running
-    #   export MTOOLS_SKIP_CHECK=1
-		# 	mcopy -n ::/env/env "$simpath/cfcard/env/_env" -i "$mdisk"
-    #   if [ -f "$simpath/cfcard/env/_env" ];then
-		# 		mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
-		# 	  quick=true
-		# 	  _dismount=false
-		# 	fi
-		# fi
 
 		# This is the cached version
 		env="$simpath/cfcard/env/env"
-
-		# Minor speedup - don't call IsRunning if we want answers quick
-		# IsRUnning makes a slow call to VMRUN which slows down compgen
-		# if ! $quick;then
-		# 	if ! IsRunning;then
-		# 		env="$simpath/mnt/env/env"
-		# 		cfmount
-		# 	fi
-		# fi
 
     # -list is used by compgen to build tab completions
 		if $list;then
@@ -4664,9 +4690,6 @@ case $action in
 			value=$(getenv "$variable" "$env")
 			if [ -n "$value" ];then echo "$value";fi
 		fi
-
-		# #Leave the CFCard the way we found it
-  	# 	if $_dismount;then cfunmount;fi
 		;;
 	printvmx 	)
 		if $list;then
@@ -4697,11 +4720,11 @@ case $action in
 		setvmx "displayName" "$newname"
 		mv "$SIMDIR/$name" "$SIMDIR/$newname";;
 	setenv 		)
-		if IsMounted;then _dismount=false;fi
-		cfmount
-		setenv "$variable" "$value"
+	  envcache
+		setenv "$variable" "$value" "$simpath/cfcard/env/env"
+		envsave
 		echo "$variable="$(getenv "$variable")
-  		if $_dismount;then cfunmount;fi;;
+		;;
 	setvmx 		)   setvmx  "$variable" "$value";;
 	show | list	)	vsimshow;;
 	software | image )   vsimsoftware;;
@@ -4710,10 +4733,10 @@ case $action in
 	suspend 	)   "$VMRUN" suspend "$vmxfile";;
 	update 	    )	vsimupdate;;
 	unsetenv 	)
-		if IsMounted;then _dismount=false;fi
-		cfmount
-		unsetenv  "$variable" "$simpath/mnt/env/env"
-  		if $_dismount;then cfunmount;fi;;
+    envcache
+		unsetenv  "$variable" "$simpath/cfcard/env/env"
+		envsave
+  	;;
 	unsetvmx    ) 	unsetvmx "$variable" "$vmxfile";;
 	usage 		)	help "usage";;
 	test 		) 	vsimtest;;
