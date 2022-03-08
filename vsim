@@ -853,7 +853,7 @@ function exportvbox()
 	vsimstop
 
 	# Mount the CF Card
-	cfmount
+	envcache
 
 	#Must use vidconsole
 	setenv console vidconsole
@@ -877,8 +877,8 @@ function exportvbox()
 		vsimmodify
 	fi
 
-	#Must unmount before attach
-	cfunmount
+	#Must save changes before attaching
+  envsave
 	#delete any existing config file
 	rm "$SIMDIR/$name/$name.vbox"
 
@@ -2286,6 +2286,7 @@ function setenv()	#$1=variable $2=value $3=envfile
 
 	#Checks and feedback
 	if   [ -z "$_env" ]; then _env="$simpath/mnt/env/env";fi
+	if ! [ -f "$_env" ]; then _env="$simpath/cfcard/env/env";fi
 	if ! [ -f "$_env" ]; then echo "setenv:env file not found:$_env"   >&2;return 1;fi
 	if   [ -z "$_var" ]; then echo "setenv:env variable not specified" >&2;return 1;fi
 	if   [ -z "$_val" ]; then echo "setenv:env value not specified"    >&2;return 1;fi
@@ -2346,11 +2347,11 @@ function unsetenv()	#$1=variable $2=envfile
 
 	#Checks and feedback
 	if   [ -z "$_env" ]; then _env="$simpath/mnt/env/env";fi
+	if ! [ -f "$_env" ]; then _env="$simpath/cfcard/env/env";fi
 	if ! [ -f "$_env" ]; then echo "unsetenv:file not found:$_env"; return 1;fi
 	if   [ -z "$_var" ]; then echo "unsetenv:variable not specified" ; return 1;fi
 
 	#Unset variable
-	#chflags nouchg "$_env" #moved into cfmount
  	sed "s/^\(setenv $_var \).*//" "$_env" > "$_env.sed"
  	cp "$_env.sed" "$_env"
 	rm "$_env.sed"
@@ -2675,8 +2676,7 @@ function vsimimport()
 			mkdir -p "$simpath"
 			tar -C "$simpath" -vxzSf "$filename" --strip=1 &>/dev/null
 			if IsVM "$simpath";then
-				cfmount   "$simpath"
-				cfunmount "$simpath"
+				envcache
 				echo "Completed successfully"
 			else
 				echo "Import failed: VM not found at: $simpath"
@@ -2689,12 +2689,20 @@ function vsimimport()
 			vmxfile="$simpath/DataONTAP.vmx"
 			"$OVFTOOL" "--allowAllExtraConfig" "--allowExtraConfig" "--acceptAllEulas" "$filename" "$simpath/DataONTAP.vmx"
 			if IsVM "$simpath";then
-				cfmount   "$simpath"
-				if [ -d "$simpath/mnt/files" ];then
-					mkdir -p "$VSIMHOME/cfcard/files"
-					cp -R "$simpath/mnt/files/" "$VSIMHOME/cfcard/files/"
+				_vmdk="$(getcfvmdk)"
+				_flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
+				#If its not thick we must convert it
+				if [ -f "$simpath/$_vmdk" ] && ! [ -f "$simpath/$_flat" ]; then
+					rm "$simpath/tmp.vmdk" 2>/dev/null
+					rm "$simpath/tmp-flat.vmdk" 2>/dev/null
+					"$VDISKMANAGER" -n "$simpath/$_vmdk" "$simpath/tmp.vmdk"
+					"$VDISKMANAGER" -r "$simpath/tmp.vmdk" -t 4 "$simpath/$_vmdk"
+					rm "$simpath/tmp.vmdk" 2>/dev/null
+					rm "$simpath/tmp-flat.vmdk" 2>/dev/null
 				fi
-				cfunmount "$simpath"
+				envcache
+				mkdir -p "$VSIMHOME/cfcard/files"
+				cp -R "$simpath/cfcard/files/" "$VSIMHOME/cfcard/files/"
 				echo "Import Completed"
 				#Now if its SDOT eval we want to grab the keys from the OVF so we can use them when we run configure
 				if [ -z "$SDOT_BUILTIN_LICENSES" ];then
@@ -3218,25 +3226,18 @@ function vsimmakecons()
   	setvmx  "serial0.startConnected" "TRUE"
 
   	#modify the env
-  	if [ -f "$simpath/mnt/env/env" ];then
-  		setenv "console" "comconsole,vidconsole" "$simpath/mnt/env/env"
-  	else
-  		cfmount   "$simpath"
-  		setenv "console" "comconsole,vidconsole" "$simpath/mnt/env/env"
-  		cfunmount "$simpath"
-  	fi
+		envcache
+  	setenv "console" "comconsole,vidconsole" "$simpath/cfcard/env/env"
+    envsave
 }
 
 #modify an existing vsim
 function vsimmodify()
 {
-	local _dismount=true
-
-	if IsMounted;then _dismount=false;fi
-	cfmount
+  envcache
 
 	#central spot to apply changes to the vsim
-	if [ -z "$env" ];then env="$simpath/mnt/env/env";fi
+	if [ -z "$env" ];then env="$simpath/cfcard/env/env";fi
 
 	#for the moment, assuming its already mounted
 	if ! [ -f "$env" ];then return;fi
@@ -3475,17 +3476,6 @@ function vsimmodify()
 	fi
 
 #this needs logic to assert control of slot numbers:
-#here are the defaults:
-# ethernet0.pciSlotNumber = "1184" 0
-# ethernet1.pciSlotNumber = "1216" 3
-# ethernet2.pciSlotNumber = "1248" 6
-# ethernet3.pciSlotNumber = "1280" 8
-# ethernet4.pciSlotNumber = "2208" 1
-# ethernet5.pciSlotNumber = "2240" 4
-# ethernet6.pciSlotNumber = "2272" 7
-# ethernet7.pciSlotNumber = "2304" 9
-# ethernet8.pciSlotNumber = "3232" 2
-# ethernet9.pciSlotNumber = "3264" 5
   if $vmxnet3;then
 		setenv "bootarg.vm.esx" "true" "$env"
 		setenv "bootarg.vm.vmx_load" "true" "$env"
@@ -3519,13 +3509,11 @@ function vsimmodify()
 	#-bridged
 	if [ -n "$bridged" ];then connectnics "bridged" "$bridged" "$vmx";fi
 
+  envsave
 	# Toggle the default image
 	if $setdefault; then
 		if $image1 || $image2;then vsimupdate;fi
 	fi
-
-	# Done, so unmount the boot disk
-	if $_dismount;then cfunmount;fi
 
 }
 
@@ -3740,14 +3728,6 @@ function vsimsoftware()
 
 		local _prefix=${release//.}
 		local _defaultImage
-		local _dismount=false
-
-		if [ -n "$name" ];then
-			if ! IsRunning && ! IsMounted;then
-				cfmount
-				_dismount=true
-			fi
-		fi
 
 		# -release
 		if [ -n "$release" ] && ! $all && ! $list;then
@@ -3765,13 +3745,15 @@ function vsimsoftware()
 
 		# vsim image <vsim>
 		if [ -n "$name" ];then
+			envcache
 			_cfcard="$simpath/cfcard"
-			if IsMounted;then _cfcard="$simpath/mnt";fi
+			# if IsMounted;then _cfcard="$simpath/mnt";fi
 			_version1=$(cat "$_cfcard/x86_64/freebsd/image1/VERSION" 2>/dev/null)
 			_version2=$(cat "$_cfcard/x86_64/freebsd/image2/VERSION" 2>/dev/null)
 			if [ -z "$_version1" ];then _version1="-";fi
 			if [ -z "$_version2" ];then _version2="-";fi
-			if $setdefault && IsMounted;then
+			# if $setdefault && IsMounted;then
+			if $setdefault;then
 				if $image1 && [ "$_version1" != "-" ];then
 					setenv NETAPP_PRIMARY_KERNEL_URL "x86_64/freebsd/image1/kernel" "$_cfcard/env/env"
 					setenv NETAPP_BACKUP_KERNEL_URL "x86_64/freebsd/image2/kernel" "$_cfcard/env/env"
@@ -3798,7 +3780,7 @@ function vsimsoftware()
 			} | column -t -s';'
 			echo
 
-			if $_dismount;then cfunmount &>/dev/null;fi
+      envsave
 			return 0
 		fi
 
@@ -3913,10 +3895,6 @@ function vsimshow()
 	if IsRunning;then
 		_status="Running"
 		_unmount=false
-	# elif $quick;then
-	# 	_unmount=false
-	# else
-	# 	cfmount
 	fi
 
 	#Use the cached copy if we are not mounted
@@ -4029,9 +4007,8 @@ function vsimstart()
 
 	# See which console to use
   envcache
-#	cfmount
 	_console=$(getenv "console")
-#  	cfunmount >/dev/null
+
 
   	[ "$_console" = "vidconsole" ] && _gui="gui"
   	[ "$_console" = "vidconsole,comconsole" ] && _gui="gui"
@@ -4084,8 +4061,6 @@ function vsimstop()
 		echo "Stopping vsim: $name"
   		"$VMRUN" -T fusion stop "$vmxfile" $_hard &>/dev/null
 			envcache
-  		#cfmount
-  		#cfunmount &>/dev/null
   	fi
 }
 
@@ -4127,16 +4102,17 @@ function vsimtest()
 function envcache()
 {
 	#make sure cache directories exist
-	mkdir -p "$_simpath/cfcard/env" &>/dev/null
-	mkdir -p "$_simpath/cfcard/files" &>/dev/null
-	mkdir -p "$_simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
-	mkdir -p "$_simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
+	mkdir -p "$simpath/cfcard/env" &>/dev/null
+	mkdir -p "$simpath/cfcard/files" &>/dev/null
+	mkdir -p "$simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
+	mkdir -p "$simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
 
 	# if the cfcard is mounted, copy the file directly
 	if IsMounted;then
-		cp "$_simpath/mnt/env/env" "$_simpath/cfcard/env" &>/dev/null
-		cp "$_simpath/mnt/x86_64/freebsd/image1/VERSION" "$_simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
-		cp "$_simpath/mnt/x86_64/freebsd/image2/VERSION" "$_simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
+		cp "$simpath/mnt/env/env" "$simpath/cfcard/env" &>/dev/null
+		cp -R "$simpath/mnt/files/" "$simpath/cfcard/files/" &>/dev/null
+		cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
+		cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
   # if it is not mounted, but mtools are installed, use mcopy
 	elif [ -n "$(which mcopy)" ];then
 		#echo "mcopy mode"
@@ -4154,8 +4130,9 @@ function envcache()
 		# allow read operations while VM is running
 		export MTOOLS_SKIP_CHECK=1
 		mcopy -n ::/env/env "$simpath/cfcard/env/env" -i "$mdisk" &>/dev/null
-		mcopy -n ::/x86_64/freebsd/image1/VERSION "$_simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
-		mcopy -n ::/x86_64/freebsd/image2/VERSION "$_simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
+		mcopy -n ::/files/* "$simpath/cfcard/files/" -i "$mdisk" &>/dev/null
+		mcopy -n ::/x86_64/freebsd/image1/VERSION "$simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
+		mcopy -n ::/x86_64/freebsd/image2/VERSION "$simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
 
 		# if [ -f "$simpath/cfcard/env/_env" ];then
 		# 	mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
@@ -4164,9 +4141,10 @@ function envcache()
 	elif ! $quick;then
 		if ! IsRunning;then
 			cfmount
-			cp "$_simpath/mnt/env/env" "$_simpath/cfcard/env" &>/dev/null
-			cp "$_simpath/mnt/x86_64/freebsd/image1/VERSION" "$_simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
-			cp "$_simpath/mnt/x86_64/freebsd/image2/VERSION" "$_simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
+			cp "$simpath/mnt/env/env" "$simpath/cfcard/env" &>/dev/null
+		  cp -R "$simpath/mnt/files/" "$simpath/cfcard/files/" &>/dev/null
+			cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
+			cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
 		  cfunmount
 		fi
 	fi
@@ -4502,7 +4480,9 @@ while [ "X$1" != "X" ]; do
                                   ;;
       -quick                   )  quick=true;diskmodel="classic";;
       -release | -version      )  release="$argv";;
-      -setdefault | -isdefault )  setdefault="$argv";;
+      -setdefault | -isdefault )  setdefault=true;
+			                            if [ -n "$argv" ];then setdefault="$argv";fi
+																	;;
       -serno | -sn | -serial   )  serno="$argv";;
       -simdisks | -vdevinit    )  vdevinit="$argv";;
       -simdir                  )  SIMDIR="$argv";;
