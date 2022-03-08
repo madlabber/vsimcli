@@ -4119,6 +4119,39 @@ function vsimtest()
 
 }
 
+#update cached copy of a vsim env
+function envcache()
+{
+	# if the cfcard is mounted, copy the file directly
+	if IsMounted;then
+		cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env"
+  # if it is not mounted, but mtools are installed, use mcopy
+	elif [ -n "$(which mcopy)" ];then
+		#echo "mcopy mode"
+		local _vmdk="$(getcfvmdk)"
+		local _flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
+		local _start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)"
+		local _offset="$(echo $_start / 2 |bc)k"
+		mdisk="$simpath/$_flat@@$_offset"
+		#echo "$mdisk"
+		mkdir -p "$simpath/cfcard/env"
+
+		# allow read operations while VM is running
+		export MTOOLS_SKIP_CHECK=1
+		mcopy -n ::/env/env "$simpath/cfcard/env/_env" -i "$mdisk"
+		if [ -f "$simpath/cfcard/env/_env" ];then
+			mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
+		fi
+	# otherwise mount if possible to copy the env file
+	elif ! $quick;then
+		if ! IsRunning;then
+			cfmount
+		  cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env"
+		  cfunmount
+		fi
+	fi
+}
+
 #Update Data ONTAP in a vsim
 function vsimupdate()
 {
@@ -4585,31 +4618,55 @@ case $action in
 	options 	) 	vsimoptions;;
 	unmount 	) 	cfunmount;;
 	printenv 	)
-		if IsMounted;then _dismount=false;fi
+	  envcache
+		# if IsMounted;then _dismount=false;fi
+		#
+		# if [ -n "$(which mcopy)" ];then
+		#   echo "mcopy mode"
+		# 	_vmdk="$(getcfvmdk)"
+		# 	_flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
+    #   _start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)"
+		# 	_offset="$(echo $_start / 2 |bc)k"
+		# 	mdisk="$simpath/$_flat@@$_offset"
+		# 	echo "$mdisk"
+		# 	mkdir -p "$simpath/cfcard/env"
+		#
+    #   # allow read operations while VM is running
+    #   export MTOOLS_SKIP_CHECK=1
+		# 	mcopy -n ::/env/env "$simpath/cfcard/env/_env" -i "$mdisk"
+    #   if [ -f "$simpath/cfcard/env/_env" ];then
+		# 		mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
+		# 	  quick=true
+		# 	  _dismount=false
+		# 	fi
+		# fi
 
 		# This is the cached version
 		env="$simpath/cfcard/env/env"
 
 		# Minor speedup - don't call IsRunning if we want answers quick
 		# IsRUnning makes a slow call to VMRUN which slows down compgen
-		if ! $quick;then
-			if ! IsRunning;then
-				env="$simpath/mnt/env/env"
-				cfmount
-			fi
-		fi
+		# if ! $quick;then
+		# 	if ! IsRunning;then
+		# 		env="$simpath/mnt/env/env"
+		# 		cfmount
+		# 	fi
+		# fi
 
+    # -list is used by compgen to build tab completions
 		if $list;then
 			grep setenv "$env" | cut -d' ' -f2
+		# if no var is specified print them all
 		elif [ -z "$variable" ];then
 			grep setenv "$env" | sort | sed 's^setenv ^^' | sed 's^ ^=^' | sed 's^"^^g'
+    # if a var is specified just print that value
 		else
 			value=$(getenv "$variable" "$env")
 			if [ -n "$value" ];then echo "$value";fi
 		fi
 
-		#Leave the CFCard the way we found it
-  		if $_dismount;then cfunmount;fi
+		# #Leave the CFCard the way we found it
+  	# 	if $_dismount;then cfunmount;fi
 		;;
 	printvmx 	)
 		if $list;then
