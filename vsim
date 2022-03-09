@@ -113,76 +113,76 @@ fi
 #help
 function help() # $1=subcommand
 {
-    ### Print the header and sign my work
-    if [ -n "$1" ] && ! [ "$1" = "usage" ]; then
-                    ######01234567890123456789012345678901234567890123456789012345678901234567890123456789
-                    echo "Usage:";fi
-    case $1 in
-        console  )  echo "   vsim console <vsim name> [options]";;
-        create  | make )
-                    echo "   vsim create <vsim name> -package <image.tgz> [options]"
-                    echo "   vsim create <vsim name> -version <version> [options]";;
-        configure ) echo "   vsim configure <vsim name> [options]";;
-        delete | rm  )
-                    echo "   vsim delete <vsim name>|<fod name> [options]";;
-        deploy   )  echo "   vsim deploy <vsim name> [options]";;
-        export   )  echo "   vsim export <vsim name> [options]";;
-        import   )  echo "   vsim import <filename> [options]";;
-        modify   )  echo "   vsim modify <vsim name> [options]";;
-        mount    )  echo "   vsim mount <vsim name> [options]";;
-        options  )  echo "   vsim options [variable] [value] [options]";;
-        poweroff | kill )
-                    echo "   vsim poweroff <vsim name> [options]";;
-        printenv )  echo "   vsim printenv <vsim name> [variable] [options]";;
-        printvmx )  echo "   vsim printvmx <vsim name> [options]";;
-        rename   )  echo "   vsim rename <vsim name> <new name> [options]";;
-        run      )  echo "   vsim run <vsim name> [command] [options]";;
-        setenv   )  echo "   vsim setenv <vsim name> <variable> <value> [options]";;
-        setvmx   )  echo "   vsim setvmx <vsim name> <variable> <value> [options]";;
-        show     )  echo "   vsim show [vsim name] [options]";;
-        software | image )
-                    echo "   vsim image [options]"
-                    echo "   vsim image <vsim name> [options]";;
-        start    )  echo "   vsim start <vsim name> [options]";;
-        stop     )  echo "   vsim stop <vsim name> [options]";;
-        suspend  )  echo "   vsim suspend <vsim name> [options]";;
-        unmount  )  echo "   vsim unmount <vsim name> [options]";;
-        unsetenv )  echo "   vsim unsetenv <vsim name> <variable> [options]";;
-        unsetvmx )  echo "   vsim unsetvmx <vsim name> <variable> [options]";;
-        update   )  echo "   vsim update <vsim name> [options]";;
-                    ######01234567890123456789012345678901234567890123456789012345678901234567890123456789
-        usage    )  echo # Detailed output with usage
-    			echo "vsim4osx - A vsim toolkit for OSX and VMware fusion"
-    			echo "Version: $VSIMVERSION"
-    			echo "Author : Sean Hatfield"
-    			echo
-    			echo "Usage:"
-    			echo "   vsim console  <vsim name> [options]"
-					echo "   vsim create   <vsim name> (-version <version>|-package <image.tgz>) [options]"
-					echo "   vsim delete   <vsim name>|<fod name> [options]"
-					echo "   vsim deploy   <vsim name> [options]"
-					echo "   vsim export   <vsim name> [options]"
-					echo "   vsim help     [<command>|usage]"
-					echo "   vsim image    [vsim name] [options]"
-					echo "   vsim import   <file name> [options]"
-					echo "   vsim modify   <vsim name> [options]"
-					echo "   vsim mount    <vsim name> [options]"
-					echo "   vsim options  [variable]  [value]    [options]"
-					echo "   vsim poweroff <vsim name> [options]"
-					echo "   vsim printenv <vsim name> [variable] [options]"
-					echo "   vsim printvmx <vsim name> [options]"
-					echo "   vsim rename   <vsim name> <new name> [options]"
-					echo "   vsim run      <vsim name> [command]  [options]"
-					echo "   vsim setenv   <vsim name> <variable> <value> [options]"
-					echo "   vsim setvmx   <vsim name> <variable> <value> [options]"
-					echo "   vsim show     [vsim name] [options]"
-					echo "   vsim start    <vsim name> [options]"
-					echo "   vsim stop     <vsim name> [options]"
-					echo "   vsim suspend  <vsim name> [options]"
-					echo "   vsim unmount  <vsim name> [options]"
-					echo "   vsim unsetenv <vsim name> <variable> [options]"
-					echo "   vsim unsetvmx <vsim name> <variable> [options]"
-					echo "   vsim update   <vsim name> [options]";;
+  ### Print the header and sign my work
+  if [ -n "$1" ] && ! [ "$1" = "usage" ]; then
+                ######01234567890123456789012345678901234567890123456789012345678901234567890123456789
+                echo "Usage:";fi
+  case $1 in
+    console  )  echo "   vsim console <vsim name> [options]";;
+    create  | make )
+                echo "   vsim create <vsim name> -package <image.tgz> [options]"
+                echo "   vsim create <vsim name> -version <version> [options]";;
+    configure ) echo "   vsim configure <vsim name> [options]";;
+    delete | rm  )
+                echo "   vsim delete <vsim name>|<fod name> [options]";;
+    deploy   )  echo "   vsim deploy <vsim name> [options]";;
+    export   )  echo "   vsim export <vsim name> [options]";;
+    import   )  echo "   vsim import <filename> [options]";;
+    modify   )  echo "   vsim modify <vsim name> [options]";;
+    mount    )  echo "   vsim mount <vsim name> [options]";;
+    options  )  echo "   vsim options [variable] [value] [options]";;
+    poweroff | kill )
+                echo "   vsim poweroff <vsim name> [options]";;
+    printenv )  echo "   vsim printenv <vsim name> [variable] [options]";;
+    printvmx )  echo "   vsim printvmx <vsim name> [options]";;
+    rename   )  echo "   vsim rename <vsim name> <new name> [options]";;
+    run      )  echo "   vsim run <vsim name> [command] [options]";;
+    setenv   )  echo "   vsim setenv <vsim name> <variable> <value> [options]";;
+    setvmx   )  echo "   vsim setvmx <vsim name> <variable> <value> [options]";;
+    show     )  echo "   vsim show [vsim name] [options]";;
+    software | image )
+                echo "   vsim image [options]"
+                echo "   vsim image <vsim name> [options]";;
+    start    )  echo "   vsim start <vsim name> [options]";;
+    stop     )  echo "   vsim stop <vsim name> [options]";;
+    suspend  )  echo "   vsim suspend <vsim name> [options]";;
+    unmount  )  echo "   vsim unmount <vsim name> [options]";;
+    unsetenv )  echo "   vsim unsetenv <vsim name> <variable> [options]";;
+    unsetvmx )  echo "   vsim unsetvmx <vsim name> <variable> [options]";;
+    update   )  echo "   vsim update <vsim name> [options]";;
+                ######01234567890123456789012345678901234567890123456789012345678901234567890123456789
+    usage    )  echo # Detailed output with usage
+                echo "vsim4osx - A vsim toolkit for OSX and VMware fusion"
+                echo "Version: $VSIMVERSION"
+                echo "Author : Sean Hatfield"
+                echo
+                echo "Usage:"
+                echo "   vsim console  <vsim name> [options]"
+                echo "   vsim create   <vsim name> (-version <version>|-package <image.tgz>) [options]"
+                echo "   vsim delete   <vsim name>|<fod name> [options]"
+                echo "   vsim deploy   <vsim name> [options]"
+                echo "   vsim export   <vsim name> [options]"
+                echo "   vsim help     [<command>|usage]"
+                echo "   vsim image    [vsim name] [options]"
+                echo "   vsim import   <file name> [options]"
+                echo "   vsim modify   <vsim name> [options]"
+                echo "   vsim mount    <vsim name> [options]"
+                echo "   vsim options  [variable]  [value]    [options]"
+                echo "   vsim poweroff <vsim name> [options]"
+                echo "   vsim printenv <vsim name> [variable] [options]"
+                echo "   vsim printvmx <vsim name> [options]"
+                echo "   vsim rename   <vsim name> <new name> [options]"
+                echo "   vsim run      <vsim name> [command]  [options]"
+                echo "   vsim setenv   <vsim name> <variable> <value> [options]"
+                echo "   vsim setvmx   <vsim name> <variable> <value> [options]"
+                echo "   vsim show     [vsim name] [options]"
+                echo "   vsim start    <vsim name> [options]"
+                echo "   vsim stop     <vsim name> [options]"
+                echo "   vsim suspend  <vsim name> [options]"
+                echo "   vsim unmount  <vsim name> [options]"
+                echo "   vsim unsetenv <vsim name> <variable> [options]"
+                echo "   vsim unsetvmx <vsim name> <variable> [options]"
+                echo "   vsim update   <vsim name> [options]";;
 					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
 				*)
           echo # Summary output with command list
@@ -1510,12 +1510,14 @@ function validate() # $1=value
 #test if a given vsim is running
 function IsRunning() #$1=name
 {
-	local loc_vmxfile
-
-	loc_vmxfile="$vmxfile"
-	if [ -n "$1" ];then loc_vmxfile=$(getvmxfile "$1");fi
-
-	if [ -f "$("$VMRUN" -T fusion list | grep "$loc_vmxfile")" ];then return 0;fi
+  local _vmxfile="$vmxfile"
+	local _nvram="$simpath/nvram"
+  if [ -n "$1" ];then
+	  _vmxfile=$(getvmxfile "$1")
+		_nvram="$SIMDIR/$name/nvram"
+	fi
+  if [ -n "$(lsof -w $_nvram | grep nvram)" ];then return 0;fi
+#  if [ -f "$("$VMRUN" -T fusion list | grep "$_vmxfile")" ];then return 0;fi
 
 	return 1
 }
@@ -2529,7 +2531,7 @@ function vsimexport()
 				if [ -n "$_ovf" ];then _type="v";fi
 				if [ -n "$_sim" ];then _type="sim";fi
 				if [ -n "$_nodar" ];then _nodar="_nodar";fi
-				_file="$(echo $_version1|sed -e 's/\.//g')_""$_type""$_nodar""_image.tgz"					
+				_file="$(echo $_version1|sed -e 's/\.//g')_""$_type""$_nodar""_image.tgz"
 				echo "Image1 Version: $_version1"
 				echo "Image1 Type   : $_build"
 				echo "Exporting File: $_file"
@@ -2587,7 +2589,7 @@ function vsimexport()
 					setvmx ethernet7.networkName "VM Network";fi
 		fi
 
-        
+
 
 		# Must not be mounted
 		# if IsMounted;then cfunmount -zero;fi
@@ -3464,8 +3466,8 @@ function vsimmodify()
 	if ! [ -z "$consport" ];then vsimmakecons;fi
 
 	# -ev, $ev : Process these last so they function as overides
-	if ! [ -z "$ev" ];then 
-		evparse "$ev" "$env"; 
+	if ! [ -z "$ev" ];then
+		evparse "$ev" "$env";
 	fi
 
     envsave
