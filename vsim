@@ -1508,15 +1508,18 @@ function validate() # $1=value
 }
 
 #test if a given vsim is running
-function IsRunning() #$1=name
+function IsRunning() #$1=simpath
 {
-  local _vmxfile="$vmxfile"
-	local _nvram="$simpath/nvram"
+  #local _vmxfile="$vmxfile"
+	local _simpath="$simpath"
   if [ -n "$1" ];then
-	  _vmxfile=$(getvmxfile "$1")
-		_nvram="$SIMDIR/$name/nvram"
+#	  _vmxfile=$(getvmxfile "$1")
+		_simpath="$1"
 	fi
-  if [ -n "$(lsof -w $_nvram | grep nvram)" ];then return 0;fi
+#	local _nvram="$_simpath/nvram"
+
+  if [ -n "$(ls $_simpath | grep .lck)" ]; then return 0;fi
+#  if [ -f "$_nvram" ] && [ -n "$(lsof -w $_nvram | grep nvram 2>/dev/null)" ];then return 0;fi
 #  if [ -f "$("$VMRUN" -T fusion list | grep "$_vmxfile")" ];then return 0;fi
 
 	return 1
@@ -2752,7 +2755,7 @@ function vsimimport()
 function vsimlist()
 {
 	#List vsims
-	vmrunlist=$("$VMRUN" list)
+	#vmrunlist=$("$VMRUN" list)
 	local _version
 	local _env
 	local _vmx
@@ -2813,7 +2816,8 @@ function vsimlist()
 			if [ -f "$i/mnt/env/env" ];then _cfcard="$i/mnt";fi
 
 			state="-"
-			if [ -n "$(echo "$vmrunlist" | grep "$i/")" ];then state="running";fi
+			#if [ -n "$(echo "$vmrunlist" | grep "$i/")" ];then state="running";fi
+			if IsRunning $i;then state="running";fi
 			if [ -n "$(getvmx checkpoint.vmState "$vmxfile")" ];then state="suspended";fi
 			if IsMounted $i;then state="mounted";fi
 
