@@ -874,13 +874,13 @@ function exportvbox()
 	#need code here to modify based on primary kernel version
 	if [ "$_baseversion" -lt "830" ];then
 		nvmode="fake"
-		setenv "fake-nvram?" "true" 
-		setenv "bootarg.vm.vnvram" "fake" 
-		unsetenv "nvram_emulation" 
-		unsetenv "nvram_discard" 
-		setenv "bootarg.srm.nvram.setup_sim" "false" 
-		setenv "bootarg.srm.nvram.vnvram" "false" 
-		unsetenv "bootarg.vnvram.size" 
+		setenv "fake-nvram?" "true"
+		setenv "bootarg.vm.vnvram" "fake"
+		unsetenv "nvram_emulation"
+		unsetenv "nvram_discard"
+		setenv "bootarg.srm.nvram.setup_sim" "false"
+		setenv "bootarg.srm.nvram.vnvram" "false"
+		unsetenv "bootarg.vnvram.size"
 	fi
 
 	#Must save changes before attaching
@@ -1180,7 +1180,7 @@ function setoption() #$1=option $2=value
 			#And it needs an export
 			newexport="$value -alldirs -mapall=root -network $vmnet1_subnet -mask $vmnet1_netmask"
 			if [ "$(uname)" = "Linux" ];then
-				newexport="$2 $vmnet1_subnet/$(getcidr "$vmnet1_netmask")(rw,sync,fsid=0,no_root_squash,insecure)";fi
+				newexport="$2 $vmnet1_subnet/$(getcidr "$vmnet1_netmask")(rw,sync,fsid=0,no_root_squash,insecure,no_subtree_check)";fi
 			oldexport=$(cat /etc/exports | grep "^$value")
 			if [ "$newexport" = "$oldexport" ];then
 				#The export already exists, so we are good to go
@@ -2291,7 +2291,7 @@ function setdefaults()
 function setenv()	#$1=variable $2=value $3=envfile
 {
 
-    
+
 	local _var="$1"
 	local _val="\"$2\""
 	local _env="$3"
@@ -3536,7 +3536,7 @@ function vsimmodify()
 
 	# Toggle the default image
 	if $setdefault; then
-		if $image1 || $image2;then 
+		if $image1 || $image2;then
 			saveenv # to preserve config before vsim update
 			vsimupdate
 		fi
@@ -4182,7 +4182,7 @@ function cfsave()
 		mcopy -osvmp -i "$mdisk" "$simpath"/cfcard/varfsdump ::/ &>/dev/null
 		mcopy -osvmp -i "$mdisk" "$simpath"/cfcard/x86_64 ::/ &>/dev/null
 		mcopy -osvmp -i "$mdisk" "$simpath"/cfcard/x86_64/mfg_l_f ::/mfg_l_f &>/dev/null
-		mcopy -osvmp -i "$mdisk" "$simpath"/BOOT_SEQ   ::/BOOT_SEQ &>/dev/null		
+		mcopy -osvmp -i "$mdisk" "$simpath"/BOOT_SEQ   ::/BOOT_SEQ &>/dev/null
 		mcopy -osvmp -i "$mdisk" "$simpath"/setup.ngsh ::/setup.ngsh &>/dev/null
 
     elif ! IsRunning;then
