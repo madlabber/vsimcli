@@ -73,21 +73,21 @@ if ! [ -f "$vmnet1_file" ];then vmnet1_file="/etc/vmware/vmnet1/dhcpd/dhcpd.conf
 if ! [ -f "$vmnet8_file" ];then vmnet8_file="/etc/vmware/vmnet8/dhcpd/dhcpd.conf";fi
 
 if [ -f "$vmnet_file" ];then
-	# HOSTONLY Networking is used for NFS based HA
-	vmnet1_subnet=$(cat "$vmnet_file" | grep "VNET_1" | grep "SUBNET" | cut -d' ' -f3)
-	vmnet1_netmask=$(cat "$vmnet_file" | grep "VNET_1" | grep "NETMASK" | cut -d' ' -f3)
-	vmnet1_hostip=$(cat "$vmnet1_file"  | grep "fixed-address" | cut -d' ' -f2 | cut -d';' -f1)
-	# NAT Networking is used for auto setup
-	vmnet8_subnet=$(cat "$vmnet_file" | grep "VNET_8" | grep "SUBNET" | cut -d' ' -f3)
-	vmnet8_netmask=$(cat "$vmnet_file" | grep "VNET_8" | grep "NETMASK" | cut -d' ' -f3)
-	vmnet8_gateway=$(cat "$vmnet8_file" | grep -m 1 "routers" | cut -d' ' -f3 | cut -d';' -f1)
-	vmnet8_hostip=$(cat "$vmnet8_file"  | grep "fixed-address" | cut -d' ' -f2 | cut -d';' -f1)
-	vmnet8_domain=$(cat "$vmnet8_file" | grep -m 1 "domain-name " | cut -d' ' -f3 | cut -d';' -f1)
-	vmnet8_dns=$(cat "$vmnet8_file" | grep -m1 "option domain-name-servers" | cut -d' ' -f3 | cut -d';' -f1)
-	# Populate some read only options
-	NAT_SUBNET="$vmnet8_subnet"
-	NAT_NETMASK="$vmnet8_netmask"
-	NAT_GATEWAY="$vmnet8_gateway"
+    # HOSTONLY Networking is used for NFS based HA
+    vmnet1_subnet=$(cat "$vmnet_file" | grep "VNET_1" | grep "SUBNET" | cut -d' ' -f3)
+    vmnet1_netmask=$(cat "$vmnet_file" | grep "VNET_1" | grep "NETMASK" | cut -d' ' -f3)
+    vmnet1_hostip=$(cat "$vmnet1_file"  | grep "fixed-address" | cut -d' ' -f2 | cut -d';' -f1)
+    # NAT Networking is used for auto setup
+    vmnet8_subnet=$(cat "$vmnet_file" | grep "VNET_8" | grep "SUBNET" | cut -d' ' -f3)
+    vmnet8_netmask=$(cat "$vmnet_file" | grep "VNET_8" | grep "NETMASK" | cut -d' ' -f3)
+    vmnet8_gateway=$(cat "$vmnet8_file" | grep -m 1 "routers" | cut -d' ' -f3 | cut -d';' -f1)
+    vmnet8_hostip=$(cat "$vmnet8_file"  | grep "fixed-address" | cut -d' ' -f2 | cut -d';' -f1)
+    vmnet8_domain=$(cat "$vmnet8_file" | grep -m 1 "domain-name " | cut -d' ' -f3 | cut -d';' -f1)
+    vmnet8_dns=$(cat "$vmnet8_file" | grep -m1 "option domain-name-servers" | cut -d' ' -f3 | cut -d';' -f1)
+    # Populate some read only options
+    NAT_SUBNET="$vmnet8_subnet"
+    NAT_NETMASK="$vmnet8_netmask"
+    NAT_GATEWAY="$vmnet8_gateway"
 fi
 
 ##
@@ -103,55 +103,55 @@ fi
 #OBSOLETE
 #function usage()
 # {
-#	echo
-	#echo "vsim mkfod    [options] <fodname>       : make a FailOver Directory (HA Group)"
-	#echo "vsim rmfod    <fodname>                 : Alias to vsim delete"
-	#echo "options:"
-	#echo "     -vscsi                  : Use vscsi data diskmodel (for ESX)"
+#   echo
+    #echo "vsim mkfod    [options] <fodname>       : make a FailOver Directory (HA Group)"
+    #echo "vsim rmfod    <fodname>                 : Alias to vsim delete"
+    #echo "options:"
+    #echo "     -vscsi                  : Use vscsi data diskmodel (for ESX)"
 #$}
 
 #help
 function help() # $1=subcommand
 {
-	### Print the header and sign my work
-	if [ -n "$1" ] && ! [ "$1" = "usage" ]; then
-					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
-					echo "Usage:";fi
-	case $1 in
-		console  )  echo "   vsim console <vsim name> [options]";;
-		create  | make )
-                echo "   vsim create <vsim name> -package <image.tgz> [options]"
-                echo "   vsim create <vsim name> -version <version> [options]";;
-		configure )	echo "   vsim configure <vsim name> [options]";;
-		delete | rm  )
-                echo "   vsim delete <vsim name>|<fod name> [options]";;
-		deploy   )	echo "   vsim deploy <vsim name> [options]";;
-		export   )	echo "   vsim export <vsim name> [options]";;
-		import   )  echo "   vsim import <filename> [options]";;
-		modify   )  echo "   vsim modify <vsim name> [options]";;
-		mount    )  echo "   vsim mount <vsim name> [options]";;
-		options  )  echo "   vsim options [variable] [value] [options]";;
-		poweroff | kill )
-                echo "   vsim poweroff <vsim name> [options]";;
-		printenv )  echo "   vsim printenv <vsim name> [variable] [options]";;
-		printvmx )  echo "   vsim printvmx <vsim name> [options]";;
-		rename   )  echo "   vsim rename <vsim name> <new name> [options]";;
-		run      )  echo "   vsim run <vsim name> [command] [options]";;
-		setenv   )  echo "   vsim setenv <vsim name> <variable> <value> [options]";;
-		setvmx   )  echo "   vsim setvmx <vsim name> <variable> <value> [options]";;
-		show     )  echo "   vsim show [vsim name] [options]";;
-		software | image )
-                echo "   vsim image [options]"
-                echo "   vsim image <vsim name> [options]";;
-		start    )  echo "   vsim start <vsim name> [options]";;
-		stop     )  echo "   vsim stop <vsim name> [options]";;
-		suspend  )	echo "   vsim suspend <vsim name> [options]";;
-		unmount  )  echo "   vsim unmount <vsim name> [options]";;
-		unsetenv )  echo "   vsim unsetenv <vsim name> <variable> [options]";;
-		unsetvmx )	echo "   vsim unsetvmx <vsim name> <variable> [options]";;
-		update   )  echo "   vsim update <vsim name> [options]";;
-					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
-		usage    )	echo # Detailed output with usage
+    ### Print the header and sign my work
+    if [ -n "$1" ] && ! [ "$1" = "usage" ]; then
+                    ######01234567890123456789012345678901234567890123456789012345678901234567890123456789
+                    echo "Usage:";fi
+    case $1 in
+        console  )  echo "   vsim console <vsim name> [options]";;
+        create  | make )
+                    echo "   vsim create <vsim name> -package <image.tgz> [options]"
+                    echo "   vsim create <vsim name> -version <version> [options]";;
+        configure ) echo "   vsim configure <vsim name> [options]";;
+        delete | rm  )
+                    echo "   vsim delete <vsim name>|<fod name> [options]";;
+        deploy   )  echo "   vsim deploy <vsim name> [options]";;
+        export   )  echo "   vsim export <vsim name> [options]";;
+        import   )  echo "   vsim import <filename> [options]";;
+        modify   )  echo "   vsim modify <vsim name> [options]";;
+        mount    )  echo "   vsim mount <vsim name> [options]";;
+        options  )  echo "   vsim options [variable] [value] [options]";;
+        poweroff | kill )
+                    echo "   vsim poweroff <vsim name> [options]";;
+        printenv )  echo "   vsim printenv <vsim name> [variable] [options]";;
+        printvmx )  echo "   vsim printvmx <vsim name> [options]";;
+        rename   )  echo "   vsim rename <vsim name> <new name> [options]";;
+        run      )  echo "   vsim run <vsim name> [command] [options]";;
+        setenv   )  echo "   vsim setenv <vsim name> <variable> <value> [options]";;
+        setvmx   )  echo "   vsim setvmx <vsim name> <variable> <value> [options]";;
+        show     )  echo "   vsim show [vsim name] [options]";;
+        software | image )
+                    echo "   vsim image [options]"
+                    echo "   vsim image <vsim name> [options]";;
+        start    )  echo "   vsim start <vsim name> [options]";;
+        stop     )  echo "   vsim stop <vsim name> [options]";;
+        suspend  )  echo "   vsim suspend <vsim name> [options]";;
+        unmount  )  echo "   vsim unmount <vsim name> [options]";;
+        unsetenv )  echo "   vsim unsetenv <vsim name> <variable> [options]";;
+        unsetvmx )  echo "   vsim unsetvmx <vsim name> <variable> [options]";;
+        update   )  echo "   vsim update <vsim name> [options]";;
+                    ######01234567890123456789012345678901234567890123456789012345678901234567890123456789
+        usage    )  echo # Detailed output with usage
     			echo "vsim4osx - A vsim toolkit for OSX and VMware fusion"
     			echo "Version: $VSIMVERSION"
     			echo "Author : Sean Hatfield"
@@ -502,7 +502,7 @@ function autosetup()
 
 	#FS.0 can use an ngsh script to self configure
 	#Older versions use an xml answer file.  Need to add that later
-	setupfile="$simpath/mnt/setup.ngsh"
+	setupfile="$simpath/cfcard/setup.ngsh"
 	echo "#!/bin/sh" > $setupfile
 	echo "#Created by vsim4osx" >> $setupfile
 	echo "" >> $setupfile
@@ -874,11 +874,12 @@ function exportvbox()
 	#need code here to modify based on primary kernel version
 	if [ "$_baseversion" -lt "830" ];then
 		nvmode="fake"
+		envsave
 		vsimmodify
 	fi
 
 	#Must save changes before attaching
-  envsave
+    envsave
 	#delete any existing config file
 	rm "$SIMDIR/$name/$name.vbox"
 
@@ -2504,50 +2505,56 @@ function vsimexport()
 
 	#if IsVM;then echo "ISVM";else echo "NOTVM";fi
 
+	# Must not be mounted
+	if IsMounted;then cfunmount -zero;fi
+
 	# Some operations need it mounted
 	if IsVM;then
-		cfmount
+		# cfmount
+  #       local _cfcard="$simpath/mnt"
+        cfcache
+        local _cfcard="$simpath/cfcard"
 
-		_version1=$(cat "$simpath/mnt/x86_64/freebsd/image1/VERSION" 2>/dev/null)
-		_version2=$(cat "$simpath/mnt/x86_64/freebsd/image2/VERSION" 2>/dev/null)
+		_version1=$(cat "$_cfcard/x86_64/freebsd/image1/VERSION" 2>/dev/null)
+		_version2=$(cat "$_cfcard/x86_64/freebsd/image2/VERSION" 2>/dev/null)
 
   		if $image1;then
   			if [ -z "$_version1" ]; then
   				echo "Image1 not present in $name" >&2
   			else
-  				_build=$(cat "$simpath/mnt/x86_64/freebsd/image1/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
-					_nodar=$(echo "$_build" | grep "NODAR")
-					if [ "$_build" = "SIMOVF" ] || [ "$_build" = "SIM" ] || [ "$_build" = "SIMNODAR" ];then _type="sim";fi
-  				if [ "$_build" = "OVF" ] || [ "$_build" = "OVFNODAR" ];then _type="v";fi
-				  _file="$(echo $_version1|sed -e 's/\.//g')_""$_type""_image.tgz"
-				if [ -n "$_nodar" ];then
-				  _file="$(echo $_version1|sed -e 's/\.//g')_""$_type""_image_nodar.tgz"
-				fi
+  				_build=$(cat "$_cfcard/x86_64/freebsd/image1/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
+				_nodar=$(echo "$_build" | grep "NODAR")
+				_sim=$(echo "$_build" | grep "SIM")
+				_ovf=$(echo "$_build" | grep "OVF")
+				if [ -n "$_ovf" ];then _type="v";fi
+				if [ -n "$_sim" ];then _type="sim";fi
+				if [ -n "$_nodar" ];then _nodar="_nodar";fi
+				_file="$(echo $_version1|sed -e 's/\.//g')_""$_type""$_nodar""_image.tgz"					
 				echo "Image1 Version: $_version1"
 				echo "Image1 Type   : $_build"
 				echo "Exporting File: $_file"
 				echo
-				tar -C "$simpath/mnt/x86_64/freebsd/image1" -vczf "$_file" .
+				tar -C "$_cfcard/x86_64/freebsd/image1" -vczf "$_file" .
 			fi
 		fi
 
 		if $image2;then
-  		if [ -z "$_version2" ]; then
-  			echo "Image2 not present in $name" >&2
-  		else
-  			_build=$(cat "$simpath/mnt/x86_64/freebsd/image2/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
+            if [ -z "$_version2" ]; then
+                echo "Image2 not present in $name" >&2
+            else
+                _build=$(cat "$_cfcard/x86_64/freebsd/image2/BUILD" | grep "TYPE" | cut -d: -f2 | tr -ds ' ' ' ')
 				_nodar=$(echo "$_build" | grep "NODAR")
-  			if [ "$_build" = "SIMOVF" ] || [ "$_build" = "SIM" ] || [ "$_build" = "SIMNODAR" ];then _type="sim";fi
-  			if [ "$_build" = "OVF" ] || [ "$_build" = "OVFNODAR" ];then _type="v";fi
-			  _file="$(echo $_version2|sed -e 's/\.//g')_""$_type""_image.tgz"
-				if [ -n "$_nodar" ];then
-				  _file="$(echo $_version1|sed -e 's/\.//g')_""$_type""_image_nodar.tgz"
-				fi
+				_sim=$(echo "$_build" | grep "SIM")
+				_ovf=$(echo "$_build" | grep "OVF")
+				if [ -n "$_ovf" ];then _type="v";fi
+				if [ -n "$_sim" ];then _type="sim";fi
+				if [ -n "$_nodar" ];then _nodar="_nodar";fi
+				_file="$(echo $_version1|sed -e 's/\.//g')_""$_type""$_nodar""_image.tgz"
 				echo "Image2 Version: $_version2"
 				echo "Image2 Type   : $_build"
 				echo "Exporting File: $_file"
 				echo
-				tar -C "$simpath/mnt/x86_64/freebsd/image2" -vczf "$_file" .
+				tar -C "$_cfcard/x86_64/freebsd/image2" -vczf "$_file" .
 			fi
 		fi
 
@@ -2580,10 +2587,11 @@ function vsimexport()
 					setvmx ethernet7.networkName "VM Network";fi
 		fi
 
-
+        
 
 		# Must not be mounted
-		if IsMounted;then cfunmount -zero;fi
+		# if IsMounted;then cfunmount -zero;fi
+        cfsave
 
   		#if -maketgz is set, exporttgz
   		if $maketgz; then
@@ -2867,40 +2875,41 @@ function vsimmake()
 	local _vmdktype=0
 
 	# Find a few things
-	if [ -n "$release" ];then _image=$(getrelease "$release");fi
-  if [ -n "$image"   ];then _image=$(getimagepath "$image");fi
-	if [ -z "$simpath" ];then simpath="$SIMDIR/$name";fi
-  if [ -z "$mode" ];then mode="C";fi
+    if [ -n "$release" ];then _image=$(getrelease "$release");fi
+    if [ -n "$image"   ];then _image=$(getimagepath "$image");fi
+    if [ -z "$simpath" ];then simpath="$SIMDIR/$name";fi
+    if [ -z "$mode" ];then mode="C";fi
 
-	# Are we done yet?
-  if [ -n "$fodname" ] && [ -z "$name" ];then makefod "$fodname" "$vdevinit";return 0;fi
-	if [ -z "$name" ] || [ "$name" = "?" ];then help "create";exit;fi
-  if [ -z "$image$release" ];then echo "An image file or release version must be specified.";echo;help "create";return 1;fi
-  if ! [ -f "$_image" ];then echo "vsimmake:image not found:$image$release" >&2;return 1;fi
-  if ! $force && [ -d "$simpath" ];then echo "Vsim already exists: $simpath";return 1;fi
+    # Are we done yet?
+    if [ -n "$fodname" ] && [ -z "$name" ];then makefod "$fodname" "$vdevinit";return 0;fi
+    if [ -z "$name" ] || [ "$name" = "?" ];then help "create";exit;fi
+    if [ -z "$image$release" ];then echo "An image file or release version must be specified.";echo;help "create";return 1;fi
+    if ! [ -f "$_image" ];then echo "vsimmake:image not found:$image$release" >&2;return 1;fi
+    if ! $force && [ -d "$simpath" ];then echo "Vsim already exists: $simpath";return 1;fi
 
-  # Default fod name
-  if [ -z "$fodname" ] && [ -n "$partner" ];then fodname="ha_$name""_$partner";fi
-  if [ -n "$fodname" ];then makefod "$fodname" "$vdevinit";fi
+    # Default fod name
+    if [ -z "$fodname" ] && [ -n "$partner" ];then fodname="ha_$name""_$partner";fi
+    if [ -n "$fodname" ];then makefod "$fodname" "$vdevinit";fi
 
-	env="$simpath/mnt/env/env"
-	vmx="$simpath/DataONTAP.vmx"
-  vmxfile="$simpath/DataONTAP.vmx" #$vmxfile is global
+    _cfcard="$simpath/cfcard"
+    env="$_cfcard/env/env"
+    vmx="$simpath/DataONTAP.vmx"
+    vmxfile="$simpath/DataONTAP.vmx" #$vmxfile is global
 
-  #Need to check effective version of $_image and set defaults
-  _version=$(tar -xzOf "$_image" VERSION 2>/dev/null)
+    #Need to check effective version of $_image and set defaults
+    _version=$(tar -xzOf "$_image" VERSION 2>/dev/null)
 	if [ -z "$_version" ];then _version=$(tar -xzOf "$_image" ./VERSION);fi
-  _baseVersion=$(getbaseversion "$_version")
-  setdefaults $_baseVersion
+    _baseVersion=$(getbaseversion "$_version")
+    setdefaults $_baseVersion
 
-  # setdefaults also tries to determine the correct diskmodel
-  # 8.1+ is standard, 8.0 is classic
-  # but if that file is missing, try universal
-  _template="$VSIMHOME/$diskmodel.tgz"
-  if ! [ -f "$_template" ];then
-  	diskmodel="standard"
-  	_template="$VSIMHOME/universal.tgz"
-  fi
+    # setdefaults also tries to determine the correct diskmodel
+    # 8.1+ is standard, 8.0 is classic
+    # but if that file is missing, try universal
+    _template="$VSIMHOME/$diskmodel.tgz"
+    if ! [ -f "$_template" ];then
+        diskmodel="standard"
+        _template="$VSIMHOME/universal.tgz"
+    fi
 
   	# Now if the template is missing, exit gracefully
   	if ! [ -f "$_template" ];then
@@ -2942,18 +2951,20 @@ function vsimmake()
   	# at 3gb and below set it to 3072
   	if [ $ram -le 3072 ]; then setvmx "pciHole.start" "3072" "$vmx";fi
 
-  #mount the CF card vmdk
-  #	echo "mounting boot device."
-  cfmount "$simpath"
+    #mount the CF card vmdk
+    # echo "mounting boot device."
+    #cfmount "$simpath"
 
-  #copy the template cfcard into the new vSIM
+    #copy the template cfcard into the new vSIM
 	if [ -d "$VSIMHOME/cfcard/" ];then cp -R "$VSIMHOME/cfcard/" "$simpath/mnt";fi
 
 	#Build a clean env file
+    mkdir -p "$_cfcard/env"
 	echo "ENV File : $env"
 	newvsimenv "$env"
+    cfsave
 
-  #Install DataONTAP image
+    #Install DataONTAP image
 	vsimupdate
 
 	#Made it this far, so probably safe to pull a ticket
@@ -3083,6 +3094,7 @@ function vsimmake()
 
 	#update the env
 	echo "Applying configuration"
+	envsave
 	vsimmodify
 
 	#Version Specific Fixes
@@ -3126,8 +3138,9 @@ function vsimmake()
 
 
   	#detach and cleanup
-  	echo "unmounting boot device"
-  	cfunmount "$simpath" -zero
+  	# echo "unmounting boot device"
+  	# cfunmount "$simpath" -zero
+  	envsave
 
   	#RM the sim vmdk if data disk model = VSCSI
   	if $vscsi; then
@@ -3202,13 +3215,11 @@ function vsimoptions()
 #add a telnet console to a vsim
 function vsimmakecons()
 {
-	#make sure its not running
-	vsimstop
 
 	if [ "$consport" == "1" ];then
   		#this is code for comconsole but port was not specified
   		#use the ticket to pick a port in the 2200 range
-  		if [ -z "$ticket"];then ticket=$(pullticket);fi
+  		if [ -z "$ticket" ];then ticket=$(pullticket);fi
   		consport=$(expr "2200" + "$ticket")
   	fi
 
@@ -3226,15 +3237,14 @@ function vsimmakecons()
   	setvmx  "serial0.startConnected" "TRUE"
 
   	#modify the env
-		envcache
   	setenv "console" "comconsole,vidconsole" "$simpath/cfcard/env/env"
-    envsave
+
 }
 
 #modify an existing vsim
 function vsimmodify()
 {
-  envcache
+    envcache
 
 	#central spot to apply changes to the vsim
 	if [ -z "$env" ];then env="$simpath/cfcard/env/env";fi
@@ -3432,9 +3442,6 @@ function vsimmodify()
 		fi
 	fi
 
-	#Telnet console
-	if ! [ -z "$consport" ];then vsimmakecons;fi
-
 	#if -auto was set, enable autosetup
   	if $auto; then autosetup; fi
 
@@ -3453,8 +3460,15 @@ function vsimmodify()
 			unsetenv "fake-nvram?" "$env"
     fi
 
+	#Telnet console
+	if ! [ -z "$consport" ];then vsimmakecons;fi
+
 	# -ev, $ev : Process these last so they function as overides
-	if ! [ -z "$ev" ];then evparse "$ev" "$env"; fi
+	if ! [ -z "$ev" ];then 
+		evparse "$ev" "$env"; 
+	fi
+
+    envsave
 
 	# -nics : Add/Remove nics to hit the desired count
 	niccount=$(countnics)
@@ -3509,7 +3523,7 @@ function vsimmodify()
 	#-bridged
 	if [ -n "$bridged" ];then connectnics "bridged" "$bridged" "$vmx";fi
 
-  envsave
+
 	# Toggle the default image
 	if $setdefault; then
 		if $image1 || $image2;then vsimupdate;fi
@@ -4098,6 +4112,75 @@ function vsimtest()
 
 }
 
+# cache the entire cfcard
+function cfcache()
+{
+	rm -rf "$simpath/cfcard"
+    mkdir -p "$simpath/cfcard"
+
+    if IsMounted;then
+    	cp -R "$simpath/mnt/" "$simpath/cfcard/" &>/dev/null
+    elif [ -n "$(which mcopy)" ];then
+		#echo "mcopy mode"
+		local _vmdk="$(getcfvmdk)"
+		local _flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
+		local _start="66528"
+		if [ "$(uname)" = "Linux" ];then
+		  local _start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)";fi
+		if [ "$(uname)" = "Darwin" ];then
+		  local _start="$(fdisk -d $simpath/$_flat | grep 0x06 | cut -d, -f1)";fi
+		local _offset="$(echo $_start / 2 |bc)k"
+		mdisk="$simpath/$_flat@@$_offset"
+		export MTOOLS_SKIP_CHECK=1
+		mcopy -nsvmp -i "$mdisk" "::/" "$simpath/cfcard/" &>/dev/null
+    elif ! IsRunning;then
+    	cfmount
+        cp -R "$simpath/mnt/" "$simpath/cfcard/" &>/dev/null
+        cfunmount
+    fi
+}
+
+# cache the entire cfcard
+function cfsave()
+{
+
+    if IsMounted;then
+    	cp -R "$simpath/cfcard/" "$simpath/mnt/" &>/dev/null
+    elif [ -n "$(which mcopy)" ];then
+		#echo "mcopy mode"
+		local _vmdk="$(getcfvmdk)"
+		local _flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
+		local _start="66528"
+		if [ "$(uname)" = "Linux" ];then
+		  local _start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)";fi
+		if [ "$(uname)" = "Darwin" ];then
+		  local _start="$(fdisk -d $simpath/$_flat | grep 0x06 | cut -d, -f1)";fi
+		local _offset="$(echo $_start / 2 |bc)k"
+		mdisk="$simpath/$_flat@@$_offset"
+		export MTOOLS_SKIP_CHECK=1
+		# this copies cfcard as a subfolder of / :(
+		#mcopy -osvmp -i "$mdisk" "$simpath"/cfcard/ ::/ #&>/dev/null
+		# So instead just grab the bits we care about
+		mcopy -osvmp -i "$mdisk" "$simpath"/cfcard/env ::/ &>/dev/null
+		mcopy -osvmp -i "$mdisk" "$simpath"/cfcard/files ::/ &>/dev/null
+		mcopy -osvmp -i "$mdisk" "$simpath"/cfcard/x86_64 ::/ &>/dev/null
+		mcopy -osvmp -i "$mdisk" "$simpath"/cfcard/x86_64/mfg_l_f ::/mfg_l_f &>/dev/null
+		mcopy -osvmp -i "$mdisk" "$simpath"/cfcard/x86_64/setup.ngsh ::/setup.ngsh &>/dev/null
+
+    elif ! IsRunning;then
+    	cfmount
+        cp -R "$simpath/cfcard/" "$simpath/mnt/" &>/dev/null
+        cfunmount
+    fi
+}
+
+function cfflush()
+{
+	rm -rf "$simpath/cfcard"
+    envcache
+}
+
+
 #update cached copy of a vsim env
 function envcache()
 {
@@ -4129,10 +4212,10 @@ function envcache()
 
 		# allow read operations while VM is running
 		export MTOOLS_SKIP_CHECK=1
-		mcopy -n ::/env/env "$simpath/cfcard/env/env" -i "$mdisk" &>/dev/null
-		mcopy -n ::/files/* "$simpath/cfcard/files/" -i "$mdisk" &>/dev/null
-		mcopy -n ::/x86_64/freebsd/image1/VERSION "$simpath/cfcard/x86_64/freebsd/image1/VERSION" -i "$mdisk" &>/dev/null
-		mcopy -n ::/x86_64/freebsd/image2/VERSION "$simpath/cfcard/x86_64/freebsd/image2/VERSION" -i "$mdisk" &>/dev/null
+		mcopy -n -i "$mdisk" ::/env/env "$simpath/cfcard/env/env" &>/dev/null
+		mcopy -n -i "$mdisk" ::/files/* "$simpath/cfcard/files/" &>/dev/null
+		mcopy -n -i "$mdisk" ::/x86_64/freebsd/image1/VERSION "$simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
+		mcopy -n -i "$mdisk" ::/x86_64/freebsd/image2/VERSION "$simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
 
 		# if [ -f "$simpath/cfcard/env/_env" ];then
 		# 	mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
@@ -4141,10 +4224,10 @@ function envcache()
 	elif ! $quick;then
 		if ! IsRunning;then
 			cfmount
-			cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env" &>/dev/null
-		  cp -R "$simpath/mnt/files/" "$simpath/cfcard/files/" &>/dev/null
-			cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
-			cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
+            cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env" &>/dev/null
+            cp -R "$simpath/mnt/files/" "$simpath/cfcard/files/" &>/dev/null
+            cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
+            cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
 		  cfunmount
 		fi
 	fi
@@ -4158,7 +4241,7 @@ function envsave()
 	# if the cfcard is mounted, copy the file directly
 	if IsMounted;then
 		cp "$_simpath/cfcard/env/env" "$_simpath/mnt/env/env" &>/dev/null
-  # if it is not mounted, but mtools are installed, use mcopy
+    # if it is not mounted, but mtools are installed, use mcopy
 	elif [ -n "$(which mcopy)" ];then
 		#echo "mcopy mode"
 		local _vmdk="$(getcfvmdk)"
@@ -4174,15 +4257,15 @@ function envsave()
 
 		# allow read operations while VM is running
 		export MTOOLS_SKIP_CHECK=1
-		mcopy -o "$simpath/cfcard/env/env" ::/env/env -i "$mdisk" #&>/dev/null
+		mcopy -o -i "$mdisk" "$simpath/cfcard/env/env" ::/env/env #&>/dev/null
 		# if [ -f "$simpath/cfcard/env/_env" ];then
 		# 	mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
 		# fi
 	# otherwise mount if possible to copy the env file
 	else
-			cfmount
-			cp "$_simpath/cfcard/env/env" "$_simpath/mnt/env/env" &>/dev/null
-		  cfunmount
+        cfmount
+        cp "$_simpath/cfcard/env/env" "$_simpath/mnt/env/env" &>/dev/null
+        cfunmount
 	fi
 }
 
@@ -4205,8 +4288,10 @@ function vsimupdate()
   	# If we have no _image we are done
   	if ! [ -f "$_image" ];then echo "vsimupdate:image not found:$image$release" >&2;return 1;fi
 
-	IsMounted && _unmount=false || _unmount=true
-	cfmount
+	# IsMounted && _unmount=false || _unmount=true
+	# cfmount
+	cfcache
+	local _cfcard="$simpath/cfcard"
 
 	# Get the installation folder ready
 	# and figure out which image to install to
@@ -4218,11 +4303,11 @@ function vsimupdate()
  	if $image2;then _primary="x86_64/freebsd/image2";fi
  	echo "Package  : $_image"
  	echo "Version  : $_version"
- 	chflags nouchg "$simpath/mnt/$_primary/"* 2>/dev/null
- 	rm "$simpath/mnt/$_primary/"* 2>/dev/null
-	mkdir -p "$simpath/mnt/$_primary" #in case CF is blank
-	mkdir -p "$simpath/mnt/x86_64/freebsd/image1"
-	mkdir -p "$simpath/mnt/x86_64/freebsd/image2"
+ 	chflags nouchg "$_cfcard/$_primary/"* 2>/dev/null
+ 	rm "$_cfcard/$_primary/"* 2>/dev/null
+	mkdir -p "$_cfcard/$_primary" #in case CF is blank
+	mkdir -p "$_cfcard/x86_64/freebsd/image1"
+	mkdir -p "$_cfcard/x86_64/freebsd/image2"
 
 	#FIXME:  new netboot images need some cleanup
 	# Detection is handled, but subdir still get extracted
@@ -4230,51 +4315,51 @@ function vsimupdate()
 	if $_netboot;then
 		echo "NETBOOT"
 		# this dumb list is a bugfix for semi-broken tar in Monterey intermittently failing to parse a file list
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/VERSION 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/BUILD 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/CHECKSUM 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/COMPAT.TXT 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/INSTALL 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/cap.xml 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/fw.tgz 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/kernel 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/metadata.xml 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platform.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platfs.img 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/rootfs.img 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/pmroot_late.tgz 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/key_fingerprint.sig 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/kernel.sig 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platform.ko.sig 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/rootfs.img.sig 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_ata_pci_disengage.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_netvsc.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_storvsc.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_utils.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_vmbus.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/if_vmx.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/if_vtnet.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/mlxen.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/mpt.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_blk.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_pci.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_scsi.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/vmbus_pcib.ko 2>&1 | grep -v tar
-		tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/xenhvm.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/VERSION 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/BUILD 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/CHECKSUM 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/COMPAT.TXT 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/INSTALL 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/cap.xml 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/fw.tgz 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/kernel 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/metadata.xml 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platform.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platfs.img 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/rootfs.img 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/pmroot_late.tgz 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/key_fingerprint.sig 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/kernel.sig 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platform.ko.sig 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/rootfs.img.sig 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_ata_pci_disengage.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_netvsc.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_storvsc.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_utils.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_vmbus.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/if_vmx.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/if_vtnet.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/mlxen.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/mpt.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_blk.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_pci.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_scsi.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/vmbus_pcib.ko 2>&1 | grep -v tar
+		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/xenhvm.ko 2>&1 | grep -v tar
 
-		#tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" "netboot"
-		#tar -C "$simpath/mnt/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" $file_list #2>&1 | grep -v tar
+		#tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" "netboot"
+		#tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" $file_list #2>&1 | grep -v tar
 	else
-		tar -C "$simpath/mnt/$_primary" -vxzSf "$_image"
+		tar -C "$_cfcard/$_primary" -vxzSf "$_image"
 	fi
 
 	# Old netboot trap
-	if [ -d "$simpath/mnt/$_primary/netboot" ];then
+	if [ -d "$_cfcard/$_primary/netboot" ];then
 		echo "netboot image detected"
-		rm -rf "$simpath/mnt/$_primary/netboot/"*/
-		mv "$simpath/mnt/$_primary/netboot/"* "$simpath/mnt/$_primary"
-		rm -rf "$simpath/mnt/$_primary/netboot"
+		rm -rf "$_cfcard/$_primary/netboot/"*/
+		mv "$_cfcard/$_primary/netboot/"* "$_cfcard/$_primary"
+		rm -rf "$_cfcard/$_primary/netboot"
 	fi
 
 	if $setdefault;then
@@ -4297,7 +4382,8 @@ function vsimupdate()
 	fi
 
 	#unmount the boot device
-	if $_unmount; then cfunmount;fi
+	# if $_unmount; then cfunmount;fi
+	cfsave
 
 }
 
@@ -4593,7 +4679,7 @@ fi
 
 #For these commands, exit if the VM is still running
 case $action in
-	export|create|modify|setenv|setvmx|start|unsetenv|unsetvmx|update )
+	export|create|modify|setenv|setvmx|start|unsetenv|unsetvmx|update|makecons )
 		if IsRunning; then echo "error: vsim is still running: $simpath";exit;fi;;
 esac
 
@@ -4646,7 +4732,9 @@ case $action in
 	export 		)	vsimexport;;
 	help 		  ) help "$arg2";;
 	import 		)	vsimimport;;
-	makecons 	)	vsimmakecons;;
+	makecons 	)	envcache
+	                vsimmakecons
+	                envsave;;
 	mkfod 		)	makefod "$name" "$vdevinit";;
 	maketgz  	)   tar -C "$SIMDIR" -czvf "$name.tgz" "$name";; # Used by install.sh
 	modify		)   vsimmodify;;
@@ -4719,7 +4807,7 @@ case $action in
   	;;
 	unsetvmx    ) 	unsetvmx "$variable" "$vmxfile";;
 	usage 		)	help "usage";;
-	test 		) 	vsimtest;;
+	test 		) 	cfsave;;#vsimtest;;
     * 			)	echo "Invalid Command";;
 esac
 
