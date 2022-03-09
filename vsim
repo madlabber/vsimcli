@@ -874,8 +874,13 @@ function exportvbox()
 	#need code here to modify based on primary kernel version
 	if [ "$_baseversion" -lt "830" ];then
 		nvmode="fake"
-		envsave
-		vsimmodify
+		setenv "fake-nvram?" "true" 
+		setenv "bootarg.vm.vnvram" "fake" 
+		unsetenv "nvram_emulation" 
+		unsetenv "nvram_discard" 
+		setenv "bootarg.srm.nvram.setup_sim" "false" 
+		setenv "bootarg.srm.nvram.vnvram" "false" 
+		unsetenv "bootarg.vnvram.size" 
 	fi
 
 	#Must save changes before attaching
@@ -2286,6 +2291,7 @@ function setdefaults()
 function setenv()	#$1=variable $2=value $3=envfile
 {
 
+    
 	local _var="$1"
 	local _val="\"$2\""
 	local _env="$3"
@@ -2898,6 +2904,7 @@ function vsimmake()
     if [ -n "$fodname" ];then makefod "$fodname" "$vdevinit";fi
 
     _cfcard="$simpath/cfcard"
+    rm -rf "$_cfcard"
     env="$_cfcard/env/env"
     vmx="$simpath/DataONTAP.vmx"
     vmxfile="$simpath/DataONTAP.vmx" #$vmxfile is global
@@ -3100,7 +3107,6 @@ function vsimmake()
 
 	#update the env
 	echo "Applying configuration"
-	envsave
 	vsimmodify
 
 	#Version Specific Fixes
@@ -3250,7 +3256,6 @@ function vsimmakecons()
 #modify an existing vsim
 function vsimmodify()
 {
-    envcache
 
 	#central spot to apply changes to the vsim
 	if [ -z "$env" ];then env="$simpath/cfcard/env/env";fi
@@ -3466,15 +3471,13 @@ function vsimmodify()
 			unsetenv "fake-nvram?" "$env"
     fi
 
+
 	#Telnet console
 	if ! [ -z "$consport" ];then vsimmakecons;fi
-
 	# -ev, $ev : Process these last so they function as overides
 	if ! [ -z "$ev" ];then
 		evparse "$ev" "$env";
 	fi
-
-    envsave
 
 	# -nics : Add/Remove nics to hit the desired count
 	niccount=$(countnics)
@@ -3532,7 +3535,10 @@ function vsimmodify()
 
 	# Toggle the default image
 	if $setdefault; then
-		if $image1 || $image2;then vsimupdate;fi
+		if $image1 || $image2;then 
+			saveenv # to preserve config before vsim update
+			vsimupdate
+		fi
 	fi
 
 }
@@ -4121,6 +4127,7 @@ function vsimtest()
 # cache the entire cfcard
 function cfcache()
 {
+
 	rm -rf "$simpath/cfcard"
     mkdir -p "$simpath/cfcard"
 
@@ -4190,6 +4197,7 @@ function cfflush()
 #update cached copy of a vsim env
 function envcache()
 {
+
 	#make sure cache directories exist
 	mkdir -p "$simpath/cfcard/env" &>/dev/null
 	mkdir -p "$simpath/cfcard/files" &>/dev/null
@@ -4242,11 +4250,12 @@ function envcache()
 #save updates ack to the cfcard vmdk
 function envsave()
 {
+
 	# If the VM is running we are done
 	if IsRunning;then echo "envsave:vm is running";exit;fi
 	# if the cfcard is mounted, copy the file directly
 	if IsMounted;then
-		cp "$_simpath/cfcard/env/env" "$_simpath/mnt/env/env" &>/dev/null
+		cp "$simpath/cfcard/env/env" "$simpath/mnt/env/env" #&>/dev/null
     # if it is not mounted, but mtools are installed, use mcopy
 	elif [ -n "$(which mcopy)" ];then
 		#echo "mcopy mode"
@@ -4270,7 +4279,7 @@ function envsave()
 	# otherwise mount if possible to copy the env file
 	else
         cfmount
-        cp "$_simpath/cfcard/env/env" "$_simpath/mnt/env/env" &>/dev/null
+        cp "$simpath/cfcard/env/env" "$simpath/mnt/env/env" #&>/dev/null
         cfunmount
 	fi
 }
@@ -4743,7 +4752,9 @@ case $action in
 	                envsave;;
 	mkfod 		)	makefod "$name" "$vdevinit";;
 	maketgz  	)   tar -C "$SIMDIR" -czvf "$name.tgz" "$name";; # Used by install.sh
-	modify		)   vsimmodify;;
+	modify		)   envcache
+                    vsimmodify
+                    envsave;;
 	mount 	 	) 	cfmount && echo "$simpath/mnt";;
 	options 	) 	vsimoptions;;
 	unmount 	) 	cfunmount;;
