@@ -13,6 +13,7 @@ ENV_ITGZPATH="$ITGZPATH"
 ENV_VSIMPASSWORD="$VSIMPASSWORD"
 ENV_VSIMHOME="$VSIMHOME"
 ENV_VSIMSERIAL="$VSIMSERIAL"
+ENV_VSIMPARTNERSERIAL="$VSIMPARTNERSERIAL"
 
 #Defaults:
 #OVFTOOL="/Applications/VMware OVF Tool/ovftool"
@@ -26,9 +27,10 @@ ITGZPATH="$VSIMHOME/ontap"
 VSIMPASSWORD="netapp1!"
 #VSIMLICENSE="" #User must provide cluster base
 # Cluster base is deprecated now so leaving 99 here since it was the first result in google for "cluster base license key"
-VSIMLICENSE="UJBGVLVQJHOJKBAAAAAAAAAAAAAA"
+VSIMLICENSE=""
 SDOT_BUILTIN_LICENSES="" #These can be found in the eval .ova
-VSIMSERIAL="4082368-50-7"
+VSIMSERIAL=""
+VSIMPARTNERSERIAL=""
 
 #If those failed, maybe it is a tech preview of Fusion:
 if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware Fusion Tech Preview.app/Contents/Library/VMware OVF Tool/ovftool";fi
@@ -58,9 +60,11 @@ if [ -n "$ENV_FODDIR" ];then FODDIR="$ENV_FODDIR";fi
 if [ -n "$ENV_ITGZPATH" ];then ITGZPATH="$ENV_ITGZPATH";fi
 if [ -n "$ENV_VSIMHOME" ];then VSIMHOME="$ENV_VSIMHOME";fi
 if [ -n "$ENV_VSIMSERIAL" ];then VSIMSERIAL="$ENV_VSIMSERIAL";fi
+if [ -n "$ENV_VSIMPARTNERSERIAL" ];then VSIMPARTNERSERIAL="$ENV_VSIMPARTNERSERIAL";fi
 
 # Apply defaults
 if [ -n "$VSIMSERIAL" ];then serno="$VSIMSERIAL";fi
+if [ -n "$VSIMPARTNERSERIAL" ];then serno2="$VSIMPARTNERSERIAL";fi
 
 # Networking is managed by VMware
 vmnet_file="/Library/Preferences/VMware Fusion/networking"
@@ -246,6 +250,7 @@ function help() # $1=subcommand
 					echo "   -node-name <name>                    Node Name";;esac
 	case $1 in usage|create )
 					echo "   -partner <vsim name>                 Also create the HA partner"
+          echo "   -partnerserial <serial_number>       System Serial Number of the HA partner"
 					echo "   -auto                                Enable Auto setup"
 					echo "   -create <cluster name>               Create a new cluster"
 					echo "   -join <cluster name>                 Join an existing cluster"
@@ -1120,7 +1125,8 @@ function getoption() # $1=option
 		VDISKMANAGER | vdiskmanager )  echo "$VDISKMANAGER";;
 		VSIMLICENSE | vsimlicense )    echo "$VSIMLICENSE";;
 		SDOT_BUILTIN_LICENSES | sdot_builtin_licenses ) echo "$SDOT_BUILTIN_LICENSES";;
-		VSIMSERIAL  | VSIMSERIAL )     echo "$VSIMSERIAL";;
+		VSIMSERIAL  | vsimserial )     echo "$VSIMSERIAL";;
+    VSIMPARTNERSERIAL | vsimpartnerserial ) echo "$VSIMPARTNERSERIAL";;
 		NAT_SUBNET 	| nat_subnet  )    echo "$NAT_SUBNET";;
 		NAT_NETMASK | nat_netmask )    echo "$NAT_NETMASK";;
 		NAT_GATEWAY | nat_gateway )    echo "$NAT_GATEWAY";;
@@ -1239,6 +1245,9 @@ function setoption() #$1=option $2=value
 		VSIMSERIAL | vsimserial )
 			VSIMSERIAL="$2"
 			echo "$1=$2";;
+    VSIMPARTNERSERIAL | vsimpartnerserial )
+  			VSIMPARTNERSERIAL="$2"
+  			echo "$1=$2";;
 		SDOT_BUILTIN_LICENSES | sdot_builtin_licenses )
 			SDOT_BUILTIN_LICENSES="$2"
 			echo "$1=$2";;
@@ -1280,6 +1289,9 @@ function saveoptions()
 	echo "#This is the default serial number for new vsims"
 	echo 'VSIMSERIAL="'$VSIMSERIAL'"'
 	echo
+  echo "#This is the default serial number for new partner vsims"
+	echo 'VSIMPARTNERSERIAL="'$VSIMPARTNERSERIAL'"'
+  echo
 	echo "#These are the licenses used to initialize ONTAP Select"
 	echo 'SDOT_BUILTIN_LICENSES="'$SDOT_BUILTIN_LICENSES'"'
 	} > "$VSIMCFGFILE"
@@ -3043,7 +3055,7 @@ function vsimmake()
   	fi
 
   	#If we have an ICMAC, create the HA IC
-	if ! [ -z "$icmac" ]; then
+    if ! [ -z "$icmac" ]; then
 		echo "Creating HA Interconnect"
 		#default to last port unless specified
 		portnum=$(expr "$nics" + 1)
@@ -3185,7 +3197,7 @@ function vsimmake()
       consport="1"
   		partner=""
   		icmac=""
-  		serno=""
+  		serno="$serno2"
   		bsdip=""
   		simpath=""
   		vsimmake
@@ -3220,6 +3232,7 @@ function vsimoptions()
 	echo "VSIMHOME=$VSIMHOME"
 	echo "VSIMPASSWORD=$VSIMPASSWORD"
 	echo "VSIMSERIAL"="$VSIMSERIAL"
+  echo "VSIMPARTNERSERIAL"="$VSIMPARTNERSERIAL"
 	echo "NAT_SUBNET=$NAT_SUBNET"
 	echo "NAT_NETMASK=$NAT_NETMASK"
 	echo "NAT_GATEWAY=$NAT_GATEWAY"
@@ -4593,6 +4606,7 @@ while [ "X$1" != "X" ]; do
 			                            if [ -n "$argv" ];then setdefault="$argv";fi
 																	;;
       -serno | -sn | -serial   )  serno="$argv";;
+      -partnerserial           )  serno2="$argv";;
       -simdisks | -vdevinit    )  vdevinit="$argv";;
       -simdir                  )  SIMDIR="$argv";;
       -vidcons | -vidconsole   )  console="vidconsole"

@@ -163,6 +163,8 @@ if [ -f "$license_file" ];then
   ./vsim options VSIMLICENSE "$base"
   vsimserial=$(cat "$license_file" | grep '^Licenses' | cut -d' ' -f 8 | cut -d')' -f 1 | head -1)
   ./vsim options VSIMSERIAL "$vsimserial"
+  vsimpartnerserial=$(cat "$license_file" | grep '^Licenses' | grep second | cut -d' ' -f 11 | cut -d')' -f 1)
+  ./vsim options VSIMPARTNERSERIAL "$vsimpartnerserial"
 fi
 
 
