@@ -3631,6 +3631,7 @@ function vsimrun()
 			-ex \"> \" { }
 			-ex \"login: \" { }
 			-ex \"Password:\" { }
+      -ex \"Login incorrect\" { }
 		}
 
 		# an empty password means we just want the interactive console
@@ -3641,16 +3642,48 @@ function vsimrun()
 			exit 0 }
 
 		# Attempt to log in
-		# puts \"Attempting Login\r\"
+		#puts \"Attempting Login\r\"
 		log_user 0
-		set timeout 6
+		set timeout 20
 		send \"\r\"
 		expect {
-			-ex \"> \" {
+			\"> \" {
+        #puts \"\rbranch: > \r\"
 				send \"\r\"
 			}
-			-ex \"login: \"   {
-		  		#puts \"\rbranch: login: \r\"
+			\"login:\"   {
+          #puts \"\rbranch::login \r\"
+          send \"$username\r\"
+          expect \"$username\r\"
+          #puts \"\rbranch::login::login:$username\r\"
+          sleep 3
+          expect \"Password:\" {
+              #puts \"prompt returned\r\"
+              send \"$password\r\"
+              #expect \"$password\"
+              #puts \"\rbranch::login::password:$password\r\"
+          }
+          #puts \"\rbranch::login::wait\r\"
+          expect {
+            \">\" {
+              #puts \"\rbranch::login::>\r\"
+						  send \"\r\"
+					  }
+            \"Login incorrect\" {
+              #puts \"branch::login::Login incorrect\"
+              if { \"$cmd\" != \"\" } {
+                puts \"Login incorrect\"
+                exit 1
+						  }
+						  expect \"\r\"
+					  }
+          }
+          #puts \"end: login:\r\"
+          #puts \"BUFFER:\r\"
+          #puts \$expect_out(buffer)
+			}
+      \"Login incorrect\"   {
+		  		puts \"\rbranch: Login incorrect: \r\"
 		  		send \"$username\r\"
 		        expect -exact \"Password:\"
 		        send \"$password\r\"
@@ -3667,8 +3700,8 @@ function vsimrun()
 					}
 				}
 			}
-			-ex \"Password:\" {
-		  		#puts \"\rbranch: Password: \r\"
+			\"Password:\" {
+		  		puts \"\rbranch: Password: \r\"
 		  		send   \"$password\r\"
 		  		expect {
 					-ex \"> \" {
