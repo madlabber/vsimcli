@@ -2721,7 +2721,7 @@ function vsimimport()
 				fi
 				envcache
 				mkdir -p "$VSIMHOME/cfcard/files"
-				cp -R "$simpath/cfcard/files/" "$VSIMHOME/cfcard/"
+				cp -R "$simpath/cfcard/files/." "$VSIMHOME/cfcard/files/"
 				echo "Import Completed"
 				#Now if its SDOT eval we want to grab the keys from the OVF so we can use them when we run configure
 				if [ -z "$SDOT_BUILTIN_LICENSES" ];then
@@ -4133,7 +4133,7 @@ function cfcache()
     mkdir -p "$simpath/cfcard"
 
     if IsMounted;then
-    	cp -R "$simpath/mnt/" "$simpath/cfcard/" &>/dev/null
+    	cp -R "$simpath/mnt/." "$simpath/cfcard/" &>/dev/null
     elif [ -n "$(which mcopy)" ];then
 		#echo "mcopy mode"
 		local _vmdk="$(getcfvmdk)"
@@ -4149,7 +4149,7 @@ function cfcache()
 		mcopy -nsvmp -i "$mdisk" "::/" "$simpath/cfcard/" &>/dev/null
     elif ! IsRunning;then
     	cfmount
-        cp -R "$simpath/mnt/" "$simpath/cfcard/" &>/dev/null
+        cp -R "$simpath/mnt/." "$simpath/cfcard/" &>/dev/null
         cfunmount
     fi
 }
@@ -4159,7 +4159,7 @@ function cfsave()
 {
 
     if IsMounted;then
-    	cp -R "$simpath/cfcard/" "$simpath/mnt/" &>/dev/null
+    	cp -R "$simpath/cfcard/." "$simpath/mnt/" &>/dev/null
     elif [ -n "$(which mcopy)" ];then
 		#echo "mcopy mode"
 		local _vmdk="$(getcfvmdk)"
@@ -4187,7 +4187,7 @@ function cfsave()
 
     elif ! IsRunning;then
     	cfmount
-        cp -R "$simpath/cfcard/" "$simpath/mnt/" &>/dev/null
+        cp -R "$simpath/cfcard/." "$simpath/mnt/" &>/dev/null
         cfunmount
     fi
 }
@@ -4212,7 +4212,7 @@ function envcache()
 	# if the cfcard is mounted, copy the file directly
 	if IsMounted;then
 		cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env" &>/dev/null
-		cp -R "$simpath/mnt/files/" "$simpath/cfcard/files/" &>/dev/null
+		cp -R "$simpath/mnt/files/." "$simpath/cfcard/files/" &>/dev/null
 		cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
 		cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
   # if it is not mounted, but mtools are installed, use mcopy
@@ -4244,7 +4244,7 @@ function envcache()
 		if ! IsRunning;then
 			cfmount
             cp "$simpath/mnt/env/env" "$simpath/cfcard/env/env" &>/dev/null
-            cp -R "$simpath/mnt/files/" "$simpath/cfcard/files/" &>/dev/null
+            cp -R "$simpath/mnt/files/." "$simpath/cfcard/files/" &>/dev/null
             cp "$simpath/mnt/x86_64/freebsd/image1/VERSION" "$simpath/cfcard/x86_64/freebsd/image1/VERSION" &>/dev/null
             cp "$simpath/mnt/x86_64/freebsd/image2/VERSION" "$simpath/cfcard/x86_64/freebsd/image2/VERSION" &>/dev/null
 		  cfunmount
