@@ -2969,7 +2969,7 @@ function vsimmake()
     #cfmount "$simpath"
 
     #copy the template cfcard into the new vSIM
-	if [ -d "$VSIMHOME/cfcard/" ];then cp -R "$VSIMHOME/cfcard/" "$simpath/mnt";fi
+	if [ -d "$VSIMHOME/cfcard/" ];then cp -R "$VSIMHOME/cfcard/" "$_cfcard";fi
 
 	#Build a clean env file
     mkdir -p "$_cfcard/env"
