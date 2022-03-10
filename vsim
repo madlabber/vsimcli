@@ -4129,7 +4129,7 @@ function vsimtest()
 function cfcache()
 {
 
-	rm -rf "$simpath/cfcard"
+	  rm -rf "$simpath/cfcard"
     mkdir -p "$simpath/cfcard"
 
     if IsMounted;then
@@ -4152,6 +4152,7 @@ function cfcache()
         cp -R "$simpath/mnt/." "$simpath/cfcard/" &>/dev/null
         cfunmount
     fi
+
 }
 
 # cache the entire cfcard
@@ -4208,6 +4209,7 @@ function envcache()
 	mkdir -p "$simpath/cfcard/files" &>/dev/null
 	mkdir -p "$simpath/cfcard/x86_64/freebsd/image1" &>/dev/null
 	mkdir -p "$simpath/cfcard/x86_64/freebsd/image2" &>/dev/null
+  chmod -R 777 "$simpath/cfcard"
 
 	# if the cfcard is mounted, copy the file directly
 	if IsMounted;then
@@ -4231,10 +4233,10 @@ function envcache()
 
 		# allow read operations while VM is running
 		export MTOOLS_SKIP_CHECK=1
-		mcopy -n -i "$mdisk" ::/env/env "$simpath/cfcard/env/env"
-		mcopy -n -i "$mdisk" ::/files/* "$simpath/cfcard/files/"
-		mcopy -n -i "$mdisk" ::/x86_64/freebsd/image1/VERSION* "$simpath/cfcard/x86_64/freebsd/image1/" #&>/dev/null
-		mcopy -n -i "$mdisk" ::/x86_64/freebsd/image2/VERSION* "$simpath/cfcard/x86_64/freebsd/image2/" #&>/dev/null
+		mcopy -n -i "$mdisk" ::/env/env "$simpath/cfcard/env/env" &>/dev/null
+		mcopy -n -i "$mdisk" ::/files/* "$simpath/cfcard/files/" &>/dev/null
+		mcopy -n -i "$mdisk" ::/x86_64/freebsd/image1/VERSION* "$simpath/cfcard/x86_64/freebsd/image1/" &>/dev/null
+		mcopy -n -i "$mdisk" ::/x86_64/freebsd/image2/VERSION* "$simpath/cfcard/x86_64/freebsd/image2/" &>/dev/null
 
 		# if [ -f "$simpath/cfcard/env/_env" ];then
 		# 	mv "$simpath/cfcard/env/_env" "$simpath/cfcard/env/env"
@@ -4250,6 +4252,7 @@ function envcache()
 		  cfunmount
 		fi
 	fi
+
 }
 
 #save updates ack to the cfcard vmdk
