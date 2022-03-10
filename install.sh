@@ -155,6 +155,8 @@ if ! [ -f "standard.tgz" ];then
 fi
 
 license_file="CMode_licenses_9.9.1.txt"
+mkdir -p "$HOME/vsims/cfcard"
+touch "$HOME/vsims/cfcard/mfg_l_f"
 if [ -f "$license_file" ];then
 	sed 's/\t/ /g' "$license_file" | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>"$HOME/vsims/cfcard/mfg_l_f"
   base=$(cat "$license_file" | grep '=' | grep AAAA | cut -d'=' -f 2 | cut -d' ' -f 2)
