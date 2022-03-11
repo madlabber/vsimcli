@@ -63,8 +63,8 @@ if [ -n "$ENV_VSIMSERIAL" ];then VSIMSERIAL="$ENV_VSIMSERIAL";fi
 if [ -n "$ENV_VSIMPARTNERSERIAL" ];then VSIMPARTNERSERIAL="$ENV_VSIMPARTNERSERIAL";fi
 
 # Apply defaults
-if [ -n "$VSIMSERIAL" ];then serno="$VSIMSERIAL";fi
-if [ -n "$VSIMPARTNERSERIAL" ];then serno2="$VSIMPARTNERSERIAL";fi
+if [ -n "$VSIMSERIAL" ] && [ -z "$serno" ];then serno="$VSIMSERIAL";fi
+if [ -n "$VSIMPARTNERSERIAL" ] && [ -z "$serno2" ];then serno2="$VSIMPARTNERSERIAL";fi
 
 # Networking is managed by VMware
 vmnet_file="/Library/Preferences/VMware Fusion/networking"
@@ -135,6 +135,7 @@ function help() # $1=subcommand
     modify   )  echo "   vsim modify <vsim name> [options]";;
     mount    )  echo "   vsim mount <vsim name> [options]";;
     options  )  echo "   vsim options [variable] [value] [options]";;
+    package  )  echo "   vsim package [options]";;
     poweroff | kill )
                 echo "   vsim poweroff <vsim name> [options]";;
     printenv )  echo "   vsim printenv <vsim name> [variable] [options]";;
@@ -172,6 +173,7 @@ function help() # $1=subcommand
                 echo "   vsim modify   <vsim name> [options]"
                 echo "   vsim mount    <vsim name> [options]"
                 echo "   vsim options  [variable]  [value]    [options]"
+                echo "   vsim package  [options]"
                 echo "   vsim poweroff <vsim name> [options]"
                 echo "   vsim printenv <vsim name> [variable] [options]"
                 echo "   vsim printvmx <vsim name> [options]"
@@ -204,22 +206,23 @@ function help() # $1=subcommand
           echo "  console                     Connect to a vsim console"
           echo "  configure                   configure an ONTAP Select VM (experimental)"
           echo "  create                      Create a vsim"
-					echo "  delete                      Delete a vsim"
-					echo "  deploy                      Deploy a vsim to an ESXi host (experimental)"
-					echo "  export                      Export a vsim"
+		  echo "  delete                      Delete a vsim"
+          echo "  deploy                      Deploy a vsim to an ESXi host (experimental)"
+          echo "  export                      Export a vsim"
           echo "  help                        Display help"
-          echo "  image                       Manage software images"
-					echo "  import                      Import a vsim or software package"
-					echo "  modify                      Modify a vsim"
-					echo "  mount                       Mount a vsim's cf card"
-					echo "  options                     Show and Set options and paths"
-					echo "  poweroff                    Poweroff a vsim (poweroff vm)"
-					echo "  printenv                    Print a vsim's loader environment"
-					echo "  printvmx                    Print a vsim's vmx file"
-					echo "  rename                      Rename a vsim"
-					echo "  run                         Run commands in a vsim shell"
-					echo "  setenv                      Set a loader variable"
-					echo "  setvmx                      Set a vmx variable"
+          echo "  image                       Manage a vsim's software images"
+		  echo "  import                      Import a vsim or software package"
+          echo "  modify                      Modify a vsim"
+          echo "  mount                       Mount a vsim's cf card"
+          echo "  options                     Show and Set options and paths"
+          echo "  package                     Manage the package repository"
+          echo "  poweroff                    Poweroff a vsim (poweroff vm)"
+          echo "  printenv                    Print a vsim's loader environment"
+          echo "  printvmx                    Print a vsim's vmx file"
+          echo "  rename                      Rename a vsim"
+          echo "  run                         Run commands in a vsim shell"
+          echo "  setenv                      Set a loader variable"
+          echo "  setvmx                      Set a vmx variable"
           echo "  show                        Display vsims"
 					echo "  start                       Start a vsim"
 					echo "  stop                        Stop a vsim (shutdown guest)"
@@ -240,9 +243,9 @@ function help() # $1=subcommand
 	case $1 in usage|configure|console|cons|create|make|delete|rm|export|image|import|modify|mount|poweroff|printenv|printvmx|kill| \
 				deploy|rename|run|setenv|setvmx|show|software|start|stop|suspend|unmount|unsetenv|unsetvmx|update )
 					echo "   -vsim <vsim name>                    Vsim name";;esac
-	case $1 in usage|image|show|software|create|update )
+	case $1 in usage|show|create|update )
 					echo "   -version <Version>                   Software version";;esac
-	case $1 in usage|image|show|software|create|import|update )
+	case $1 in usage|show|create|import|update )
 					echo "   -package <image.tgz>                 Software package";;esac
 	case $1 in usage|configure )
 					echo "   -cluster <name>                      Cluster Name"
@@ -278,7 +281,11 @@ function help() # $1=subcommand
 					echo "   -image <image1|image2>               Image Name";;esac
 	case $1 in usage|image|software|update )
 					echo "   -isdefault                           Is Default Image";;esac
-	case $1 in usage|image|software )
+	case $1 in usage|package )
+	                echo "   -get <filename>                      Add a package to the repository."
+	                echo "   -delete <filename|version>           Remove a package from the repository."
+					echo "   -show                                List available packages";;esac
+	case $1 in usage)
 					echo "   -list                                List available packages";;esac
 	case $1 in usage|import )
 					echo "   -file <filename>                     File to import (vsim or ontap image)";;esac
@@ -319,7 +326,7 @@ function help() # $1=subcommand
 					echo "   -variable <variable>                 Variable name";;esac
 	case $1 in usage|options|setenv|setvmx )
 					echo "   -value <value>                       Value to assign to a variable";;esac
-	case $1 in usage|options|create|make|image|software|update )
+	case $1 in usage|options|create|make|update )
 					echo "   -itgzpath <path>                     Search path for image.tgz files";;esac
 	case $1 in usage|options|console|cons|create|image|make|modify|delete|rm|export|import|mount|poweroff|printenv|printvmx|kill| \
 				rename|run|setenv|setvmx|show|start|stop|suspend|unmount|unsetenv|unsetvmx|update )
@@ -3789,6 +3796,96 @@ function vsimrunscript()
 	done <"$filename"
 }
 
+# This function will be reduced in scope to just managing 
+# the ontap package repository
+function vsimpackage()
+{
+
+		if [ "$name" = "$release" ];then name="";fi
+		if [ "$name" = "?" ];then help "package";exit;fi
+		if [ -z "$name$release$image" ] && ! $list && ! $all && ! $listpackages && ! $listversions;then help package;exit;fi
+
+		local _prefix=${release//.}
+		local _defaultImage
+
+	    _defaultImage=$(getrelease "$release")
+	    if [ -z "$_defaultImage" ];then _defaultImage=$(getimagepath "$release");fi
+
+		# -release
+		if [ -n "$release" ] && ! $all && ! $list;then
+			if [ -n "$_defaultImage" ];then echo "$_defaultImage";return 0;fi		
+			return 1
+		fi
+
+
+		#End of section that operates at the vsim level
+
+		# complete list by repository
+		if $all;then
+			echo
+			OLDIFS=$IFS
+			IFS=";"
+			for i in $ITGZPATH
+			do
+				if [ -d "$i" ];then
+					echo "Repository: $i:"
+					ls "$i" | grep "tgz" | column
+					echo
+				fi
+			done
+			IFS=$OLDIFS
+		fi
+
+		# complete list
+		if $list;then
+			OLDIFS=$IFS
+			IFS=";"
+			for i in $ITGZPATH
+			do
+				if [ -d "$i" ] && [ -z "$release" ] && [ -z "$image" ];then
+					ls -d -1 "$i/"*.tgz | sort
+				elif [ -d "$i" ] && [ -n "$release" ] && [ -z "$image" ];then
+					ls -d -1 "$i/"*.tgz | grep "$_prefix""_._image.tgz"
+				elif [ -d "$i" ] && [ -n "$image" ];then
+					ls -d -1 "$i/$image" 2>/dev/null | sort
+				fi
+			done
+			IFS=$OLDIFS
+		fi
+
+		# complete list in compgen friendly format
+		if $listpackages;then
+			OLDIFS=$IFS
+			IFS=";"
+			for i in $ITGZPATH
+			do
+				if [ -d "$i" ];then
+					OLDPWD="$PWD"
+					cd "$i"
+					ls *.tgz | sort
+					PWD="$OLDPWD"
+				fi
+			done
+			IFS=$OLDIFS
+		fi
+
+		# complete list in compgen friendly format
+		if $listversions;then
+			OLDIFS=$IFS
+			IFS=";"
+			for i in $ITGZPATH
+			do
+				if [ -d "$i" ];then
+					OLDPWD="$PWD"
+					cd "$i"
+					ls *.tgz | cut -d'_' -f1
+					PWD="$OLDPWD"
+				fi
+			done
+			IFS=$OLDIFS
+		fi
+}
+
 # Overdue for refactoring
 function vsimsoftware()
 {
@@ -4472,7 +4569,7 @@ unsetvariable=false
 vmxnet3=false
 
 #Command abbreviations are nice to have
-commandlist="console\ncreate\nconfigure\ndelete\nexport\nhelp\nimport\nmodify\nmount\noptions\npoweroff\nprintenv\nprintvmx\nrename\nrun\nsetenv\nsetvmx\nshow\nsoftware\nstart\nstop\nsuspend\nunmount\nunsetenv\nunsetvmx\nupdate\n"
+commandlist="console\ncreate\nconfigure\ndelete\nexport\nhelp\nimport\nmodify\nmount\noptions\npackage\npoweroff\nprintenv\nprintvmx\nrename\nrun\nsetenv\nsetvmx\nshow\nsoftware\nstart\nstop\nsuspend\nunmount\nunsetenv\nunsetvmx\nupdate\n"
 matchcount=$(printf $commandlist | grep ^$1 | wc -l | tr -ds " " " ")
 if [ "$matchcount" = 1 ];then action=$(printf $commandlist | grep ^$1);fi
 
@@ -4507,6 +4604,10 @@ case $action in
 		if IsValue "$1"; then variable="$1";shift;fi
 		if IsValue "$1"; then value="$1";shift;fi
 		;;
+	package ) 
+        if [ "$1" = "show" ];then list=true;shift;fi
+        if IsValue "$1" && [ -n "$1" ]; then release="$1";shift;fi
+        ;;
 	rename 	)
 		# rename $oldname $newname
 		if [ "$1" = "-vsim" ];then shift;fi
@@ -4543,10 +4644,10 @@ while [ "X$1" != "X" ]; do
 	if [ -z "$argv" ];then argv=$(validate "$2") && shift;fi
 
     case $arg in
-    	-7m                   )	mode="7";;
+      -7m                   ) mode="7";;
       -all                  ) all="$argv";;
-		  -list                 ) list="$argv";;
-    	-auto                 )	auto="$argv";;
+      -list | -show         ) list="$argv";;
+      -auto                 ) auto="$argv";;
     	-bsdip                ) bsdip="$argv";;
     	-bsdmgmt | -bsdport   )	bsdportname="$argv";;
     	-cmode                )	mode="C";;
@@ -4573,8 +4674,12 @@ while [ "X$1" != "X" ]; do
       -fa                   ) if [ -n "$argv" ];then fodname="$argv"; cfonode="a"; cfopartner="b"; prompt="VLOADER-A>";fi;;
       -fb                   ) if [ -n "$argv" ];then fodname="$argv"; cfonode="b"; cfopartner="a"; prompt="VLOADER-B>";fi;;
       -file | -script       ) filename="$argv";;
+      -delete               ) deleteimage=$(getrelease "$argv")
+	                          if [ -z "$deleteimage" ];then _defaultImage=$(getimagepath "$argv");fi
+	                          if [ -z "$deleteimage" ];then echo "package not found:$argv ";exit;fi
+	                          ;;
+      -get                  ) if [ -f "$argv" ];then getfile="$argv";fi;;
       -i | -itgz | -package ) image="$argv";;  #need to rename all the image references
-      -get                  ) ;;
       -image                ) if [ "$(echo "$argv" | tr '[:upper:]' '[:lower:]')" = "image1" ];then image1=true;fi
                               if [ "$(echo "$argv" | tr '[:upper:]' '[:lower:]')" = "image2" ];then image2=true;fi
                               ;;
@@ -4598,7 +4703,7 @@ while [ "X$1" != "X" ]; do
       -nat                     )  nat="$argv";;
       -hostonly                )  hostonly="$argv";;
       -bridged                 )  bridged="$argv"
-			                            if [ -z "$argv" ];then bridged="e0c,e0d";fi;;
+                                  if [ -z "$argv" ];then bridged="e0c,e0d";fi;;
       -newname                 )  newname="$argv";;
       -password | -pw | -pass  )  VSIMPASSWORD="$argv";;
       -comconsole | -comcons | -cons | -consport | -makecons )	# undecided
@@ -4786,6 +4891,14 @@ case $action in
 	mount 	 	) 	cfmount && echo "$simpath/mnt";;
 	options 	) 	vsimoptions;;
 	unmount 	) 	cfunmount;;
+    package     )   if [ -n "$getfile" ];then 
+                     image="$getfile"; vsimimport
+                    elif [ -f "$deleteimage" ];then
+                      rm "$deleteimage"
+                      echo "deleted package: $deleteimage"
+                    else
+                      vsimpackage
+                    fi;;
 	printenv 	)
 	  envcache
 
