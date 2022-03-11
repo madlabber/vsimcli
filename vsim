@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #GLOBALS
-VSIMVERSION="20220309.01"
+VSIMVERSION="20220310.01"
 
 #Capture the user ENV
 ENV_OVFTOOL="$OVFTOOL"
@@ -1173,16 +1173,6 @@ function setoption() #$1=option $2=value
 			#vmnet1_netmask=$(cat "$vmnet_file" | grep "VNET_1" | grep "NETMASK" | cut -d' ' -f3)
 			if [ -z "$vmnet1_subnet" ];then echo "vmnet1 subnet not defined.";exit;fi
 
-			#if [ "$(uname)" = "Linux" ];then
-			#	echo "Manualy update the /etc/exports file:"
-			#	echo "$2 $vmnet1_subnet/$(getcidr "$vmnet1_netmask")(rw,sync,fsid=0,no_root_squash)"
-			#	echo
-			#	FODDIR="$2"
-			#	echo "$1=$2"
-			#	saveoptions
-			#	#exit
-			#fi
-
 			#And it needs an export
 			newexport="$value -alldirs -mapall=root -network $vmnet1_subnet -mask $vmnet1_netmask"
 			if [ "$(uname)" = "Linux" ];then
@@ -1220,6 +1210,15 @@ function setoption() #$1=option $2=value
 			echo "$newexport" >> /etc/exports
 			#and echo it to the user
 			echo "$newexport"
+
+			if [ "$(uname)" = "Darwin" ];then
+				# recent versions of darwin flipped the default value of nfs.server.mount.require_resv_port
+				# so now we must explicitly set it to 0
+				echo "Configuring nfs.conf"
+				cp /etc/nfs.conf /etc/nfs.conf.bak
+                sed 's|^nfs.server.mount.require_resv_port*|# &|g' /etc/nfs.conf.bak > /etc/nfs.conf
+                echo "nfs.server.mount.require_resv_port=0" >> /etc/nfs.conf
+			fi
 
 			#finally, bounce nfsd
 			if [ "$(uname)" = "Linux" ] && [ -n "$(which exportfs)" ];then
@@ -1801,7 +1800,7 @@ function makefod() #$1=fodname, $2=vdevinit
 	ln -s "/sim/remote/nodea" "$FODDIR/$_fod/nodeb/,partner"
 
 	#Make disks
-	OLFIFS=$IFS
+	OLDIFS=$IFS
 	IFS=","
 	for i in $_disks
 	do
@@ -2814,6 +2813,7 @@ function vsimlist()
 	if ! $list;then
 		echo "Vsim/VM;State;Version;Mode;System Id;Serial Number"
 		echo "------------------------;----------;--------;----;----------;-------------"
+		#### "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
 	fi
 	OLFIFS=$IFS
 	IFS=$(echo -en "\n\b")
@@ -4379,46 +4379,19 @@ function vsimupdate()
 	mkdir -p "$_cfcard/x86_64/freebsd/image2"
 
 	#FIXME:  new netboot images need some cleanup
-	# Detection is handled, but subdir still get extracted
 	if [ "$(tar -tzf $_image | grep netboot/VERSION)" = "netboot/VERSION" ];then _netboot=true;fi
 	if $_netboot;then
 		echo "NETBOOT"
-		# this dumb list is a bugfix for semi-broken tar in Monterey intermittently failing to parse a file list
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/VERSION 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/BUILD 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/CHECKSUM 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/COMPAT.TXT 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/INSTALL 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/cap.xml 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/fw.tgz 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/kernel 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/metadata.xml 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platform.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platfs.img 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/rootfs.img 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/pmroot_late.tgz 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/key_fingerprint.sig 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/kernel.sig 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/platform.ko.sig 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/rootfs.img.sig 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_ata_pci_disengage.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_netvsc.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_storvsc.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_utils.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/hv_vmbus.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/if_vmx.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/if_vtnet.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/mlxen.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/mpt.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_blk.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_pci.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/virtio_scsi.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/vmbus_pcib.ko 2>&1 | grep -v tar
-		tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" netboot/xenhvm.ko 2>&1 | grep -v tar
-
-		#tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" "netboot"
-		#tar -C "$_cfcard/$_primary" --strip-components=1 --exclude "*platform.rc" -vxzSf "$_image" $file_list #2>&1 | grep -v tar
+		file_list=""
+		file_list=" $file_list netboot/VERSION netboot/BUILD netboot/CHECKSUM netboot/COMPAT.TXT"
+        file_list=" $file_list netboot/INSTALL netboot/cap.xml netboot/fw.tgz netboot/kernel"
+        file_list=" $file_list netboot/metadata.xml netboot/platform.ko netboot/platfs.img netboot/rootfs.img"
+        file_list=" $file_list netboot/pmroot_late.tgz netboot/key_fingerprint.sig netboot/kernel.sig netboot/platform.ko.sig"
+        file_list=" $file_list netboot/rootfs.img.sig netboot/hv_ata_pci_disengage.ko netboot/hv_netvsc.ko netboot/hv_storvsc.ko"
+        file_list=" $file_list netboot/hv_utils.ko netboot/hv_vmbus.ko netboot/if_vmx.ko netboot/if_vtnet.ko"
+        file_list=" $file_list netboot/mlxen.ko netboot/mpt.ko netboot/virtio.ko netboot/virtio_blk.ko"
+        file_list=" $file_list netboot/virtio_pci.ko netboot/virtio_scsi.ko netboot/xenhvm.ko"
+		tar -C "$_cfcard/$_primary" --strip-components=1 -vxzSf "$_image" $file_list 2>&1 | grep -v tar
 	else
 		tar -C "$_cfcard/$_primary" -vxzSf "$_image"
 	fi
