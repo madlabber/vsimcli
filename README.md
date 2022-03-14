@@ -1,9 +1,9 @@
-# vsim4osx
-A vsim toolkit for building and managing ONTAP vsims on (Intel) MacOS and VMware Fusion
+# VSIM CLI
+A vsim toolkit for building and managing ONTAP Simulator Virtual Machines
 
 ## Installation
 
-To install vsim4osx:
+To install:
   1. Download the 9.9.1 version of the simulator and license file from the NetApp support site:
      "https://mysupport.netapp.com/api/tools-service/toolsbinary/simulate-ontap/download/vsim-netapp-DOT9.9.1-cm_nodar.ova"
 
@@ -41,11 +41,12 @@ Available Commands:
     deploy                      Deploy a vsim to an ESXi host (experimental)
     export                      Export a vsim
     help                        Display help
-    image                       Manage software images
+    image                       Manage a vsim's software images
     import                      Import a vsim or software package
     modify                      Modify a vsim
     mount                       Mount a vsim's cf card
     options                     Show and Set options and paths
+    package                     Manage the package repository
     poweroff                    Poweroff a vsim (poweroff vm)
     printenv                    Print a vsim's loader environment
     printvmx                    Print a vsim's vmx file
@@ -71,12 +72,12 @@ vsim help <command>
 
 Import some Data ONTAP images into the repository:
 
-    vsim import ~/Downloads/824_q_image.tgz
-    vsim import ~/Downloads/97_q_image.tgz
+    vsim package -get ~/Downloads/824_q_image.tgz
+    vsim package -get ~/Downloads/97_q_image.tgz
 
 Show the available software images:
 
-    vsim image -list
+    vsim package -show
 
 Create a simple vsim:
 
