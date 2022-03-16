@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #GLOBALS
-VSIMVERSION="20220311.01"
+VSIMVERSION="20220316.01"
 
 #Capture the user ENV
 ENV_OVFTOOL="$OVFTOOL"
@@ -24,10 +24,8 @@ VSIMHOME="$HOME/vsims"
 SIMDIR="$HOME/vsims"
 FODDIR="$HOME/vsims"
 ITGZPATH="$VSIMHOME/ontap"
-VSIMPASSWORD="netapp1!"
-#VSIMLICENSE="" #User must provide cluster base
-# Cluster base is deprecated now so leaving 99 here since it was the first result in google for "cluster base license key"
-VSIMLICENSE=""
+VSIMPASSWORD="netapp123"
+VSIMLICENSE="" #cluster base key
 SDOT_BUILTIN_LICENSES="" #These can be found in the eval .ova
 VSIMSERIAL=""
 VSIMPARTNERSERIAL=""
