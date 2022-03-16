@@ -41,14 +41,14 @@ if ! [ -f "$OVFTOOL" ] || ! [ -f "$VDISKMANAGER" ] || ! [ -f "$VMRUN" ];then
 fi
 
 if ! [ -f "standard.tgz" ];then
-	ovafile=`ls vsim-netapp-DOT9.9.1-cm_nodar.ova | sort | head -1`
+	ovafile="vsim-netapp-DOT9.9.1-cm_nodar.ova"
 fi
 
-if [ -z "$ovafile" ];then
-  ovafile=`ls ~/Downloads/vsim-netapp-DOT9.9.1-cm_nodar.ova | sort | head -1`
+if ! [ -f "$ovafile" ];then
+  ovafile="~/Downloads/vsim-netapp-DOT9.9.1-cm_nodar.ova"
 fi
 
-if [ -z "$ovafile" ] && ! [ -f "standard.tgz" ];then
+if ! [ -f "$ovafile" ] && ! [ -f "standard.tgz" ];then
 		echo "An existing 9.9.1 vsim OVA file is required."
 		echo "Plase download vsim-netapp-DOT9.9.1-cm_nodar.ova and "
 		echo "place it in this folder, then try the installation again."
@@ -128,12 +128,6 @@ chmod -R 777 "$HOME/vsims"
 mkdir -p "$HOME/vsims/ontap"
 chmod -R 777 "$HOME/vsims/ontap"
 
-#Plan is to dynamically build the standard.tgz/classic.tgz from these sources:
-#810
-#http://mysupport.netapp.com/NOW/cgi-bin/simulatorlic8.cgi/download/tools/simulator/ontap/8.1/vsim-DOT81-cm-esx.zip
-#8.2.3
-#http://mysupport.netapp.com/NOW/cgi-bin/simulatorlic8.cgi/download/tools/simulator/ontap/8.2.3/vsim_netapp-cm.tgz
-
 #Build templates if necessary
 #Build standard.tgz from the ova
 if ! [ -f "standard.tgz" ];then
@@ -141,14 +135,8 @@ if ! [ -f "standard.tgz" ];then
 	./vsim delete standard
 	./vsim import -file "$ovafile" -name "standard"
   ./vsim export -vsim standard -image image1
-  ./vsim import 991_sim_image_nodar.tgz
-	echo "Mounting CF Card"
-	./vsim mount standard
-	echo "Cleaning CF Card"
-	rm "$HOME/vsims/standard/mnt/x86_64/freebsd/image1"/*.*
-	rm "$HOME/vsims/standard/mnt/x86_64/freebsd/image2"/*.*
-	echo "Unmounting"
-	./vsim unmount standard
+  ./vsim import 991_sim_nodar_image.tgz
+  ./vsim clean standard
 	echo "Exporting tgz"
 	./vsim export standard -tgz
 	./vsim delete standard

@@ -327,7 +327,7 @@ function help() # $1=subcommand
 	case $1 in usage|options|setenv|setvmx )
 					echo "   -value <value>                       Value to assign to a variable";;esac
 	case $1 in usage|options|create|make|update )
-					echo "   -itgzpath <path>                     Search path for image.tgz files";;esac
+					echo "   -packagepath <path>                     Search path for ONTAP software packages";;esac
 	case $1 in usage|options|console|cons|create|image|make|modify|delete|rm|export|import|mount|poweroff|printenv|printvmx|kill| \
 				rename|run|setenv|setvmx|show|start|stop|suspend|unmount|unsetenv|unsetvmx|update )
 					echo "   -simdir <path>                       Alternate location for vsims";;esac
@@ -2526,21 +2526,17 @@ function vsimexport()
 	# Must have something to export
 	if [ -z "$name" ] && [ -z "$fodname" ];then help "export";return 1;fi
 
-	# aAnd at least 1 output format
+	# And at least 1 output format
 	if ! $maketgz && ! $makeova && ! $makevbox && ! $vbox && ! $image1 && ! $image2;then help "export";return 1;fi
 
 	# Sometimes the fodname lands in the vsim name variable
 	if ! IsVM && [ -d "$FODDIR/$name" ] && [ -n "$name" ];then echo "setting fodname";fodname="$name";fi
-
-	#if IsVM;then echo "ISVM";else echo "NOTVM";fi
 
 	# Must not be mounted
 	if IsMounted;then cfunmount -zero;fi
 
 	# Some operations need it mounted
 	if IsVM;then
-		# cfmount
-  #       local _cfcard="$simpath/mnt"
         cfcache
         local _cfcard="$simpath/cfcard"
 
@@ -2982,10 +2978,6 @@ function vsimmake()
   	setvmx "pciHole.start" "1024" "$vmx"
   	# at 3gb and below set it to 3072
   	if [ $ram -le 3072 ]; then setvmx "pciHole.start" "3072" "$vmx";fi
-
-    #mount the CF card vmdk
-    # echo "mounting boot device."
-    #cfmount "$simpath"
 
     #copy the template cfcard into the new vSIM
 	if [ -d "$VSIMHOME/cfcard/" ];then cp -R "$VSIMHOME/cfcard/." "$_cfcard/";fi
@@ -4176,10 +4168,8 @@ function vsimstart()
   	if $vbox;then vboxmanage startvm "$name";return 0;fi
 
 	# See which console to use
-  envcache
+    envcache
 	_console=$(getenv "console")
-
-
   	[ "$_console" = "vidconsole" ] && _gui="gui"
   	[ "$_console" = "vidconsole,comconsole" ] && _gui="gui"
 
@@ -4454,8 +4444,6 @@ function vsimupdate()
   	# If we have no _image we are done
   	if ! [ -f "$_image" ];then echo "vsimupdate:image not found:$image$release" >&2;return 1;fi
 
-	# IsMounted && _unmount=false || _unmount=true
-	# cfmount
 	cfcache
 	local _cfcard="$simpath/cfcard"
 
@@ -4625,7 +4613,7 @@ case $action in
 		if IsValue "$1"; then filename="$1";shift;fi
 		if IsValue "$1"; then name="$1";shift;fi
 		;;
-	configure | console | create | delete | deploy | export | image | make | modify | mount | poweroff | kill | update | show | start | stop | suspend | test | unmount)
+	configure | clean | console | create | delete | deploy | export | image | make | modify | mount | poweroff | kill | update | show | start | stop | suspend | test | unmount)
 		# command $name
 		if IsValue "$1"; then name="$1";shift;fi
 		;;
@@ -4691,7 +4679,7 @@ while [ "X$1" != "X" ]; do
 																icmac="$(echo "$icmac" | cut -d'=' -f2)"
                               fi;;
     	-icport               ) icport="$argv";;
-    	-ir | -itgzpath       ) ITGZPATH="$argv";;
+    	-ir | -itgzpath | -packagepath ) ITGZPATH="$argv";;
       -listfod              ) listfod="$argv";;
       -listpackages         ) listpackages="$argv";;
       -listversions         ) listversions="$argv";;
@@ -4827,7 +4815,7 @@ fi
 
 #For these commands, exit if the VM is still running
 case $action in
-	export|create|modify|setenv|setvmx|start|unsetenv|unsetvmx|update|makecons )
+	export|clean|create|modify|setenv|setvmx|start|unsetenv|unsetvmx|update|makecons )
 		if IsRunning; then echo "error: vsim is still running: $simpath";exit;fi;;
 esac
 
@@ -4842,6 +4830,39 @@ case $action in
 		VSIMPASSWORD=""
 		vsimrun
 		;;
+	clean       )
+        # prefer mtools if available
+        if [ -n "$(which mdel)" ];then
+			#echo "mcopy mode"
+			_vmdk="$(getcfvmdk)"
+			_flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
+			_start="66528"
+			if [ "$(uname)" = "Linux" ];then
+			  _start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)";fi
+			if [ "$(uname)" = "Darwin" ];then
+			  _start="$(fdisk -d $simpath/$_flat | grep 0x06 | cut -d, -f1)";fi
+			_offset="$(echo $_start / 2 |bc)k"
+			mdisk="$simpath/$_flat@@$_offset"
+			export MTOOLS_SKIP_CHECK=1
+			mattrib -r -s -h -/ -i "$mdisk" ::/ &>/dev/null
+			mdeltree -v -i "$mdisk" ::/ &>/dev/null
+			mfree=`mdir -a -i "$mdisk" | grep free | sed 's/[a-z,A-Z, ]//g'` 
+			mfreemb=$(expr $mfree / 1048576)
+
+            echo "preparing to zero $mfreemb MB"
+			dd if=/dev/zero of="$simpath/zero" bs=1048576 count=$mfreemb &>/dev/null
+			mcopy -ovm -i "$mdisk" "$simpath/zero" ::/
+			mdel -v -i "$mdisk" "::/zero"
+
+        # otherwise fallback to mount
+        else
+          echo "Cleaning CF Card"
+          mount
+          rm "$simpath/mnt/x86_64/freebsd/image1"/*.*
+	      rm "$simpath/mnt/x86_64/freebsd/image2"/*.*
+          unmount
+        fi
+        ;;
 	create | make )	vsimmake;;
 	configure ) vsimconfigure;;
 	delete  | rm | rmfod )
