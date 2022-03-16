@@ -1337,7 +1337,6 @@ function getimagepath() #$1=image
 	IFS=";"
 	for i in $ITGZPATH
 	do  
-	    echo "testing $i/$tgz"
 		if [ -f "$i/$tgz" ];then echo "$i/$tgz";return;fi
 	done
 	IFS=$OLDIFS
