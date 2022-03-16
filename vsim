@@ -94,7 +94,7 @@ if [ -f "$vmnet_file" ];then
 fi
 
 # If this is WSL there is a lot more work to do
-if [ -f "/mnt/c/ProgramData/VMware/vmnetdhcp.conf" ];then 
+if [ -f "/mnt/c/ProgramData/VMware/vmnetdhcp.conf" ];then
     vmnet_file="/mnt/c/ProgramData/VMware/vmnetdhcp.conf"
     #echo "WSL Detected"
     vmnet1_subnet=$(cat "$vmnet_file" | sed '0,/segment 1/d' | sed '/# End/,$d' | grep "subnet" | cut -d' ' -f2)
@@ -1336,7 +1336,7 @@ function getimagepath() #$1=image
 	OLDIFS=$IFS
 	IFS=";"
 	for i in $ITGZPATH
-	do  
+	do
 		if [ -f "$i/$tgz" ];then echo "$i/$tgz";return;fi
 	done
 	IFS=$OLDIFS
@@ -1377,7 +1377,7 @@ function getrelease() #$1=release
 	local _simimage=$(getimagepath "$_prefix""_sim_image.tgz")
 	local _simimagenodar=$(getimagepath "$_prefix""_sim_image_nodar.tgz")
 	local _simnodarimage=$(getimagepath "$_prefix""_sim_nodar_image.tgz")
-	
+
 	if [ -f "$_vimage" ];then echo "$_vimage";return 0;fi
 	if [ -f "$_vimagenew" ];then echo "$_vimagenew";return 0;fi
 	if [ -f "$_qimage" ];then echo "$_qimage";return 0;fi
@@ -1385,7 +1385,7 @@ function getrelease() #$1=release
 	if [ -f "$_qimagenodar" ];then echo "$_qimagenodar";return 0;fi
 	if [ -f "$_simimagenodar" ];then echo "$_simimagenodar";return 0;fi
 	if [ -f "$_simnodarimage" ];then echo "$_simnodarimage";return 0;fi
-	
+
 	return 1
 }
 
@@ -2739,12 +2739,12 @@ function vsimimport()
 			echo "Vsim: $name"
 			rm -rf "$simpath"
 			mkdir -p "$simpath"
-			#WSL Accomodations			
+			#WSL Accomodations
 			_simpath="$simpath"
 			if [ "$(echo $_simpath | grep /mnt/c/)" = "$_simpath" ];then
 			    echo "WSL Detected."
 				_simpath=$(echo $simpath | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
-			fi			
+			fi
 			vmxfile="$_simpath/DataONTAP.vmx"
 			"$OVFTOOL" "--allowAllExtraConfig" "--allowExtraConfig" "--acceptAllEulas" "$filename" "$vmxfile"
 			if IsVM "$simpath";then
@@ -3815,7 +3815,7 @@ function vsimrunscript()
 	done <"$filename"
 }
 
-# This function will be reduced in scope to just managing 
+# This function will be reduced in scope to just managing
 # the ontap package repository
 function vsimpackage()
 {
@@ -3832,7 +3832,7 @@ function vsimpackage()
 
 		# -release
 		if [ -n "$release" ] && ! $all && ! $list;then
-			if [ -n "$_defaultImage" ];then echo "$_defaultImage";return 0;fi		
+			if [ -n "$_defaultImage" ];then echo "$_defaultImage";return 0;fi
 			return 1
 		fi
 
@@ -4229,12 +4229,12 @@ function vsimstart()
 
     _type="Fusion"
 	if [ "$(uname)" = "Linux" ];then _type="ws";fi
-	#WSL Accomodations			
+	#WSL Accomodations
 	_vmxfile="$vmxfile"
 	if [ "$(echo $_vmxfile | grep /mnt/c/)" = "$_vmxfile" ];then
 	    #echo "WSL Detected."
 		_vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
-	fi			
+	fi
   	echo "Starting $name"
  	"$VMRUN" -T "$_type" start "$_vmxfile" "$_gui" #&>/dev/null
 }
@@ -4255,7 +4255,7 @@ function vsimstop()
         echo "Stopping vsim: $name"
         _type="Fusion"
         if [ "$(uname)" = "Linux" ];then _type="ws";fi
-        #WSL Accomodations			
+        #WSL Accomodations
         _vmxfile="$vmxfile"
         if [ "$(echo $_vmxfile | grep /mnt/c/)" = "$_vmxfile" ];then
         #echo "WSL Detected."
@@ -4639,7 +4639,7 @@ case $action in
 		if IsValue "$1"; then variable="$1";shift;fi
 		if IsValue "$1"; then value="$1";shift;fi
 		;;
-	package ) 
+	package )
         if [ "$1" = "show" ];then list=true;shift;fi
         if IsValue "$1" && [ -n "$1" ]; then release="$1";shift;fi
         ;;
@@ -4879,22 +4879,21 @@ case $action in
 		;;
 	clean       )
         # prefer mtools if available
-        if [ -n "$(which mdel)" ];then
+        if [ -n "$(which mdel 2>/dev/null)" ];then
 			#echo "mcopy mode"
 			_vmdk="$(getcfvmdk)"
 			_flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
 			_start="66528"
 			if [ "$(uname)" = "Linux" ];then
-			  #_start="$(fdisk -o start,type -l $simpath/$_flat | grep FAT | cut -d' ' -f 1)";fi
-              _start="$(fdisk -l $simpath/$_flat | grep FAT | tr -s ' ' | cut -d' ' -f 2)";fi
+          _start="$(fdisk -l $simpath/$_flat | grep FAT | tr -s ' ' | cut -d' ' -f 2)";fi
 			if [ "$(uname)" = "Darwin" ];then
-			  _start="$(fdisk -d $simpath/$_flat | grep 0x06 | cut -d, -f1)";fi
+			    _start="$(fdisk -d $simpath/$_flat | grep 0x06 | cut -d, -f1)";fi
 			_offset="$(echo $_start / 2 |bc)k"
 			mdisk="$simpath/$_flat@@$_offset"
 			export MTOOLS_SKIP_CHECK=1
 			mattrib -r -s -h -/ -i "$mdisk" ::/ &>/dev/null
 			mdeltree -v -i "$mdisk" ::/ &>/dev/null
-			mfree=`mdir -a -i "$mdisk" | grep free | sed 's/[a-z,A-Z, ]//g'` 
+			mfree=`mdir -a -i "$mdisk" | grep free | sed 's/[a-z,A-Z, ]//g'`
 			mfreemb=$(expr $mfree / 1048576)
 
             echo "preparing to zero $mfreemb MB"
@@ -4904,11 +4903,11 @@ case $action in
 
         # otherwise fallback to mount
         else
-          echo "Cleaning CF Card"
-          mount
-          rm "$simpath/mnt/x86_64/freebsd/image1"/*.*
-	      rm "$simpath/mnt/x86_64/freebsd/image2"/*.*
-          unmount
+            echo "Cleaning CF Card"
+            cfmount
+            rm -rf "$simpath/mnt/x86_64/"
+            rm -rf "$simpath/mnt/env/"
+            cfunmount
         fi
         ;;
 	create | make )	vsimmake;;
@@ -4923,12 +4922,12 @@ case $action in
 			vsimstop
             _type="Fusion"
             if [ "$(uname)" = "Linux" ];then _type="ws";fi
-            #WSL Accomodations			
+            #WSL Accomodations
             _vmxfile="$vmxfile"
             if [ "$(echo $_vmxfile | grep /mnt/c/)" = "$_vmxfile" ];then
             #echo "WSL Detected."
             _vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
-            fi			
+            fi
 
 			"$VMRUN" -T "$_type" deleteVM "$_vmxfile"
   			rm -rf "$simpath"
@@ -4970,7 +4969,7 @@ case $action in
 	mount 	 	) 	cfmount && echo "$simpath/mnt";;
 	options 	) 	vsimoptions;;
 	unmount 	) 	cfunmount;;
-    package     )   if [ -n "$getfile" ];then 
+    package     )   if [ -n "$getfile" ];then
                      image="$getfile"; vsimimport
                     elif [ -f "$deleteimage" ];then
                       rm "$deleteimage"
