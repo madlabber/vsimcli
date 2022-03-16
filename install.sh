@@ -62,8 +62,8 @@ if ! [ -f "classic.tgz" ];then
 fi
 
 if [ -z "$classic" ] && ! [ -f "classic.tgz" ];then
-		echo "A classic vSIM template was not found."
-		echo "This will prevent the creation of vsims running 8.0.x releases of Data ONTAP."
+		#echo "A classic vSIM template was not found."
+		#echo "This will prevent the creation of vsims running 8.0.x releases of Data ONTAP."
 		#echo "Plase download the workstation version and place it in this"
 		#echo "folder, then try the installation again."
 		#echo "This file can be downloaded from mysupport.netapp.com at:"
