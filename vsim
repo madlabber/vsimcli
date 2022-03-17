@@ -758,11 +758,16 @@ function cfunmount() # [ $1=vsimpath ] [ $2=-quick ] - skip zero whitespace
 		rm -rf "$_simpath/mnt/x86_64/freebsd/image2/._"*
 
 		#Detach
-		if   [ -n "$(which hdiutil 2>/dev/null)" ];then hdiutil detach "$_simpath/mnt" >/dev/null
+		if   [ -n "$(which hdiutil 2>/dev/null)" ];then hdiutil detach "$_simpath/mnt" &>/dev/null
 		elif [ -n "$(which vmware-mount 2>/dev/null)" ];then vmware-mount -d "$_simpath/mnt";fi
 
 	fi
 
+	if [ -n "$(mount | grep "$_simpath/")" ];then
+    #echo "cfunmount: retry"
+    if   [ -n "$(which hdiutil 2>/dev/null)" ];then hdiutil detach "$_simpath/mnt" &>/dev/null
+    elif [ -n "$(which vmware-mount 2>/dev/null)" ];then vmware-mount -d "$_simpath/mnt";fi
+  fi
 	#Clean up mountpoint and remove .cdr extention
 	if [ -n "$(mount | grep "$_simpath/")" ];then echo "cfunmount: failed to unmount: $name";exit;fi
 
@@ -2230,98 +2235,105 @@ function pullticket()
 #set version based defaults
 function setdefaults()
 {
-	if ! [ -z "$1" ];then baseversion="$1";fi
+  if ! [ -z "$1" ];then baseversion="$1";fi
 
-	#Set version specific defaults
-		if [ $baseversion -ge 991 ];then
-			mode="C"
-			if [ -z "$ram" ]; 	  then ram=6144; fi
-			if [ -z "$vnvsize" ]; then vnvsize=256;fi
-			if [ -z "$nvmode" ];  then nvmode="panic"; fi
-		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
-		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
-	  elif [ $baseversion -ge 940 ]; then
-  		#FullSteam
-  		mode="C"
-  		if [ -z "$ram" ]; 	  then ram=5120; fi
-  		if [ -z "$vnvsize" ]; then vnvsize=256;fi
-  		if [ -z "$nvmode" ];  then nvmode="panic"; fi
-		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
-		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
-  	elif [ $baseversion -ge 920 ]; then
-  		#FullSteam
-  		mode="C"
-  		if [ -z "$ram" ]; 	  then ram=4096; fi
-  		if [ -z "$vnvsize" ]; then vnvsize=256;fi
-  		if [ -z "$nvmode" ];  then nvmode="panic"; fi
-		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
-		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
-  	elif [ $baseversion -ge 830 ]; then
-  		#FullSteam
-  		mode="C"
-  		if [ -z "$ram" ]; 	  then ram=3072; fi
-  		if [ -z "$vnvsize" ]; then vnvsize=256;fi
-  		if [ -z "$nvmode" ];  then nvmode="panic"; fi
-		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
-		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
-	elif [ $baseversion -ge 820 ]; then
-		#Sierra Nevada
-		if [ -z "$ram" ]; 	  then ram=1600; fi
-  		if [ -z "$vnvsize" ]; then vnvsize=64;fi
-  		if [ -z "$nvmode" ];  then nvmode="panic"; fi
-		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
-		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
-	elif [ $baseversion -ge 810 ]; then
-		#RollingRock
-		if [ -z "$ram" ]; 	  then ram=1600; fi
-  		if [ -z "$nvmode" ];  then nvmode="fake"; fi
-		if [ -z "$diskmodel" ]; then diskmodel="standard";fi
-		if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
-  	elif [ $baseversion -ge 802 ]; then
-  		#BoilerMaker
-		if [ -z "$ram" ]; 	  then ram=1600; fi
-  		if [ -z "$nvmode" ];  then nvmode="fake"; fi
-		diskmodel="classic" #only model supported
-	else # 8.0.0 and 8.0.1 have special needs
-		if [ -z "$ram" ]; 	  then ram=1600; fi
-  		if [ -z "$nvmode" ];  then nvmode="fake"; fi
-		diskmodel="classic" #only model supported
-		nics=4 #PCIBridge problems
-	fi
+  #Set version specific defaults
+  if [ $baseversion -ge 9101 ];then
+    mode="C"
+    if [ -z "$ram" ]; 	  then ram=6144; fi
+    if [ -z "$vnvsize" ]; then vnvsize=256;fi
+    if [ -z "$nvmode" ];  then nvmode="panic"; fi
+    if [ -z "$diskmodel" ]; then diskmodel="standard";fi
+    if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="30:3:0,23:11:0,23:14:1";fi
+  elif [ $baseversion -ge 991 ];then
+    mode="C"
+    if [ -z "$ram" ]; 	  then ram=6144; fi
+    if [ -z "$vnvsize" ]; then vnvsize=256;fi
+    if [ -z "$nvmode" ];  then nvmode="panic"; fi
+    if [ -z "$diskmodel" ]; then diskmodel="standard";fi
+    if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
+  elif [ $baseversion -ge 940 ]; then
+    #FullSteam
+    mode="C"
+    if [ -z "$ram" ]; 	  then ram=5120; fi
+    if [ -z "$vnvsize" ]; then vnvsize=256;fi
+    if [ -z "$nvmode" ];  then nvmode="panic"; fi
+    if [ -z "$diskmodel" ]; then diskmodel="standard";fi
+    if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
+  elif [ $baseversion -ge 920 ]; then
+    #FullSteam
+    mode="C"
+    if [ -z "$ram" ]; 	  then ram=4096; fi
+    if [ -z "$vnvsize" ]; then vnvsize=256;fi
+    if [ -z "$nvmode" ];  then nvmode="panic"; fi
+    if [ -z "$diskmodel" ]; then diskmodel="standard";fi
+    if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
+  elif [ $baseversion -ge 830 ]; then
+    #FullSteam
+    mode="C"
+    if [ -z "$ram" ]; 	  then ram=3072; fi
+    if [ -z "$vnvsize" ]; then vnvsize=256;fi
+    if [ -z "$nvmode" ];  then nvmode="panic"; fi
+    if [ -z "$diskmodel" ]; then diskmodel="standard";fi
+    if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
+  elif [ $baseversion -ge 820 ]; then
+    #Sierra Nevada
+    if [ -z "$ram" ]; 	  then ram=1600; fi
+    if [ -z "$vnvsize" ]; then vnvsize=64;fi
+    if [ -z "$nvmode" ];  then nvmode="panic"; fi
+    if [ -z "$diskmodel" ]; then diskmodel="standard";fi
+    if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
+  elif [ $baseversion -ge 810 ]; then
+    #RollingRock
+    if [ -z "$ram" ]; 	  then ram=1600; fi
+    if [ -z "$nvmode" ];  then nvmode="fake"; fi
+    if [ -z "$diskmodel" ]; then diskmodel="standard";fi
+    if [ "$diskmodel" = "standard" ] && [ -z "$vdevinit" ];then vdevinit="23:14:0,23:14:1";fi
+  elif [ $baseversion -ge 802 ]; then
+    #BoilerMaker
+    if [ -z "$ram" ]; 	  then ram=1600; fi
+    if [ -z "$nvmode" ];  then nvmode="fake"; fi
+    diskmodel="classic" #only model supported
+  else # 8.0.0 and 8.0.1 have special needs
+    if [ -z "$ram" ]; 	  then ram=1600; fi
+    if [ -z "$nvmode" ];  then nvmode="fake"; fi
+    diskmodel="classic" #only model supported
+    nics=4 #PCIBridge problems
+  fi
 
 	#default bsdport
-  	if [ -z "$bsdportname" ];then bsdportname="e0c";fi
+  if [ -z "$bsdportname" ];then bsdportname="e0c";fi
 
-  	#default number of nics
-  	if [ -z "$nics" ];then
-  		#if one of these is set we will need an extra nic
-  		if [ -n "$icmac" ] || [ -n "$fodname" ]; then
-  			nics=5
-  		else
-  			nics=4
-  		fi
+  #default number of nics
+  if [ -z "$nics" ];then
+  	#if one of these is set we will need an extra nic
+  	if [ -n "$icmac" ] || [ -n "$fodname" ]; then
+  		nics=5
+  	else
+  		nics=4
   	fi
+  fi
 
-  	#if membsd was not specified base it on the ram size
-  	if [ -z "$membsd" ]; then
-  		if [ $ram -lt 4096 ]; then membsd="760";fi
-  		if [ $ram -lt 3072 ]; then membsd="512";fi
-  	fi
+  #if membsd was not specified base it on the ram size
+  if [ -z "$membsd" ]; then
+  	if [ $ram -lt 4096 ]; then membsd="760";fi
+  	if [ $ram -lt 3072 ]; then membsd="512";fi
+  fi
 
-  	if [ -z "$console" ];then
-  		console="comconsole,vidconsole"
-  		consport=1
-  	fi
+  if [ -z "$console" ];then
+  	console="comconsole,vidconsole"
+  	consport=1
+  fi
 
-  	# 9.1RC2 crashes if console=vidconsole
-  	if [ "$console" = "vidconsole" ] && [ "$baseversion" -ge 910 ];then
-  		console="vidconsole,comconsole"
-  	fi
+  # 9.1RC2 crashes if console=vidconsole
+  if [ "$console" = "vidconsole" ] && [ "$baseversion" -ge 910 ];then
+  	console="vidconsole,comconsole"
+  fi
 
-  	vmhwversion=10
-  	if [ "$diskmodel" = "classic" ];then
-  		vmhwversion=7
-  	fi
+	vmhwversion=10
+	if [ "$diskmodel" = "classic" ];then
+		vmhwversion=7
+	fi
 
 }
 
