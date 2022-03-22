@@ -1,5 +1,14 @@
-# VSIM CLI
-A vsim toolkit for building and managing ONTAP Simulator Virtual Machines
+# VSIMCLI
+A command line tool for building and managing ONTAP Simulator Virtual Machines
+
+## Description
+
+vsimcli is a shell script for building and managing a local vsim (NetApp ONTAP **V**irtual **SIM**ulator) environment.  Originally built for MacOS with VMware fusions, it now also works on Linux with VMware Workstation, and (experimentally) on WSL with VMware Workstation. Some of its functionality includes:
+ - Importing/Exporting simulator OVA or TGZ archives
+ - Creating simulator VMs from an ONTAP image.tgz software package
+ - Offline reconfiguration/upgrade of a VMs configuration, loader environment, and installed ONTAP images
+ - Start/Stop of local Simulator VMs
+ - Connecting to a vsim's serial console
 
 ## Installation
 
