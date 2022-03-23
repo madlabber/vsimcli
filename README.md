@@ -21,7 +21,7 @@ To install:
   2. Place the vsim-netapp-DOT9.9.1-cm_nodar.ova and the CMode_licenses_9.9.1.txt files in the same directory as the install.sh script
 
   3. Run the install.sh script as sudo:
-       sudo ./install.sh
+       sudo -E ./install.sh
 
 The vsim script and simlinks to some VMware components will be placed in: /usr/local/bin
 
