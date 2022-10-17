@@ -4270,10 +4270,9 @@ function vsimstop()
         #WSL Accomodations
         _vmxfile="$vmxfile"
         if [ "$(echo $_vmxfile | grep /mnt/c/)" = "$_vmxfile" ];then
-        #echo "WSL Detected."
-        _vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
+          #echo "WSL Detected."
+          _vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
         fi
-        echo "Starting $name"
         "$VMRUN" -T "$_type" stop "$_vmxfile" $_hard &>/dev/null
         envcache
     fi
