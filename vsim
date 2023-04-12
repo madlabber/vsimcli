@@ -14,6 +14,7 @@ ENV_VSIMPASSWORD="$VSIMPASSWORD"
 ENV_VSIMHOME="$VSIMHOME"
 ENV_VSIMSERIAL="$VSIMSERIAL"
 ENV_VSIMPARTNERSERIAL="$VSIMPARTNERSERIAL"
+ENV_VSIMHOST="$VSIMHOST"
 
 #Defaults:
 #OVFTOOL="/Applications/VMware OVF Tool/ovftool"
@@ -29,6 +30,7 @@ VSIMLICENSE="" #cluster base key
 SDOT_BUILTIN_LICENSES="" #These can be found in the eval .ova
 VSIMSERIAL=""
 VSIMPARTNERSERIAL=""
+VSIMHOST=""
 
 #If those failed, maybe it is a tech preview of Fusion:
 if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware Fusion Tech Preview.app/Contents/Library/VMware OVF Tool/ovftool";fi
@@ -59,10 +61,12 @@ if [ -n "$ENV_ITGZPATH" ];then ITGZPATH="$ENV_ITGZPATH";fi
 if [ -n "$ENV_VSIMHOME" ];then VSIMHOME="$ENV_VSIMHOME";fi
 if [ -n "$ENV_VSIMSERIAL" ];then VSIMSERIAL="$ENV_VSIMSERIAL";fi
 if [ -n "$ENV_VSIMPARTNERSERIAL" ];then VSIMPARTNERSERIAL="$ENV_VSIMPARTNERSERIAL";fi
+if [ -n "$ENV_VSIMHOST" ];then VSIMHOST="$ENV_VSIMHOST";fi
 
 # Apply defaults
 if [ -n "$VSIMSERIAL" ] && [ -z "$serno" ];then serno="$VSIMSERIAL";fi
 if [ -n "$VSIMPARTNERSERIAL" ] && [ -z "$serno2" ];then serno2="$VSIMPARTNERSERIAL";fi
+if [ -n "$VSIMHOST" ] && [ -z "$host" ];then host="$VSIMHOST";fi
 
 # Networking is managed by VMware
 vmnet_file="/Library/Preferences/VMware Fusion/networking"
@@ -281,13 +285,15 @@ function help() # $1=subcommand
 					echo "   -fod <fod name>                      Failover disk set";;esac
 	case $1 in usage|create|make|stop )
 					echo "   -force                               Force the operation to continue";;esac
-	case $1 in usage|export )
+	case $1 in usage|export|create )
+                    echo "   -esx                                 Use ESX style NICS";;esac
+    case $1 in usage|export )
 					echo "   -ova                                 Export the vsim in OVA format"
 					echo "   -tgz                                 Export the vsim in tgz format"
-					echo "   -esx                                 Export the vsim with ESX style NICS"
 					echo "   -vbox                                Export the vsim in vbox format";;esac
-	case $1 in deploy )
-					echo "   -host <name | ip>                    ESXi host"
+	case $1 in deploy|console )
+					echo "   -host <name | ip>                    ESXi host";;esac
+    case $1 in deploy )    
 					echo "   -datastore  <name>                   ESXi Datastore"
 					echo "   -nat <portgroup>                     ESXi Data Network (VM Network)"
 					echo "   -hostonly <portgroup>                ESXi Cluster Network (Cluster Network)";;esac
@@ -3649,8 +3655,8 @@ function vsimrun()
 
 	# Attempt to log in and run the command
 	# This odd construct lets interact work if no command was passed
-    echo "host: $host"
-    echo "port: $consport"
+    # echo "host: $host"
+    # echo "port: $consport"
 
 	expect <( echo "
 		set timeout 1
@@ -4216,12 +4222,15 @@ function vsimstart()
   	[ "$_console" = "vidconsole" ] && _gui="gui"
   	[ "$_console" = "vidconsole,comconsole" ] && _gui="gui"
 
-  	# Fix VMware Fusion Suspend/Resume in 8.2.x
-  	setvmx toolScripts.beforeSuspend FALSE
-	setvmx toolScripts.afterResume FALSE
-	# Sometimes these are set in lowercase
-	unsetvmx toolscripts.beforesuspend
-	unsetvmx toolscripts.afterresume
+    #don't do this on remote hosts
+    if [ -z "$host" ];then
+  	  # Fix VMware Fusion Suspend/Resume in 8.2.x
+  	  setvmx toolScripts.beforeSuspend FALSE
+	  setvmx toolScripts.afterResume FALSE
+	  # Sometimes these are set in lowercase
+	  unsetvmx toolscripts.beforesuspend
+	  unsetvmx toolscripts.afterresume
+    fi
 
 	#Handling for SDOT parameters
 #	if [ -n "$(getcdrom)" ];then
@@ -4251,8 +4260,23 @@ function vsimstart()
 	    #echo "WSL Detected."
 		_vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
 	fi
-  	echo "Starting $name"
- 	"$VMRUN" -T "$_type" start "$_vmxfile" "$_gui" #&>/dev/null
+    if [ -z "$host" ];then 
+  	  echo "Starting $name"
+ 	  "$VMRUN" -T "$_type" start "$_vmxfile" "$_gui" #&>/dev/null
+    else
+      echo "attempting VM start on $host"
+      vmid=$(ssh root@$host 'vim-cmd vmsvc/getallvms' | grep vsims | grep $name/ | cut -d' ' -f1 )
+      echo "vmid: $vmid"
+      echo "checking guestState"
+      guestRunning=$(ssh root@$host "vim-cmd vmsvc/get.guest $vmid" | grep "guestState =" | cut -d'"' -f2)
+      echo "$guestRunning"
+      if [ "$guestRunning" = "notRunning" ];then
+        echo "attempting power.on"
+        guestStart=$(ssh root@$host "vim-cmd vmsvc/power.on $vmid" )
+        echo "$guestStart"
+      fi
+    fi
+
 }
 
 #Stop a vsim
@@ -4277,7 +4301,30 @@ function vsimstop()
           #echo "WSL Detected."
           _vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
         fi
-        "$VMRUN" -T "$_type" stop "$_vmxfile" $_hard &>/dev/null
+
+        if [ -z "$host" ];then 
+          "$VMRUN" -T "$_type" stop "$_vmxfile" "$_hard" &>/dev/null
+        else
+          echo "attempting VM stop on $host"
+          vmid=$(ssh root@$host 'vim-cmd vmsvc/getallvms' | grep vsims | grep $name/ | cut -d' ' -f1 )
+          echo "vmid: $vmid"
+          echo "checking guestState"
+          guestState=$(ssh root@$host "vim-cmd vmsvc/get.guest $vmid" | grep "guestState =" | cut -d'"' -f2)
+          echo "$guestState"
+          if [ "$guestState" = "running" ];then
+            echo "attempting power.shutdown"
+            if [ "$_hard" = "hard" ];then
+              guestStop=$(ssh root@$host "vim-cmd vmsvc/power.off $vmid" )
+            else
+              guestStop=$(ssh root@$host "vim-cmd vmsvc/power.shutdown $vmid" )
+            fi
+            echo "$guestStop"
+          fi
+    fi
+
+
+
+
         envcache
     fi
 }
