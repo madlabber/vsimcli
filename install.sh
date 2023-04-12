@@ -20,7 +20,7 @@ if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER="/Applications/VMware Fusion Tech 
 if ! [ -f "$VMRUN" ];then VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun";fi
 
 #Or this might be WSL
-if ! [ -f "OVFTOOL" ];then OVFTOOL="/mnt/c/Program Files (x86)/VMware/VMware Workstation/OVFTool/ovftool.exe";fi
+if ! [ -f "$OVFTOOL" ];then OVFTOOL="/mnt/c/Program Files (x86)/VMware/VMware Workstation/OVFTool/ovftool.exe";fi
 if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER="/mnt/c/Program Files (x86)/VMware/VMware Workstation/vmware-vdiskmanager.exe";fi
 if ! [ -f "$VMRUN" ];then VMRUN="/mnt/c/Program Files (x86)/VMware/VMware Workstation/vmrun.exe";fi
 
