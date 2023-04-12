@@ -3059,8 +3059,9 @@ function vsimmake()
 		#vmnet1_file="/Library/Preferences/VMware Fusion/vmnet1/dhcpd.conf"
 		vmnet1_hostip=$(cat "$vmnet1_file"  | grep "fixed-address" | cut -d' ' -f2 | cut -d';' -f1)
 
-	  	fodhost=$vmnet1_hostip
+	  	fodhost="$vmnet1_hostip"
   		nfssimdev="$fodhost:$FODDIR/$fodname"
+        echo "$nfssimdev"
   		#generate bsdip unless it was specified on the cli
 		if [ -z "$bsdip" ]; then
 				icaddr="$(echo "$fodhost" | cut -d'.' -f1).$(echo "$fodhost" \
@@ -4525,15 +4526,17 @@ function vsimupdate()
 	if [ "$(tar -tzf $_image | grep netboot/VERSION)" = "netboot/VERSION" ];then _netboot=true;fi
 	if $_netboot;then
 		echo "NETBOOT"
-		file_list=""
-		file_list=" $file_list netboot/VERSION netboot/BUILD netboot/CHECKSUM netboot/COMPAT.TXT"
-        file_list=" $file_list netboot/INSTALL netboot/cap.xml netboot/fw.tgz netboot/kernel"
-        file_list=" $file_list netboot/metadata.xml netboot/platform.ko netboot/platfs.img netboot/rootfs.img"
-        file_list=" $file_list netboot/pmroot_late.tgz netboot/key_fingerprint.sig netboot/kernel.sig netboot/platform.ko.sig"
-        file_list=" $file_list netboot/rootfs.img.sig netboot/hv_ata_pci_disengage.ko netboot/hv_netvsc.ko netboot/hv_storvsc.ko"
-        file_list=" $file_list netboot/hv_utils.ko netboot/hv_vmbus.ko netboot/if_vmx.ko netboot/if_vtnet.ko"
-        file_list=" $file_list netboot/mlxen.ko netboot/mpt.ko netboot/virtio.ko netboot/virtio_blk.ko"
-        file_list=" $file_list netboot/virtio_pci.ko netboot/virtio_scsi.ko netboot/xenhvm.ko"
+        file_list=""
+        file_list=" $file_list netboot/VERSION netboot/BUILD netboot/CHECKSUM netboot/COMPAT.TXT"
+        file_list=" $file_list netboot/INSTALL netboot/bsdboot.tgz netboot/cap.xml netboot/fw.tgz netboot/if_vmx.ko netboot/if_vtnet.ko"
+        file_list=" $file_list netboot/kernel netboot/kernel.csfc.sig netboot/kernel.sig"        
+        file_list=" $file_list netboot/key_fingerprint.csfc.sig netboot/key_fingerprint.sig netboot/metadata.xml"
+        file_list=" $file_list netboot/mlxen.ko netboot/mlx4.ko netboot/mlx4en.ko netboot/mpt.ko netboot/netapp_vmx.ko"        
+        file_list=" $file_list netboot/nvdimm.ko netboot/platform.ko netboot/platform.ko.sig netboot/platform.ko.csfc.sig"
+        file_list=" $file_list netboot/platfs.img netboot/platfs.img.csfc.sig netboot/platfs.img.sig netboot/pmroot_late.tgz netboot/pvscsi.ko"
+        file_list=" $file_list netboot/rootfs.img netboot/rootfs.img.csfc.sig netboot/rootfs.img.sig"
+        file_list=" $file_list netboot/hv_ata_pci_disengage.ko netboot/hv_netvsc.ko netboot/hv_storvsc.ko netboot/hv_utils.ko netboot/hv_vmbus.ko"
+        file_list=" $file_list netboot/virtio.ko netboot/virtio_blk.ko netboot/virtio_pci.ko netboot/virtio_scsi.ko netboot/xenhvm.ko"
 		tar -C "$_cfcard/$_primary" --strip-components=1 -vxzSf "$_image" $file_list 2>&1 | grep -v tar
 	else
 		tar -C "$_cfcard/$_primary" -vxzSf "$_image"
