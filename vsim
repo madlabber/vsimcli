@@ -3619,6 +3619,7 @@ function vsimrun()
 	console=$(getenv console "$simpath/cfcard/env/env")
 	consport=$(getvmx serial0.fileName | cut -d: -f3)
 	password="$VSIMPASSWORD"
+    if [ -z "$host" ];then host="127.0.0.1";fi
 
 	# Bail out now if we don't have a comconsole
 	if [ "$console" = "vidconsole" ] || [ "$console" = "vidconsole,comconsole" ] || [ -z "$consport" ];then
@@ -3648,12 +3649,14 @@ function vsimrun()
 
 	# Attempt to log in and run the command
 	# This odd construct lets interact work if no command was passed
+    echo "host: $host"
+    echo "port: $consport"
 
 	expect <( echo "
 		set timeout 1
 		log_user 0
 		set stty_init \"-icanon -echo intr ^g\"
-		spawn nc 127.0.0.1 $consport
+		spawn nc $host $consport
 		expect_after eof { break }
 
 		# Tell the user how to interrupt
