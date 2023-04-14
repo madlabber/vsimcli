@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #GLOBALS
-VSIMVERSION="20220316.01"
+VSIMVERSION="20230414.01"
 
 #Capture the user ENV
 ENV_OVFTOOL="$OVFTOOL"
@@ -15,6 +15,10 @@ ENV_VSIMHOME="$VSIMHOME"
 ENV_VSIMSERIAL="$VSIMSERIAL"
 ENV_VSIMPARTNERSERIAL="$VSIMPARTNERSERIAL"
 ENV_VSIMHOST="$VSIMHOST"
+ENV_VSIMDATASTORE="$VSIMDATASTORE"
+ENV_NAT_NAME="$NAT_NAME"
+ENV_HOSTONLY_NAME="$HOSTONLY_NAME"
+ENV_BRIDGED_NAME="$BRIDGED_NAME"
 
 #Defaults:
 #OVFTOOL="/Applications/VMware OVF Tool/ovftool"
@@ -31,6 +35,10 @@ SDOT_BUILTIN_LICENSES="" #These can be found in the eval .ova
 VSIMSERIAL=""
 VSIMPARTNERSERIAL=""
 VSIMHOST=""
+VSIMDATASTORE=""
+NAT_NAME="VM Network"
+HOSTONLY_NAME="Cluster Network"
+BRIDGED_NAME="Management Network"
 
 #If those failed, maybe it is a tech preview of Fusion:
 if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware Fusion Tech Preview.app/Contents/Library/VMware OVF Tool/ovftool";fi
@@ -62,11 +70,16 @@ if [ -n "$ENV_VSIMHOME" ];then VSIMHOME="$ENV_VSIMHOME";fi
 if [ -n "$ENV_VSIMSERIAL" ];then VSIMSERIAL="$ENV_VSIMSERIAL";fi
 if [ -n "$ENV_VSIMPARTNERSERIAL" ];then VSIMPARTNERSERIAL="$ENV_VSIMPARTNERSERIAL";fi
 if [ -n "$ENV_VSIMHOST" ];then VSIMHOST="$ENV_VSIMHOST";fi
+if [ -n "$ENV_VSIMDATASTORE" ];then VSIMDATASTORE="$ENV_VSIMDATASTORE";fi
+if [ -n "$ENV_NAT_NAME" ];then VSIMDATASTORE="$ENV_NAT_NAME";fi
+if [ -n "$ENV_HOSTONLY_NAME" ];then VSIMDATASTORE="$ENV_HOSTONLY_NAME";fi
+if [ -n "$ENV_BRIDGED_NAME" ];then VSIMDATASTORE="$ENV_BRIDGED_NAME";fi
 
 # Apply defaults
 if [ -n "$VSIMSERIAL" ] && [ -z "$serno" ];then serno="$VSIMSERIAL";fi
 if [ -n "$VSIMPARTNERSERIAL" ] && [ -z "$serno2" ];then serno2="$VSIMPARTNERSERIAL";fi
 if [ -n "$VSIMHOST" ] && [ -z "$host" ];then host="$VSIMHOST";fi
+if [ -n "$VSIMDATASTORE" ] && [ -z "$datastore" ];then datastore="$VSIMDATASTORE";fi
 
 # Networking is managed by VMware
 vmnet_file="/Library/Preferences/VMware Fusion/networking"
@@ -393,7 +406,7 @@ function addnic()
 {
 
 	local _nic=$(countnics)
-	local _net_esx="VM Network"
+	local _net_esx="$NAT_NAME" #VM Network
 	local _net_fusion="nat"
 
 	# Upper limit from VMware
@@ -401,7 +414,7 @@ function addnic()
 
 	# Cluster ports are special
 	if [ "$_nic" -lt 2 ] && [ "$mode" = "C" ];then
-		_net_esx="Cluster Network"
+		_net_esx="$HOSTONLY_NAME" #"Cluster Network"
 		_net_fusion="hostonly"
 	fi
 
@@ -774,7 +787,7 @@ function cfunmount() # [ $1=vsimpath ] [ $2=-quick ] - skip zero whitespace
     if   [ -n "$(which hdiutil 2>/dev/null)" ];then hdiutil detach "$_simpath/mnt" &>/dev/null
     elif [ -n "$(which vmware-mount 2>/dev/null)" ];then vmware-mount -d "$_simpath/mnt";fi
   fi
-	#Clean up mountpoint and remove .cdr extention
+	#Clean up mountpoint
 	if [ -n "$(mount | grep "$_simpath/")" ];then echo "cfunmount: failed to unmount: $name";exit;fi
 
 	# Sanity check for case insensitive file systems
@@ -782,8 +795,6 @@ function cfunmount() # [ $1=vsimpath ] [ $2=-quick ] - skip zero whitespace
 
 	rm -rf "$_simpath/mnt"
 
-	# I used to rename on mount, so this cleans up any stale mounts
-	if [ -f "$_simpath/$_flat.cdr" ];then mv "$_simpath/$_flat.cdr" "$_simpath/$_flat";fi
 	return 0
 
 }
@@ -1174,6 +1185,10 @@ function unsetoption() #$1=option
 			SDOT_BUILTIN_LICENSES="";;
 		VSIMLICENSE | vsimlicense )
 			VSIMLICENSE="";;
+        VSIMHOST | vsimhost )
+            VSIMHOST="";;
+        VSIMDATASTORE | vsimdatastore )
+            VSIMDATASTORE="";;
 	esac
 	saveoptions
 
@@ -1182,28 +1197,25 @@ function unsetoption() #$1=option
 function setoption() #$1=option $2=value
 {
 	case $1 in
-		OVFTOOL | ovftool )
+        OVFTOOL | ovftool )
 			if [ -f "$value" ];then	OVFTOOL="$2";echo "$1=$2"
 			else echo "error:options: file does not exist: $value";fi;;
-		VMRUN | vmrun )
+        VMRUN | vmrun )
 			if [ -f "$value" ];then VMRUN="$2";echo "$1=$2"
 			else echo "error:options: file does not exist: $value";fi;;
-		VDISKMANAGER | vdiskmanager )
+        VDISKMANAGER | vdiskmanager )
 			if [ -f "$value" ];then VDISKMANAGER="$2";echo "$1=$2"
 			else echo "error:options: file does not exist: $value";fi;;
-		SIMDIR  | simdir  )
+        SIMDIR  | simdir  )
 			if [ -d "$value" ];then SIMDIR="$2";echo "$1=$2"
 			else echo "error:options: directory does not exist: $value";fi;;
-		FODDIR | foddir )
+        FODDIR | foddir )
 			#FODDIR is special:
 			#It must be a directory that exists
 			if ! [ -d "$value" ];then echo "error:options: directory does not exist: $value";exit;fi
 			#It must not contain a space
 			if echo "$value" | grep -E '[ ]' >/dev/null;then echo "error:option FODDIR cannot contain a space: $value";exit;fi
 			#It must also be exported, so vmnet1 must be configured
-			#vmnet_file="/Library/Preferences/VMware Fusion/networking"
-			#vmnet1_subnet=$(cat "$vmnet_file" | grep "VNET_1" | grep "SUBNET" | cut -d' ' -f3)
-			#vmnet1_netmask=$(cat "$vmnet_file" | grep "VNET_1" | grep "NETMASK" | cut -d' ' -f3)
 			if [ -z "$vmnet1_subnet" ];then echo "vmnet1 subnet not defined.";exit;fi
 
 			#And it needs an export
@@ -1277,15 +1289,30 @@ function setoption() #$1=option $2=value
 		VSIMSERIAL | vsimserial )
 			VSIMSERIAL="$2"
 			echo "$1=$2";;
-    VSIMPARTNERSERIAL | vsimpartnerserial )
+        VSIMPARTNERSERIAL | vsimpartnerserial )
   			VSIMPARTNERSERIAL="$2"
   			echo "$1=$2";;
-		SDOT_BUILTIN_LICENSES | sdot_builtin_licenses )
+        SDOT_BUILTIN_LICENSES | sdot_builtin_licenses )
 			SDOT_BUILTIN_LICENSES="$2"
 			echo "$1=$2";;
-		NAT_SUBNET | NAT_NETMASK | NAT_GATEWAY )
+        NAT_SUBNET | NAT_NETMASK | NAT_GATEWAY )
 			echo "This read-only option is managed by VMware Fusion."
 			echo;;
+        NAT_NAME | nat_name )
+            NAT_NAME="$2"
+            echo "$1=$2";;
+        HOSTONLY_NAME | hostonly_name )
+            HOSTONLY_NAME="$2"
+            echo "$1=$2";;
+        BRIDGED_NAME | bridged_name )
+            BRIDGED_NAME="$2"
+            echo "$1=$2";;
+        VSIMHOST | vsimhost )
+            VSIMHOST="$2"
+            echo "$1=$2";;
+        VSIMDATASTORE | vsimdatastore )
+            VSIMDATASTORE="$2"
+            echo "$1=$2";;
 	esac
 	saveoptions
 }
@@ -1321,11 +1348,23 @@ function saveoptions()
 	echo "#This is the default serial number for new vsims"
 	echo 'VSIMSERIAL="'$VSIMSERIAL'"'
 	echo
-  echo "#This is the default serial number for new partner vsims"
+    echo "#This is the default serial number for new partner vsims"
 	echo 'VSIMPARTNERSERIAL="'$VSIMPARTNERSERIAL'"'
-  echo
+    echo
 	echo "#These are the licenses used to initialize ONTAP Select"
 	echo 'SDOT_BUILTIN_LICENSES="'$SDOT_BUILTIN_LICENSES'"'
+    echo
+    echo "#To use an external ESX host specify that host here.  Leave blank to use the local Fusion/Workstation hypervisor"
+    echo 'VSIMHOST="'$VSIMHOST'"'
+    echo
+    echo "#When using an ESX host, these ESX Portgroup names for the NAT,HOSTONLY, and BRIDGED networks"
+    echo 'HOSTONLY_NAME="'$HOSTONLY_NAME'"'
+    echo 'NAT_NAME="'$NAT_NAME'"'
+    echo 'BRIDGED_NAME="'$BRIDGED_NAME'"'
+    echo    
+    echo "#When using an ESX host, specify the VMware NFS Datastore.  Must also be mounted locally as the SIMDIR specified above."
+    echo 'VSIMDATASTORE="'$VSIMDATASTORE'"'    
+    echo
 	} > "$VSIMCFGFILE"
 	chmod 777 "$VSIMCFGFILE"
 }
@@ -1400,24 +1439,6 @@ function getrelease() #$1=release
 	return 1
 }
 
-# Figure out the boot mode
-function getmode() # $simpath
-{
-	local _simpath="$1"
-	local _version
-	local _mode="C"
-	local _cfcard
-	local _env
-
-	if [ -z "$_simpath" ];then _simpath="$simpath";fi
-	if [ -f "$_simpath/cfcard/env/env" ];then _cfcard="$_simpath/cfcard";fi
-	if [ -f "$_simpath/mnt/env/env" ];then _cfcard="$_simpath/mnt";fi
-
-	_env="$_cfcard/env/env"
-
-
-
-}
 
 #get the full path to the vsim
 function getvsimpath() #$1=id
@@ -1486,24 +1507,16 @@ function ifvalue() #$1=value
 #Test if a given vsim is mounted
 function IsMounted() #$1=simpath
 {
-	local _simpath="$1"
-	local _vmdk
-	local _flat
-
-	if [ -z "$_simpath" ]; then _simpath="$simpath";fi
+    # find the path
+	local _simpath=${1:-"$simpath"}
 	if [ -z "$_simpath" ]; then return 1;fi
 
-	#[ -d "$_simpath/mnt/env" ]
-	if [ -n "$(mount | grep "$_simpath/")" ];then return 0;fi
-
-	# Files Names
-	_vmdk="$(getcfvmdk "$_simpath")"
-	if [ -z "$_vmdk" ];then return 1;fi
-	_flat="$(basename -s .vmdk $_vmdk)-flat.vmdk"
-
-	if [ -f "$_simpath/$_flat.cdr" ];then return 0;fi
-
-	return 1
+    # test the path
+	if [ -n "$(mount | grep "$_simpath/")" ]; then 
+        return 0
+    else
+        return 1
+    fi
 }
 
 #Test is a value is a number
@@ -1563,19 +1576,14 @@ function validate() # $1=value
 #test if a given vsim is running
 function IsRunning() #$1=simpath
 {
-  #local _vmxfile="$vmxfile"
-	local _simpath="$simpath"
-  if [ -n "$1" ];then
-#	  _vmxfile=$(getvmxfile "$1")
-		_simpath="$1"
-	fi
-#	local _nvram="$_simpath/nvram"
 
-  if [ -n "$(ls $_simpath | grep .lck)" ]; then return 0;fi
-#  if [ -f "$_nvram" ] && [ -n "$(lsof -w $_nvram | grep nvram 2>/dev/null)" ];then return 0;fi
-#  if [ -f "$("$VMRUN" -T fusion list | grep "$_vmxfile")" ];then return 0;fi
+    local _simpath=${1:-"$simpath"}
 
-	return 1
+    if [ -n "$(ls $_simpath | grep .lck)" ]; then 
+        return 0
+    else
+        return 1
+    fi
 }
 
 #is directory a VM?
@@ -2626,28 +2634,28 @@ function vsimexport()
 				#Nics should minic the configuration in the vmx
 				if [ "$(getvmx ethernet0.present)" = "TRUE" ]; then
 					unsetvmx ethernet0.connectionType
-					setvmx ethernet0.networkName "Cluster Network";fi
+					setvmx ethernet0.networkName "$HOSTONLY_NAME";fi
 				if [ "$(getvmx ethernet1.present)" = "TRUE" ]; then
 					unsetvmx ethernet1.connectionType
-					setvmx ethernet1.networkName "Cluster Network";fi
+					setvmx ethernet1.networkName "$HOSTONLY_NAME";fi
 				if [ "$(getvmx ethernet2.present)" = "TRUE" ]; then
 					unsetvmx ethernet2.connectionType
-					setvmx ethernet2.networkName "VM Network";fi
+					setvmx ethernet2.networkName "$NAT_NAME";fi 
 				if [ "$(getvmx ethernet3.present)" = "TRUE" ]; then
 					unsetvmx ethernet3.connectionType
-					setvmx ethernet3.networkName "VM Network";fi
+					setvmx ethernet3.networkName "$NAT_NAME";fi
 				if [ "$(getvmx ethernet4.present)" = "TRUE" ]; then
 					unsetvmx ethernet4.connectionType
-					setvmx ethernet4.networkName "VM Network";fi
+					setvmx ethernet4.networkName "$NAT_NAME";fi
 				if [ "$(getvmx ethernet5.present)" = "TRUE" ]; then
 					unsetvmx ethernet5.connectionType
-					setvmx ethernet5.networkName "VM Network";fi
+					setvmx ethernet5.networkName "$NAT_NAME";fi
 				if [ "$(getvmx ethernet6.present)" = "TRUE" ]; then
 					unsetvmx ethernet6.connectionType
-					setvmx ethernet6.networkName "VM Network";fi
+					setvmx ethernet6.networkName "$NAT_NAME";fi
 				if [ "$(getvmx ethernet7.present)" = "TRUE" ]; then
 					unsetvmx ethernet7.connectionType
-					setvmx ethernet7.networkName "VM Network";fi
+					setvmx ethernet7.networkName "$NAT_NAME";fi
 		fi
 
 
@@ -2963,6 +2971,7 @@ function vsimmake()
     if [ -z "$fodname" ] && [ -n "$partner" ];then fodname="ha_$name""_$partner";fi
     if [ -n "$fodname" ];then makefod "$fodname" "$vdevinit";fi
 
+    # create blank cfcard staging folder
     _cfcard="$simpath/cfcard"
     rm -rf "$_cfcard"
     env="$_cfcard/env/env"
@@ -3210,6 +3219,7 @@ function vsimmake()
   	# echo "unmounting boot device"
   	# cfunmount "$simpath" -zero
   	envsave
+    echo "Flushing changes to CFCARD"
   	cfsave
 
   	#RM the sim vmdk if data disk model = VSCSI
@@ -3226,7 +3236,8 @@ function vsimmake()
   	fi
 
   	# If we are making it for esx, convert the disks to thick
-  	if $esx; then convertvmdk2esx;fi
+    # likely obsolete but might be useful for dealing with really old tgz vsim bundles
+  	# if $esx; then convertvmdk2esx;fi
 
   	echo "Vsim $name created."
   	echo ""
@@ -3277,10 +3288,16 @@ function vsimoptions()
 	echo "VSIMHOME=$VSIMHOME"
 	echo "VSIMPASSWORD=$VSIMPASSWORD"
 	echo "VSIMSERIAL"="$VSIMSERIAL"
-  echo "VSIMPARTNERSERIAL"="$VSIMPARTNERSERIAL"
+    echo "VSIMPARTNERSERIAL"="$VSIMPARTNERSERIAL"
+    echo "NAT_NAME"="$NAT_NAME"
 	echo "NAT_SUBNET=$NAT_SUBNET"
 	echo "NAT_NETMASK=$NAT_NETMASK"
 	echo "NAT_GATEWAY=$NAT_GATEWAY"
+    echo "HOSTONLY_NAME"="$HOSTONLY_NAME"
+    echo "BRIDGED_NAME"="$BRIDGED_NAME"
+    echo "VSIMHOST"="$VSIMHOST"
+    echo "VSIMDATASTORE"="$VSIMDATASTORE"
+
 }
 
 #add a telnet console to a vsim
@@ -4155,6 +4172,18 @@ function vsimshow()
 			bridged )   if [ -n "$_bridged" ];then _bridged="$_bridged,";fi
 						_bridged="$_bridged$ntapname";;
 		esac
+
+        networkName=$(getvmx "ethernet$i.networkName")
+
+        case $networkName in
+            $NAT_NAME       ) if [ -n "$_nat" ];then _nat="$_nat,";fi
+                              _nat="$_nat$ntapname";;
+            $HOSTONLY_NAME  ) if [ -n "$_hostonly" ];then _hostonly="$_hostonly,";fi
+                              _hostonly="$_hostonly$ntapname";;
+            $BRIDGED_NAME   ) if [ -n "$_bridged" ];then _bridged="$_bridged,";fi
+                              _bridged="$_bridged$ntapname";;
+        esac
+
 		i=$[$i+1]
 	done
 
@@ -4264,16 +4293,22 @@ function vsimstart()
   	  echo "Starting $name"
  	  "$VMRUN" -T "$_type" start "$_vmxfile" "$_gui" #&>/dev/null
     else
-      echo "attempting VM start on $host"
+      echo "Starting $name on $host in datastore $datastore"
+      registerVM=$(ssh root@$host "vim-cmd solo/registervm /vmfs/volumes/$datastore/$name/DataONTAP.vmx $name")
+      #echo "$registerVM"
       vmid=$(ssh root@$host 'vim-cmd vmsvc/getallvms' | grep vsims | grep $name/ | cut -d' ' -f1 )
       echo "vmid: $vmid"
-      echo "checking guestState"
+      if [ -z "$vmid" ];then 
+        echo "vsim not registered"
+      fi
+
+      #echo "checking guestState"
       guestRunning=$(ssh root@$host "vim-cmd vmsvc/get.guest $vmid" | grep "guestState =" | cut -d'"' -f2)
-      echo "$guestRunning"
+      #echo "$guestRunning"
       if [ "$guestRunning" = "notRunning" ];then
-        echo "attempting power.on"
+        #echo "attempting power.on"
         guestStart=$(ssh root@$host "vim-cmd vmsvc/power.on $vmid" )
-        echo "$guestStart"
+        #echo "$guestStart"
       fi
     fi
 
@@ -4283,50 +4318,55 @@ function vsimstart()
 function vsimstop()
 {
     local _hard
-
-    # And it has to exist
-    if ! [ -d "$simpath" ]; then echo "error:stop: vsim $name not found: $simpath";exit;fi
-
-    if $vbox;then echo "vsimstop: vbox graceful shutdown not supported";return 1;fi
-
     if $force;then _hard="hard";fi
 
-    if IsRunning; then
-        echo "Stopping vsim: $name"
-        _type="Fusion"
-        if [ "$(uname)" = "Linux" ];then _type="ws";fi
-        #WSL Accomodations
-        _vmxfile="$vmxfile"
-        if [ "$(echo $_vmxfile | grep /mnt/c/)" = "$_vmxfile" ];then
+    # It has to exist
+    if ! [ -d "$simpath" ]; then echo "error:stop: vsim $name not found: $simpath";exit;fi
+
+    # and it doesn't work on virtualbox
+    if $vbox;then echo "vsimstop: vbox graceful shutdown not supported";return 1;fi
+
+    # And it must be running
+    if ! IsRunning; then return 1;fi
+    
+    # determine hypervisor type
+    _type="Fusion"
+    if [ "$(uname)" = "Linux" ];then _type="ws";fi
+    if [ -n "$host" ];then _type="esx";fi
+    
+    #WSL Accomodations
+    _vmxfile="$vmxfile"
+    if [ "$(echo $_vmxfile | grep /mnt/c/)" = "$_vmxfile" ];then
           #echo "WSL Detected."
           _vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
+    fi
+
+    # On Fusion and Workstation use VMRUN
+    if [ "$_type" != "esx" ];then 
+        echo "Stopping vsim: $name"
+        "$VMRUN" -T "$_type" stop "$_vmxfile" "$_hard" &>/dev/null
+    fi
+
+    # On ESX, use vim-cmd over ssh
+    if [ "$_type" = "esx" ];then 
+        echo "Stopping $name on $host"
+
+        #get the vmid
+        vmid=$(ssh root@$host 'vim-cmd vmsvc/getallvms' | grep vsims | grep $name/ | cut -d' ' -f1 )
+        #echo "vmid: $vmid"
+        
+        if $force;then
+            guestStop=$(ssh root@$host "vim-cmd vmsvc/power.off $vmid" &>/dev/null)
+        else
+            guestStop=$(ssh root@$host "vim-cmd vmsvc/power.shutdown $vmid" &>/dev/null)
         fi
 
-        if [ -z "$host" ];then 
-          "$VMRUN" -T "$_type" stop "$_vmxfile" "$_hard" &>/dev/null
-        else
-          echo "attempting VM stop on $host"
-          vmid=$(ssh root@$host 'vim-cmd vmsvc/getallvms' | grep vsims | grep $name/ | cut -d' ' -f1 )
-          echo "vmid: $vmid"
-          echo "checking guestState"
-          guestState=$(ssh root@$host "vim-cmd vmsvc/get.guest $vmid" | grep "guestState =" | cut -d'"' -f2)
-          echo "$guestState"
-          if [ "$guestState" = "running" ];then
-            echo "attempting power.shutdown"
-            if [ "$_hard" = "hard" ];then
-              guestStop=$(ssh root@$host "vim-cmd vmsvc/power.off $vmid" )
-            else
-              guestStop=$(ssh root@$host "vim-cmd vmsvc/power.shutdown $vmid" )
-            fi
-            echo "$guestStop"
-          fi
+        # reset permissions on vm directory so envcache will succeed
+        ret=$(ssh root@$host "chmod -R 777 /vmfs/volumes/$datastore/$name")
     fi
 
-
-
-
-        envcache
-    fi
+    #update the envcache
+    envcache
 }
 
 #Test code
@@ -4553,7 +4593,7 @@ function vsimupdate()
   	# If we have no _image we are done
   	if ! [ -f "$_image" ];then echo "vsimupdate:image not found:$image$release" >&2;return 1;fi
 
-	cfcache
+	#cfcache
 	local _cfcard="$simpath/cfcard"
 
 	# Get the installation folder ready
@@ -4621,7 +4661,7 @@ function vsimupdate()
 
 	#unmount the boot device
 	# if $_unmount; then cfunmount;fi
-	cfsave
+	#cfsave
 
 }
 
@@ -4870,6 +4910,9 @@ if [ -n "$variable" ] && [ -z "$value" ];then
 	variable=$(echo "$variable" | cut -d'=' -f 1)
 fi
 
+# If host is defined then esx must be true
+if [ -n "$host" ];then esx=true;fi
+
 #If we aren't setting options then the options must be checked
 #A few of these must actually exist
 if ! [ "$action" = "options" ] && ! [ "$action" = "help" ] && [ -n "$action" ];then
@@ -4993,7 +5036,13 @@ case $action in
             _vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
             fi
 
-			"$VMRUN" -T "$_type" deleteVM "$_vmxfile"
+            if [ -z "$host" ];then 
+			    "$VMRUN" -T "$_type" deleteVM "$_vmxfile"
+            else
+                ret=$(ssh root@$host "chmod -R 777 /vmfs/volumes/$datastore/$name")
+                echo "$ret"
+            fi
+
   			rm -rf "$simpath"
   		fi
 
@@ -5001,8 +5050,8 @@ case $action in
   		if [ -d "$simpath/nodea" ];then rm -rf "$simpath";fi
   		if [ -d "$FODDIR/$fodname/nodea" ];then rm -rf "$FODDIR/$fodname";fi
   		if [ -d "$FODDIR/$name/nodea" ];then rm -rf "$FODDIR/$name";fi;;
-	deploy		)   if [ -z "$nat" ];then nat="VM Network";fi
-					      if [ -z "$hostonly" ];then hostonly="VM Network";fi
+	deploy		)   if [ -z "$nat" ];then nat="$NAT_NAME";fi
+					      if [ -z "$hostonly" ];then hostonly="$HOSTONLY_NAME";fi
 
                 #set OVFTOOL options
                 extraConfig[0]="--allowAllExtraConfig"
@@ -5099,7 +5148,11 @@ case $action in
 	start 	    )	vsimstart;;
 	stop 	    ) 	vsimstop;;
 	suspend 	)   "$VMRUN" suspend "$vmxfile";;
-	update 	    )	vsimupdate;;
+	update 	    )
+        cfcache	
+        vsimupdate
+        cfcave
+        ;;
 	unsetenv 	)
     envcache
 		unsetenv  "$variable" "$simpath/cfcard/env/env"
