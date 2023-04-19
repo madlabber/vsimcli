@@ -680,14 +680,13 @@ function convertvmdk2esx()
 # Mount the simulator boot device (CF Card) vmdk
 function cfmount() # $1=vsimpath
 {
-	local _simpath="$1"
+	local _simpath=${1:-"$simpath"}
 	local _vmdk="$(getcfvmdk "$1")"
 	local _flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
 	local _partition=2 #Need some logic to valid this
 
 	#bail out now if the path is invalid or missing
 	if   IsMounted "$_simpath";     then return 0;fi
-	if   [ -z "$_simpath" ];        then _simpath="$simpath";fi
 	if   [ -z "$_simpath" ];        then echo "cfmount:simpath not specified";return 1;fi
 	if ! [ -d "$_simpath" ];        then echo "cfmount:directory not found:$_simpath";return 1;fi
 	if ! [ -f "$_simpath/$_vmdk" ]; then echo "cfmount:vmdk not found:$_simpath/$_vmdk";return 1;fi
