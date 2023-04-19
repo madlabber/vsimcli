@@ -19,6 +19,9 @@ ENV_VSIMDATASTORE="$VSIMDATASTORE"
 ENV_NAT_NAME="$NAT_NAME"
 ENV_HOSTONLY_NAME="$HOSTONLY_NAME"
 ENV_BRIDGED_NAME="$BRIDGED_NAME"
+ENV_NAT_SUBNET="$NAT_SUBNET"
+ENV_NAT_NETMASK="$NAT_NETMASK"
+ENV_NAT_GATEWAY="$NAT_GATEWAY"
 
 #Defaults:
 #OVFTOOL="/Applications/VMware OVF Tool/ovftool"
@@ -125,6 +128,12 @@ if [ -f "/mnt/c/ProgramData/VMware/vmnetdhcp.conf" ];then
     NAT_NETMASK="$vmnet8_netmask"
     NAT_GATEWAY="$vmnet8_gateway"
 fi
+
+# Allow the env vars to override the vmnet files
+if [ -n "$ENV_NAT_SUBNET" ];then  NAT_SUBNET="$ENV_NAT_SUBNET";fi
+if [ -n "$ENV_NAT_NETMASK" ];then NAT_NETMASK="$ENV_NAT_NETMASK";fi
+if [ -n "$ENV_NAT_GATEWAY" ];then NAT_GATEWAY="$ENV_NAT_GATEWAY";fi
+
 ##
 ##  TODO:
 ##
@@ -413,7 +422,7 @@ function addnic()
 	if [ "$_nic" -ge 10 ];then return;fi
 
 	# Cluster ports are special
-	if [ "$_nic" -lt 2 ] && [ "$mode" = "C" ];then
+	if [ "$_nic" -lt 2 ] && [ "$mode" = "C" ] && [ "$snc" = "false" ];then
 		_net_esx="$HOSTONLY_NAME" #"Cluster Network"
 		_net_fusion="hostonly"
 	fi
@@ -478,7 +487,7 @@ function autosetup()
 	if [ -z "$_node_name" ];then _node_name="$name";fi
 
 	# Base node IP on the ticket #.  FIXME: avoid the DHCP range
-	nodeip="$(echo "$vmnet8_subnet" | cut -d'.' -f1-3).1$ticket"
+	nodeip="$(echo "$NAT_SUBNET" | cut -d'.' -f1-3).1$ticket"
 
 	# In create mode we need a cluster_mgmt ip
 	if [ "$operation" = "create" ];then
@@ -486,7 +495,7 @@ function autosetup()
 		# Then pull another ticket and generate another IP for the node
 		ticket2=$(pullticket)
 		clusterip="$nodeip"
-		nodeip="$(echo "$vmnet8_subnet" | cut -d'.' -f1-3).1$ticket2"
+		nodeip="$(echo "$NAT_SUBNET" | cut -d'.' -f1-3).1$ticket2"
 
 		#if IP was specific at the CLI, use that one instead
 		if [ -n "$cluster_mgmt_ip" ]; then clusterip="$cluster_mgmt_ip";fi
@@ -494,10 +503,10 @@ function autosetup()
 
   # If node_mgmt_ip was specified, apply it now.
 	if [ -n "$node_mgmt_ip" ]; then nodeip="$node_mgmt_ip";fi
-	if [ -z "$mgmt_netmask" ]; then mgmt_netmask="$vmnet8_netmask";fi
-	if [ -z "$mgmt_gateway" ]; then mgmt_gateway="$vmnet8_gateway";fi
+	if [ -z "$mgmt_netmask" ]; then mgmt_netmask="$NAT_NETMASK";fi
+	if [ -z "$mgmt_gateway" ]; then mgmt_gateway="$NAT_GATEWAY";fi
 
-	dns_info="$vmnet8_domain;$vmnet8_gateway"
+	dns_info="$vmnet8_domain;$NAT_GATEWAY"
 
 	#BURT 8250500 Mitigation
 	delorean_required=false
@@ -570,26 +579,34 @@ function autosetup()
 	case $operation in
 		create )
 			echo "Operation: Cluster Create"
+
 			#In this case we do want lifs generated
+            if [ "$snc" = "false" ];then
 			setenv "bootarg.init.auto_cluster_lif.disable" "false" "$env"
+            fi
+
 			#BURT 8250500 may require a time machine
 			if $delorean_required;then
 				echo "ngsh -c date 20190701"`date +%H%M` >> $setupfile
 			fi
 			#Create the cluster
-			echo "ngsh -c cluster create -clustername $cluster" >> $setupfile
+            if [ "$snc" = "true" ];then sncflag="-node-count 1";fi
+			echo "ngsh -c cluster create -clustername $cluster $sncflag" >> $setupfile
 			#If a cluster base license is available, add it
 			if [ -n "$VSIMLICENSE" ];then
 				echo "ngsh -c license add $VSIMLICENSE" >> $setupfile
 			fi
+            
 			#BURT 8250500 may require a time machine
 			if $delorean_required;then
 				echo "ngsh -c date "`date +%Y%m%d%H%M` >> $setupfile
 			fi
-			#Create the cluster_mgmt lif
+			
+            #Create the cluster_mgmt lif
 			echo "ngsh -c network interface create -vserver $cluster -lif cluster_mgmt -role cluster-mgmt -home-node $_node_name -home-port e0d -address $clusterip -netmask $mgmt_netmask"  >> $setupfile
 			#Jumbos don't work in Fusion, so fix the Cluster ports
 			echo "ngsh -c network port broadcast-domain modify -broadcast-domain Cluster -ipspace Cluster -mtu 1500"  >> $setupfile
+
 			#If HA, then reboot now to enable HA
 			if [ -n "$fodname" ];then
 				echo "ngsh -c echo 'Rebooting to activate HA'" >> $setupfile
@@ -2465,8 +2482,8 @@ function vsimconfigure()
 	local _node_uuid=$(uuidgen | awk '{print tolower($0)}')
 	local _ticket1=$(pullticket)
 	local _ticket2=$(pullticket)
-	local _cluster_mgmt_ip="$(echo "$vmnet8_subnet" | cut -d'.' -f1-3).1$_ticket1"
-	local _node_mgmt_ip="$(echo "$vmnet8_subnet" | cut -d'.' -f1-3).1$_ticket2"
+	local _cluster_mgmt_ip="$(echo "$NAT_SUBNET" | cut -d'.' -f1-3).1$_ticket1"
+	local _node_mgmt_ip="$(echo "$NAT_SUBNET" | cut -d'.' -f1-3).1$_ticket2"
 	local _serial_number="998877665544332211$_ticket1"
 	local _cdrom="$(getcdrom)"
 
@@ -4705,6 +4722,7 @@ zero=false
 gui=false
 unsetvariable=false
 vmxnet3=false
+snc=false
 
 #Command abbreviations are nice to have
 commandlist="console\ncreate\nconfigure\ndelete\nexport\nhelp\nimport\nmodify\nmount\noptions\npackage\npoweroff\nprintenv\nprintvmx\nrename\nrun\nsetenv\nsetvmx\nshow\nsoftware\nstart\nstop\nsuspend\nunmount\nunsetenv\nunsetvmx\nupdate\n"
@@ -4855,6 +4873,7 @@ while [ "X$1" != "X" ]; do
 			                            if [ -n "$argv" ];then setdefault="$argv";fi
 																	;;
       -serno | -sn | -serial   )  serno="$argv";;
+      -snc                     )  snc=true;;
       -partnerserial           )  serno2="$argv";;
       -simdisks | -vdevinit    )  vdevinit="$argv";;
       -simdir                  )  SIMDIR="$argv";;
