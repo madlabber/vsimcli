@@ -1,10 +1,10 @@
 #!/bin/bash
 errCount=0
-if [[ $UID != 0 ]]; then
-    echo "Please run this script with sudo:"
-    echo "sudo -E $0 $*"
-    exit 1
-fi
+# if [[ $UID != 0 ]]; then
+#     echo "Please run this script with sudo:"
+#     echo "sudo -E $0 $*"
+#     # exit 1
+# fi
 
 echo
 echo "Checking dependencies."
@@ -46,7 +46,7 @@ if ! [ -f "$OVFTOOL" ] || ! [ -f "$VDISKMANAGER" ] || ! [ -f "$VMRUN" ];then
 fi
 
 if ! [ -f "classic.tgz" ];then
-		echo "A classic vSIM template was not found."
+		echo "- A classic vSIM template was not found."
 		#echo "This will prevent the creation of vsims running 8.0.x releases of Data ONTAP."
 		#echo "Plase download the workstation version and place it in this"
 		#echo "folder, then try the installation again."
@@ -56,18 +56,62 @@ if ! [ -f "classic.tgz" ];then
 fi
 
 if ! [ -f "standard.tgz" ];then
-	echo "A standard vSIM template was not found."
+	echo "- A standard vSIM template was not found."
 	ovafile="vsim-netapp-DOT9.9.1-cm_nodar.ova"
 fi
 
+# lazy search for a supported ova
+if ! [ -f "$ovafile" ];then
+  ovafile="vsim-netapp-DOT9.9.1-cm_nodar.ova"
+fi
+if ! [ -f "$ovafile" ];then
+  ovafile="vsim-netapp-DOT9.10.1-cm_nodar.ova"
+fi
+if ! [ -f "$ovafile" ];then
+  ovafile="vsim-netapp-DOT9.11.1-cm_nodar.ova"
+fi
+if ! [ -f "$ovafile" ];then
+  ovafile="vsim-netapp-DOT9.12.1-cm_nodar.ova"
+fi
+if ! [ -f "$ovafile" ];then
+  ovafile="vsim-netapp-DOT9.13.1-cm_nodar.ova"
+fi
+if ! [ -f "$ovafile" ];then
+  ovafile="vsim-netapp-DOT9.14.1-cm_nodar.ova"
+fi
+# also look in downloads
 if ! [ -f "$ovafile" ];then
   ovafile="~/Downloads/vsim-netapp-DOT9.9.1-cm_nodar.ova"
 fi
+if ! [ -f "$ovafile" ];then
+  ovafile="~/Downloads/vsim-netapp-DOT9.10.1-cm_nodar.ova"
+fi
+if ! [ -f "$ovafile" ];then
+  ovafile="~/Downloads/vsim-netapp-DOT9.11.1-cm_nodar.ova"
+fi
+if ! [ -f "$ovafile" ];then
+  ovafile="~/Downloads/vsim-netapp-DOT9.12.1-cm_nodar.ova"
+fi
+if ! [ -f "$ovafile" ];then
+  ovafile="~/Downloads/vsim-netapp-DOT9.13.1-cm_nodar.ova"
+fi
+if ! [ -f "$ovafile" ];then
+  ovafile="~/Downloads/vsim-netapp-DOT9.14.1-cm_nodar.ova"
+fi
+
+if [ -f "$ovafile" ];then 
+  echo "+ A vSIM OVA file was found: $ovafile"
+fi
+if [ -f "standard.tgz" ];then
+  echo "+ A standard vSIM template was found: standard.tgz"
+  echo "..using existing standard.tgz"
+fi
+
 
 if ! [ -f "$ovafile" ] && ! [ -f "standard.tgz" ];then
         echo ""
-		echo "  An existing 9.9.1 vsim OVA file is required."
-		echo "  Plase download vsim-netapp-DOT9.9.1-cm_nodar.ova and "
+		echo "  An existing vsim OVA file is required."
+		echo "  Plase download vsim-netapp-DOT9.9.1-cm_nodar.ova or newer and "
 		echo "  place it in this folder, then try the installation again."
 		echo "  This file can be downloaded from the mysupport.netapp.com at:"
 		echo "  https://mysupport.netapp.com/api/tools-service/toolsbinary/simulate-ontap/download/vsim-netapp-DOT9.9.1-cm_nodar.ova"
@@ -82,71 +126,116 @@ if [ $errCount -ne 0 ];then
 	exit 1
 fi
 
+echo
 echo "Proceeding with installation."
 
-#Scripts go here
-echo "Copying files to /usr/local/bin:"
-mkdir -p /usr/local/bin
-cp vsim /usr/local/bin
-if [ -f "/usr/local/bin/vsim" ]; then
-	echo "+ /usr/local/bin/vsim"
+# make directory structure
+echo
+echo "Creating $HOME/vsims directories"
+mkdir -p "$HOME/vsims"
+mkdir -p "$HOME/vsims/ontap"
+mkdir -p "$HOME/vsims/cfcard"
+mkdir -p "$HOME/vsims/bin"
+chmod -R 777 "$HOME/vsims"
+
+#Scripts go here if they can
+if [ -w /usr/local ]; then
+  echo
+  echo "Copying files to /usr/local/bin:"
+  mkdir -p /usr/local/bin
+  cp vsim /usr/local/bin
+  if [ -f "/usr/local/bin/vsim" ]; then
+  	echo "+ /usr/local/bin/vsim"
+  fi
+  cp .vsim-completion.sh /usr/local/bin
+  if [ -f "/usr/local/bin/.vsim-completion.sh" ]; then
+  	echo "+ /usr/local/bin/.vsim-completion.sh"
+  fi
 fi
-cp .vsim-completion.sh /usr/local/bin
-if [ -f "/usr/local/bin/.vsim-completion.sh" ]; then
-	echo "+ /usr/local/bin/.vsim-completion.sh"
+
+# And here
+echo
+echo "Copying files to $HOME/vsims/bin:"
+mkdir -p $HOME/vsims/bin
+cp vsim $HOME/vsims/bin
+if [ -f "$HOME/vsims/bin/vsim" ]; then
+	echo "+ $HOME/vsims/bin/vsim"
 fi
+cp .vsim-completion.sh $HOME/vsims/bin
+if [ -f "$HOME/vsims/bin/.vsim-completion.sh" ]; then
+	echo "+ $HOME/vsims/bin/.vsim-completion.sh"
+fi
+
+
+
 
 #Simlinks go here too
-echo "Creating symlinks for VMware Fusion components"
-ln -s "$VMRUN" "/usr/local/bin/vmrun" 2>/dev/null
-if [ -f "/usr/local/bin/vmrun" ]; then
-	echo "+ /usr/local/bin/vmrun"
-fi
-ln -s "$OVFTOOL" "/usr/local/bin/ovftool" 2>/dev/null
-if [ -f "/usr/local/bin/ovftool" ];then
-	echo "+ /usr/local/bin/ovftool"
-fi
-ln -s "$VDISKMANAGER" "/usr/local/bin/vmware-vdiskmanager" 2>/dev/null
-if [ -f "/usr/local/bin/vmware-vdiskmanager" ]; then
-	echo "+ /usr/local/bin/vmware-vdiskmanager"
+# These are for administrator convenience and not used by the tool
+if [ -w /usr/local ]; then
+  echo "Creating symlinks for VMware Fusion components"
+  ln -s "$VMRUN" "/usr/local/bin/vmrun" 2>/dev/null
+  if [ -f "/usr/local/bin/vmrun" ]; then
+  	echo "+ /usr/local/bin/vmrun"
+  fi
+  ln -s "$OVFTOOL" "/usr/local/bin/ovftool" 2>/dev/null
+  if [ -f "/usr/local/bin/ovftool" ];then
+  	echo "+ /usr/local/bin/ovftool"
+  fi
+  ln -s "$VDISKMANAGER" "/usr/local/bin/vmware-vdiskmanager" 2>/dev/null
+  if [ -f "/usr/local/bin/vmware-vdiskmanager" ]; then
+  	echo "+ /usr/local/bin/vmware-vdiskmanager"
+  fi
 fi
 
-echo "Adding tab completion to bash environment"
-src="source /usr/local/bin/.vsim-completion.sh"
-
+# configure bashrc for linux
+echo
+echo "Updating .bashrc"
 bashrc="$HOME/.bashrc"
+src="source $HOME/vsims/bin/.vsim-completion.sh"
+bashpath='export PATH="$HOME/vsims/bin:$PATH"'
 if ! [ -f "$bashrc" ];then touch "$bashrc";fi
 if ! cat "$bashrc" | grep "$src";then	echo "$src" >> "$bashrc";fi
+if ! cat "$bashrc" | grep "$bashpath";then echo "$bashpath" >> "$bashrc";fi
 
-echo "Adding tab completion to zsh environment"
+#configure zshrc for newer macos
+echo
+echo "Updating .zshrc"
 zshrc="$HOME/.zshrc"
+zshpath='export PATH=$HOME/vsims/bin:$PATH'
 if ! [ -f "$zshrc" ];then touch "$zshrc";fi
 if ! cat "$zshrc" | grep "compinit";then echo "autoload -U +X compinit && compinit" >> "$zshrc";fi
 if ! cat "$zshrc" | grep "bashcompinit";then echo "autoload -U +X bashcompinit && bashcompinit" >> "$zshrc";fi
 if ! cat "$zshrc" | grep "$src";then echo "$src" >> "$zshrc";fi
-
-echo "Creating $HOME/vsims directories"
-mkdir -p "$HOME/vsims"
-chmod -R 777 "$HOME/vsims"
-mkdir -p "$HOME/vsims/ontap"
-chmod -R 777 "$HOME/vsims/ontap"
+if ! cat "$zshrc" | grep "$zshpath";then echo "$zshpath" >> "$zshrc";fi
 
 #Build templates if necessary
 #Build standard.tgz from the ova
 if ! [ -f "standard.tgz" ];then
-	echo "Building standard diskmodel template."
-	./vsim delete standard
-	./vsim import -file "$ovafile" -name "standard"
-  ./vsim export -vsim standard -image image1
-  ./vsim import 991_sim_nodar_image.tgz
-  ./vsim clean standard
-	echo "Exporting tgz"
-	./vsim export standard -tgz
-	./vsim delete standard
+    echo
+    echo "Building standard diskmodel template."
+    ./vsim delete standard
+    ./vsim import -file "$ovafile" -name "standard"
+    ./vsim export -vsim standard -image image1
+
+	imagetgz=$(ls *_image.tgz)
+    ./vsim import $imagetgz
+    ./vsim clean standard
+    echo "Exporting tgz"
+    ./vsim export standard -tgz
+    ./vsim delete standard
 fi
 
-license_file="CMode_licenses_9.9.1.txt"
-mkdir -p "$HOME/vsims/cfcard"
+echo
+echo "Searching for license file."
+license_file="$(ls CMode_licenses_*.txt 2> /dev/null| head -n 1)"
+if ! [ -f "$license_file" ];then license_file="$(ls ~/Downloads/CMode_licenses_*.txt 2> /dev/null| head -n 1)";fi
+
+if [ -f "$license_file" ];then
+  echo "+ Found: $license_file"
+else
+  echo "- no license files found."
+fi
+rm "$HOME/vsims/cfcard/mfg_l_f" 2> /dev/null
 touch "$HOME/vsims/cfcard/mfg_l_f"
 if [ -f "$license_file" ];then
 	sed 's/\t/ /g' "$license_file" | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>"$HOME/vsims/cfcard/mfg_l_f"
@@ -165,6 +254,7 @@ fi
 # See prototype in make.sh
 
 #templates go here
+echo
 echo "Copying files to $HOME/vsims:"
 cp standard.tgz $HOME/vsims 2>/dev/null
 if [ -f "$HOME/vsims/standard.tgz" ];then
@@ -180,15 +270,8 @@ if [ -f "$HOME/vsims/universal.tgz" ];then
 	echo "+ $HOME/vsims/universal.tgz"
 fi
 
-
-#image.tgz files go here:
-mkdir -p /Library/WebServer/Documents/ontap
-#or here
-mkdir -p "$HOME/vsims/ontap"
-mkdir -p "$HOME/vsims/cfcard"
-
 failed=0
-if ! [ -f "/usr/local/bin/vsim" ]; then failed=1;fi
+if ! [ -f "$HOME/vsims/bin/vsim" ]; then failed=1;fi
 if ! [ -f "$HOME/vsims/standard.tgz" ];then failed=1;fi
 
 if [ $failed -ne 0 ];then
@@ -211,10 +294,12 @@ chmod -R 777 "$HOME/vsims"
 
 
 #Now configure NFS based on the vmnet1 settings in VMware
+echo
+echo "exporting $HOME/vsims may prompt for credentials."
+echo "This is only required to support local HA vsims"
+echo
 vsimhome="$HOME/vsims"
-./vsim options FODDIR "$vsimhome"
-
-
+sudo ./vsim options FODDIR "$vsimhome"
 
 #orient the user
 echo ""
@@ -225,9 +310,9 @@ echo "run vsim from the terminal for usage"
 echo ""
 echo "vsims will be placed in $vsimhome"
 echo ""
-echo "Open a new terminal window to proceed"
+echo "Open a new terminal to proceed"
 echo ""
 echo "*************************************"
 echo ""
 
-exit
+#exit
