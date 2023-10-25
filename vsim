@@ -5169,7 +5169,7 @@ case $action in
 	update 	    )
         cfcache	
         vsimupdate
-        cfcave
+        cfsave
         ;;
 	unsetenv 	)
     envcache
