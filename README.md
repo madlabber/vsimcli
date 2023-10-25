@@ -13,25 +13,28 @@ vsimcli is a shell script for building and managing a local vsim (NetApp ONTAP *
 ## Installation
 
 To install:
-  1. Download the 9.9.1 version of the simulator and license file from the NetApp support site:
+  1. Download the 9.9.1 or later version of the simulator and license file from the NetApp support site:
      "https://mysupport.netapp.com/api/tools-service/toolsbinary/simulate-ontap/download/vsim-netapp-DOT9.9.1-cm_nodar.ova"
 
      "https://mysupport.netapp.com/api/tools-service/toolsbinary/simulate-ontap/download/CMode_licenses_9.8.txt"
 
-  2. Place the vsim-netapp-DOT9.9.1-cm_nodar.ova and the CMode_licenses_9.9.1.txt files in the same directory as the install.sh script
+  2. Place the vsim ova and txt files in the same directory as the install.sh script, or in the ~/Downloads directory.
 
-  3. Run the install.sh script as sudo:
-       sudo -E ./install.sh
+  3. Run the install.sh script:
+       ./install.sh
 
-The vsim script and simlinks to some VMware components will be placed in: /usr/local/bin
+The vsim script will be placed in: $HOME/vsims/bin 
 
-Completions (tab complete for the vsim command) will be added to: ~/.bashrc and ~./zshrc
+Completions (tab complete for the vsim command) will be added to: ~/.bashrc and/or ~./zshrc
+
+$HOME/vsims/bin will be added to the path.
 
 Blank vsim templates will be placed in $HOME/vsims, which is also where managed vsims are placed by default.
 
 ONTAP software images will be stored in: $HOME/vsims/ontap
 
-The local NFS server on OSX will be configured to export $HOME/vsims to the VMWare 'host only' subnet.  This is required for local vsim HA to function.
+The local NFS server on OSX will be configured to export $HOME/vsims to the VMWare 'host only' subnet.  This is required for local vsim HA to function.  
+This may invoke a sudo prompt during install, which can be cancelled if sudo access is not available.
 
 ## Usage
 
