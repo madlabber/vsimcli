@@ -2589,7 +2589,7 @@ function vsimexport()
 	if [ -z "$name" ] && [ -z "$fodname" ];then help "export";return 1;fi
 
 	# And at least 1 output format
-	if ! $maketgz && ! $makeova && ! $makevbox && ! $vbox && ! $image1 && ! $image2;then help "export";return 1;fi
+	if ! $maketgz && ! $makeova && ! $makevbox && ! $vbox && ! $image1 && ! $image2 && [ "$template" == "false" ];then help "export";return 1;fi
 
 	# Sometimes the fodname lands in the vsim name variable
 	if ! IsVM && [ -d "$FODDIR/$name" ] && [ -n "$name" ];then echo "setting fodname";fodname="$name";fi
@@ -2674,11 +2674,20 @@ function vsimexport()
 					setvmx ethernet7.networkName "$NAT_NAME";fi
 		fi
 
-
+		if [ "$template" != "false" ]; then
+			shortversion="$(echo $_version1 | cut -d'P' -f 1 | cut -d'X' -f 1 | sed -e 's/\.//g')"
+			if [ "$template" == "true" ];then template="standard_$shortversion";fi
+		    echo "saving $name as $template.tgz"
+			cfclean
+  			tar -C "$simpath/.." -zcf "$VSIMHOME/$template.tgz" "$name"
+			#cfsave
+        fi
 
 		# Must not be mounted
 		# if IsMounted;then cfunmount -zero;fi
         cfsave
+
+
 
   		#if -maketgz is set, exporttgz
   		if $maketgz; then
@@ -4453,6 +4462,44 @@ function cfcache()
 
 }
 
+function cfclean()
+{
+    # prefer mtools if available
+    if [ -n "$(which mdel 2>/dev/null)" ];then
+		#echo "mcopy mode"
+		_vmdk="$(getcfvmdk)"
+		_flat="$(basename -s .vmdk $_vmdk 2>/dev/null)-flat.vmdk"
+		_start="66528"
+		if [ "$(uname)" = "Linux" ];then
+          _start="$(fdisk -l $simpath/$_flat | grep FAT | tr -s ' ' | cut -d' ' -f 2)";fi
+		if [ "$(uname)" = "Darwin" ];then
+		  _start="$(fdisk -d $simpath/$_flat | grep 0x06 | cut -d, -f1)";fi
+		_offset="$(echo $_start / 2 |bc)k"
+		mdisk="$simpath/$_flat@@$_offset"
+		export MTOOLS_SKIP_CHECK=1
+		mattrib -r -s -h -/ -i "$mdisk" ::/ &>/dev/null
+		mdeltree -v -i "$mdisk" ::/ &>/dev/null
+		mfree=`mdir -a -i "$mdisk" | grep free | sed 's/[a-z,A-Z, ]//g'`
+		mfreemb=$(expr $mfree / 1048576)
+
+        echo "preparing to zero $mfreemb MB"
+		dd if=/dev/zero of="$simpath/zero" bs=1048576 count=$mfreemb &>/dev/null
+		mcopy -ovm -i "$mdisk" "$simpath/zero" ::/
+		mdel -v -i "$mdisk" "::/zero"
+		rm "$simpath/zero"
+
+    # otherwise fallback to mount
+    else
+        echo "Cleaning CF Card"
+        cfmount
+        rm -rf "$simpath/mnt/x86_64/"
+        rm -rf "$simpath/mnt/env/"
+        cfunmount
+    fi
+
+}
+
+
 # cache the entire cfcard
 function cfsave()
 {
@@ -4726,6 +4773,7 @@ gui=false
 unsetvariable=false
 vmxnet3=false
 snc=false
+template=false
 
 #Command abbreviations are nice to have
 commandlist="console\ncreate\nconfigure\ndelete\nexport\nhelp\nimport\nmodify\nmount\noptions\npackage\npoweroff\nprintenv\nprintvmx\nrename\nrun\nsetenv\nsetvmx\nshow\nsoftware\nstart\nstop\nsuspend\nunmount\nunsetenv\nunsetvmx\nupdate\n"
