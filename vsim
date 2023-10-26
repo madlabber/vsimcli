@@ -3009,6 +3009,9 @@ function vsimmake()
         _template="$VSIMHOME/universal.tgz"
     fi
 
+	# If -model \ -template was supplied us that one
+	if [ -f "$VSIMHOME/$template" ]; then _template="$VSIMHOME/$template";fi
+	
   	# Now if the template is missing, exit gracefully
   	if ! [ -f "$_template" ];then
   		echo "vsimmake: missing vm template: $_template"
@@ -4882,9 +4885,9 @@ while [ "X$1" != "X" ]; do
                                 # but now 9.1RC2 will crash with "console=vidconsole" so make a version based hack elsewhere
                                   ;;
       -name | -vsim | -node   )  name="$argv";;
-      -node-name			        )  nodename="$argv";;
+      -node-name              )  nodename="$argv";;
       -vnvram 	              )  nvmode="$argv";;
-      -pnvr				            )  nvmode="full";;
+      -pnvr	                  )  nvmode="full";;
       -vnvsize                )  if IsNumber "$argv";then vnvsize=$argv;fi;;
       -vcpus                  )  if IsNumber "$argv";then vcpus=$argv;fi;;
       -ab | -autoboot         )  ab="$argv";;
@@ -4892,16 +4895,20 @@ while [ "X$1" != "X" ]; do
       -vscsi                  )  vscsi=true
                                  vscsidisks="$argv";;
       -vsa                    )  vsa="$argv"
-		                             vscsi="$argv"
+                                 vscsi="$argv"
                                  ;;
       -makeova | -ova       )	makeova="$argv";;
       -maketgz | -tgz       )	maketgz="$argv";;
       -makevbox | -vbox     ) makevbox="$argv";;
+	  -model | -template    ) if [ -f "$VSIMHOME/$argv.tgz" ];then template="$argv.tgz";fi
+	                          if [ -f "$argv" ];then template="$argv";fi
+	                          if [ -z "$argv" ];then template=true;fi
+							  ;;
       -? | "?" | -h | -help ) name="?";; ##assorted cries for help
-      -value | -val         )	value="$argv";;
-      -variable | -var      )	variable="$argv";;
-			-vmxnet3              ) vmxnet3=true;;
-      -vsimha               )	ram=4096
+      -value | -val         ) value="$argv";;
+      -variable | -var      ) variable="$argv";;
+      -vmxnet3              ) vmxnet3=true;;
+      -vsimha               ) ram=4096
                               nics=8
                               nvmode="panic"
                               vnvsize=256
@@ -5093,6 +5100,7 @@ case $action in
 	                vsimmakecons
 	                envsave;;
 	mkfod 		)	makefod "$name" "$vdevinit";;
+	makefod 	)	makefod "$name" "$vdevinit";;
 	maketgz  	)   tar -C "$SIMDIR" -czvf "$name.tgz" "$name";; # Used by install.sh
 	modify		)   envcache
                     vsimmodify
