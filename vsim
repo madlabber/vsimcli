@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #GLOBALS
-VSIMVERSION="20231025.01"
+VSIMVERSION="20231026.01"
 
 #Capture the user ENV
 ENV_OVFTOOL="$OVFTOOL"
@@ -230,50 +230,50 @@ function help() # $1=subcommand
                 echo "   vsim unsetvmx <vsim name> <variable> [options]"
                 echo "   vsim update   <vsim name> [options]";;
 					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
-				*)
-          echo # Summary output with command list
-          echo "VSIM CLI - A toolkit for managing ONTAP Simulators"
-          echo "Version: $VSIMVERSION"
-          echo "Author : Sean Hatfield"
-          echo
-          echo "Usage:"
-          echo "vsim <command> [options]"
-          echo ""
-          echo "Help:"
-          echo "vsim help <command>"
-          echo ""
-          echo "Available Commands:"
-          echo "  console                     Connect to a vsim console"
-          echo "  configure                   configure an ONTAP Select VM (experimental)"
-          echo "  create                      Create a vsim"
-		  echo "  delete                      Delete a vsim"
-          echo "  deploy                      Deploy a vsim to an ESXi host (experimental)"
-          echo "  export                      Export a vsim"
-          echo "  help                        Display help"
-          echo "  image                       Manage a vsim's software images"
-		  echo "  import                      Import a vsim or software package"
-          echo "  modify                      Modify a vsim"
-          echo "  mount                       Mount a vsim's cf card"
-          echo "  options                     Show and Set options and paths"
-          echo "  package                     Manage the package repository"
-          echo "  poweroff                    Poweroff a vsim (poweroff vm)"
-          echo "  printenv                    Print a vsim's loader environment"
-          echo "  printvmx                    Print a vsim's vmx file"
-          echo "  rename                      Rename a vsim"
-          echo "  run                         Run commands in a vsim shell"
-          echo "  setenv                      Set a loader variable"
-          echo "  setvmx                      Set a vmx variable"
-          echo "  show                        Display vsims"
-					echo "  start                       Start a vsim"
-					echo "  stop                        Stop a vsim (shutdown guest)"
-					echo "  suspend                     Suspend a vsim"
-					echo "  unmount                     Unmount a vsim's cf card"
-					echo "  unsetenv                    Unset a loader variable"
-					echo "  unsetvmx                    Unset a vmx variable"
-					echo "  update                      Update a vsim's ontap image"
-					echo
-					exit
-					;;
+            *)
+                echo # Summary output with command list
+                echo "VSIM CLI - A toolkit for managing ONTAP Simulators"
+                echo "Version: $VSIMVERSION"
+                echo "Author : Sean Hatfield"
+                echo
+                echo "Usage:"
+                echo "vsim <command> [options]"
+                echo ""
+                echo "Help:"
+                echo "vsim help <command>"
+                echo ""
+                echo "Available Commands:"
+                echo "  console                     Connect to a vsim console"
+                echo "  configure                   configure an ONTAP Select VM (experimental)"
+                echo "  create                      Create a vsim"
+                echo "  delete                      Delete a vsim"
+                echo "  deploy                      Deploy a vsim to an ESXi host (experimental)"
+                echo "  export                      Export a vsim"
+                echo "  help                        Display help"
+                echo "  image                       Manage a vsim's software images"
+                echo "  import                      Import a vsim or software package"
+                echo "  modify                      Modify a vsim"
+                echo "  mount                       Mount a vsim's cf card"
+                echo "  options                     Show and Set options and paths"
+                echo "  package                     Manage the package repository"
+                echo "  poweroff                    Poweroff a vsim (poweroff vm)"
+                echo "  printenv                    Print a vsim's loader environment"
+                echo "  printvmx                    Print a vsim's vmx file"
+                echo "  rename                      Rename a vsim"
+                echo "  run                         Run commands in a vsim shell"
+                echo "  setenv                      Set a loader variable"
+                echo "  setvmx                      Set a vmx variable"
+                echo "  show                        Display vsims"
+                echo "  start                       Start a vsim"
+                echo "  stop                        Stop a vsim (shutdown guest)"
+                echo "  suspend                     Suspend a vsim"
+                echo "  unmount                     Unmount a vsim's cf card"
+                echo "  unsetenv                    Unset a loader variable"
+                echo "  unsetvmx                    Unset a vmx variable"
+                echo "  update                      Update a vsim's ontap image"
+                echo
+                exit
+                ;;
 	esac
 
 					######01234567890123456789012345678901234567890123456789012345678901234567890123456789
