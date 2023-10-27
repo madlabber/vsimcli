@@ -6,6 +6,12 @@ errCount=0
 #     # exit 1
 # fi
 
+# decide where to install to
+if [ "$VSIMHOME" == "" ] && [ -f "$HOME/.vsimrc" ];then VSIMHOME="$(cat ~/.vsimrc | grep ^VSIMHOME|cut -d'"' -f 2)";fi
+if [ "$VSIMHOME" == "" ]; then VSIMHOME="$HOME/.vsim";fi
+export VSIMHOME="$VSIMHOME"
+echo "VSIMHOME=$VSIMHOME"
+
 echo
 echo "Checking dependencies."
 
@@ -96,39 +102,38 @@ echo "Proceeding with installation."
 
 # make directory structure
 echo
-echo "Creating $HOME/vsims directories"
-mkdir -p "$HOME/vsims"
-mkdir -p "$HOME/vsims/ontap"
-mkdir -p "$HOME/vsims/cfcard"
-mkdir -p "$HOME/vsims/bin"
-chmod -R 777 "$HOME/vsims"
+echo "Creating $VSIMHOME directories"
+mkdir -p "$VSIMHOME"
+mkdir -p "$VSIMHOME/ontap"
+mkdir -p "$VSIMHOME/cfcard"
+mkdir -p "$VSIMHOME/bin"
+chmod -R 777 "$VSIMHOME"
 
-#Scripts go here if they can
-if [ -w /usr/local ]; then
-  echo
-  echo "Copying files to /usr/local/bin:"
-  mkdir -p /usr/local/bin
-  cp vsim /usr/local/bin
-  if [ -f "/usr/local/bin/vsim" ]; then
-  	echo "+ /usr/local/bin/vsim"
-  fi
-  cp .vsim-completion.sh /usr/local/bin
-  if [ -f "/usr/local/bin/.vsim-completion.sh" ]; then
-  	echo "+ /usr/local/bin/.vsim-completion.sh"
-  fi
-fi
+# #Scripts go here if they can
+# if [ -w /usr/local ]; then
+#   echo
+#   echo "Copying files to /usr/local/bin:"
+#   mkdir -p /usr/local/bin
+#   cp vsim /usr/local/bin
+#   if [ -f "/usr/local/bin/vsim" ]; then
+#   	echo "+ /usr/local/bin/vsim"
+#   fi
+#   cp .vsim-completion.sh /usr/local/bin
+#   if [ -f "/usr/local/bin/.vsim-completion.sh" ]; then
+#   	echo "+ /usr/local/bin/.vsim-completion.sh"
+#   fi
+# fi
 
 # And here
 echo
-echo "Copying files to $HOME/vsims/bin:"
-mkdir -p $HOME/vsims/bin
-cp vsim $HOME/vsims/bin
-if [ -f "$HOME/vsims/bin/vsim" ]; then
-	echo "+ $HOME/vsims/bin/vsim"
+echo "Copying files to $VSIMHOME/bin:"
+cp vsim $VSIMHOME/bin
+if [ -f "$VSIMHOME/bin/vsim" ]; then
+	echo "+ $VSIMHOME/bin/vsim"
 fi
-cp .vsim-completion.sh $HOME/vsims/bin
-if [ -f "$HOME/vsims/bin/.vsim-completion.sh" ]; then
-	echo "+ $HOME/vsims/bin/.vsim-completion.sh"
+cp .vsim-completion.sh $VSIMHOME/bin
+if [ -f "$VSIMHOME/bin/.vsim-completion.sh" ]; then
+	echo "+ $VSIMHOME/bin/.vsim-completion.sh"
 fi
 
 
@@ -156,8 +161,8 @@ fi
 echo
 echo "Updating .bashrc"
 bashrc="$HOME/.bashrc"
-src="source $HOME/vsims/bin/.vsim-completion.sh"
-bashpath='export PATH="$HOME/vsims/bin:$PATH"'
+src="source $VSIMHOME/bin/.vsim-completion.sh"
+bashpath='export PATH="'$VSIMHOME'/bin:$PATH"'
 if ! [ -f "$bashrc" ];then touch "$bashrc";fi
 if ! cat "$bashrc" | grep "$src";then	echo "$src" >> "$bashrc";fi
 if ! cat "$bashrc" | grep "$bashpath";then echo "$bashpath" >> "$bashrc";fi
@@ -166,7 +171,7 @@ if ! cat "$bashrc" | grep "$bashpath";then echo "$bashpath" >> "$bashrc";fi
 echo
 echo "Updating .zshrc"
 zshrc="$HOME/.zshrc"
-zshpath='export PATH=$HOME/vsims/bin:$PATH'
+zshpath='export PATH='$VSIMHOME'/bin:$PATH'
 if ! [ -f "$zshrc" ];then touch "$zshrc";fi
 if ! cat "$zshrc" | grep "compinit";then echo "autoload -U +X compinit && compinit" >> "$zshrc";fi
 if ! cat "$zshrc" | grep "bashcompinit";then echo "autoload -U +X bashcompinit && bashcompinit" >> "$zshrc";fi
@@ -190,7 +195,8 @@ if [ -f "$ovafile" ];then
   echo
   echo "Importing templates."
   echo "+ $ovafile"
-  result="$(./vsim import -file "$ovafile" -template -image1 )"
+  result="$(./vsim import -file "$ovafile" -vsim template -template -image1 )"
+  #echo "$result"
 fi
 
 echo
@@ -203,10 +209,10 @@ if [ -f "$license_file" ];then
 else
   echo "- no license files found."
 fi
-rm "$HOME/vsims/cfcard/mfg_l_f" 2> /dev/null
-touch "$HOME/vsims/cfcard/mfg_l_f"
+rm "$VSIMHOME/cfcard/mfg_l_f" 2> /dev/null
+touch "$VSIMHOME/cfcard/mfg_l_f"
 if [ -f "$license_file" ];then
-	sed 's/\t/ /g' "$license_file" | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>"$HOME/vsims/cfcard/mfg_l_f"
+	sed 's/\t/ /g' "$license_file" | tr -s ' ' | cut -d' ' -f 2 |grep AAAAA>"$VSIMHOME/cfcard/mfg_l_f"
   base=$(cat "$license_file" | grep '=' | grep AAAA | cut -d'=' -f 2 | cut -d' ' -f 2)
   ./vsim options VSIMLICENSE "$base"
   vsimserial=$(cat "$license_file" | grep '^Licenses' | cut -d' ' -f 8 | cut -d')' -f 1 | head -1)
@@ -223,24 +229,25 @@ fi
 
 #templates go here
 echo
-echo "Copying files to $HOME/vsims:"
-cp standard.tgz $HOME/vsims 2>/dev/null
-if [ -f "$HOME/vsims/standard.tgz" ];then
-	echo "+ $HOME/vsims/standard.tgz"
-	cp standard.tgz $HOME/vsims
+echo "Copying files to $VSIMHOME:"
+
+cp standard.tgz $VSIMHOME 2>/dev/null
+if [ -f "$VSIMHOME/standard.tgz" ];then
+	echo "+ $VSIMHOME/standard.tgz"
+	cp standard.tgz $VSIMHOME
 fi
-cp classic.tgz $HOME/vsims 2>/dev/null
-if [ -f "$HOME/vsims/classic.tgz" ];then
-	echo "+ $HOME/vsims/classic.tgz"
+cp classic.tgz $VSIMHOME 2>/dev/null
+if [ -f "$VSIMHOME/classic.tgz" ];then
+	echo "+ $VSIMHOME/classic.tgz"
 fi
 cp universal.tgz $HOME/vsims 2>/dev/null
-if [ -f "$HOME/vsims/universal.tgz" ];then
-	echo "+ $HOME/vsims/universal.tgz"
+if [ -f "$VSIMHOME/universal.tgz" ];then
+	echo "+ $VSIMHOME/universal.tgz"
 fi
 
 failed=0
-if ! [ -f "$HOME/vsims/bin/vsim" ]; then failed=1;fi
-if ! [ -f "$HOME/vsims/standard.tgz" ];then failed=1;fi
+if ! [ -f "$VSIMHOME/bin/vsim" ]; then failed=1;fi
+if ! [ -f "$VSIMHOME/standard.tgz" ];then failed=1;fi
 
 if [ $failed -ne 0 ];then
 	echo "File copy failed.  try again with sudo."

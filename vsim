@@ -4,16 +4,19 @@
 VSIMVERSION="20231026.01"
 
 #Capture the user ENV
+ENV_VSIMHOME="$VSIMHOME"
+ENV_ITGZPATH="$ITGZPATH"
+ENV_SIMDIR="$SIMDIR"
+ENV_FODDIR="$FODDIR"
+ENV_VSIMPASSWORD="$VSIMPASSWORD"
+ENV_VSIMLICENSE="$VSIMLICENSE"
+ENV_SDOT_BUILTIN_LICENSES="$SDOT_BUILTIN_LICENSES"
+ENV_VSIMSERIAL="$VSIMSERIAL"
+ENV_VSIMPARTNERSERIAL="$VSIMPARTNERSERIAL"
+
 ENV_OVFTOOL="$OVFTOOL"
 ENV_VMRUN="$VMRUN"
 ENV_VDISKMANAGER="$VDISKMANAGER"
-ENV_SIMDIR="$SIMDIR"
-ENV_FODDIR="$FODDIR"
-ENV_ITGZPATH="$ITGZPATH"
-ENV_VSIMPASSWORD="$VSIMPASSWORD"
-ENV_VSIMHOME="$VSIMHOME"
-ENV_VSIMSERIAL="$VSIMSERIAL"
-ENV_VSIMPARTNERSERIAL="$VSIMPARTNERSERIAL"
 ENV_VSIMHOST="$VSIMHOST"
 ENV_VSIMDATASTORE="$VSIMDATASTORE"
 ENV_NAT_NAME="$NAT_NAME"
@@ -23,20 +26,47 @@ ENV_NAT_SUBNET="$NAT_SUBNET"
 ENV_NAT_NETMASK="$NAT_NETMASK"
 ENV_NAT_GATEWAY="$NAT_GATEWAY"
 
-#Defaults:
+#A config file for extra settings
+if [ "$VSIMCFGFILE" == "" ];then VSIMCFGFILE="$HOME/.vsimrc";fi 
+if ! [ -f "$VSIMCFGFILE" ];then touch "$VSIMCFGFILE";fi
+
+#If not defined in the user ENV Load from the config file
+if [ "$VSIMHOME" == "" ];then              VSIMHOME="$(cat ~/.vsimrc              | grep ^VSIMHOME=              |cut -d'"' -f 2)";fi
+if [ "$ITGZPATH" == "" ];then              ITGZPATH="$(cat ~/.vsimrc              | grep ^ITGZPATH=              |cut -d'"' -f 2)";fi
+if [ "$SIMDIR" == "" ];then                SIMDIR="$(cat ~/.vsimrc                | grep ^SIMDIR=                |cut -d'"' -f 2)";fi
+if [ "$FODDIR" == "" ];then                FODDIR="$(cat ~/.vsimrc                | grep ^FODDIR=                |cut -d'"' -f 2)";fi
+if [ "$VSIMPASSWORD" == "" ];then          VSIMPASSWORD="$(cat ~/.vsimrc          | grep ^VSIMPASSWORD=          |cut -d'"' -f 2)";fi
+if [ "$VSIMLICENSE" == "" ];then           VSIMLICENSE="$(cat ~/.vsimrc           | grep ^VSIMLICENSE=           |cut -d'"' -f 2)";fi
+if [ "$SDOT_BUILTIN_LICENSES" == "" ];then SDOT_BUILTIN_LICENSES="$(cat ~/.vsimrc | grep ^SDOT_BUILTIN_LICENSES= |cut -d'"' -f 2)";fi
+if [ "$VSIMSERIAL" == "" ];then            VSIMSERIAL="$(cat ~/.vsimrc            | grep ^VSIMSERIAL=            |cut -d'"' -f 2)";fi
+if [ "$VSIMPARTNERSERIAL" == "" ];then     VSIMPARTNERSERIAL="$(cat ~/.vsimrc     | grep ^VSIMPARTNERSERIAL=     |cut -d'"' -f 2)";fi
+
+#debug
+# echo "VSIMHOME             : $VSIMHOME"
+# echo "ITGZPATH             : $ITGZPATH"
+# echo "VSIMPASSWORD         : $VSIMPASSWORD"
+# echo "VSIMLICENSE          : $VSIMLICENSE"
+# echo "SDOT_BUILTIN_LICENSES: $SDOT_BUILTIN_LICENSES"
+# echo "VSIMSERIAL           : $VSIMSERIAL"
+# echo "VSIMPARTNERSERIAL    : $VSIMPARTNERSERIAL"
+
+#If still not defined use defaults:
+if [ "$VSIMHOME" == "" ];then        VSIMHOME="$HOME/.vsim";fi
+if [ "$ITGZPATH" == "" ];then        ITGZPATH="$VSIMHOME/ontap";fi
+if [ "$SIMDIR" == "" ];then          SIMDIR="$HOME/vsims";fi
+if [ "$FODDIR" == "" ];then          FODDIR="$HOME/vsims";fi
+if [ "$VSIMPASSWORD" ];then          VSIMPASSWORD="netapp123";fi
+if [ "$VSIMLICENSE" ];then           VSIMLICENSE="";fi
+if [ "$SDOT_BUILTIN_LICENSES" ];then SDOT_BUILTIN_LICENSES="";fi
+if [ "$VSIMSERIAL" ];then            VSIMSERIAL="";fi
+if [ "$VSIMPARTNERSERIAL" ];then     VSIMPARTNERSERIAL="";fi
+
+
+
 #OVFTOOL="/Applications/VMware OVF Tool/ovftool"
 OVFTOOL="/Applications/VMware Fusion.app/Contents/Library/VMware OVF Tool/ovftool"
 VDISKMANAGER="/Applications/VMware Fusion.app/Contents/Library/vmware-vdiskmanager"
 VMRUN="/Applications/VMware Fusion.app/Contents/Library/vmrun"
-VSIMHOME="$HOME/vsims"
-SIMDIR="$HOME/vsims"
-FODDIR="$HOME/vsims"
-ITGZPATH="$VSIMHOME/ontap"
-VSIMPASSWORD="netapp123"
-VSIMLICENSE="" #cluster base key
-SDOT_BUILTIN_LICENSES="" #These can be found in the eval .ova
-VSIMSERIAL=""
-VSIMPARTNERSERIAL=""
 VSIMHOST=""
 VSIMDATASTORE=""
 NAT_NAME="VM Network"
@@ -56,10 +86,7 @@ if ! [ -f "$OVFTOOL" ];then OVFTOOL=$(which ovftool);fi
 if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER=$(which vmware-vdiskmanager);fi
 if ! [ -f "$VMRUN" ];then VMRUN=$(which vmrun);fi
 
-#A config file for extra settings
-#VSIMCFGFILE="$HOME/.vsimcfg"
-VSIMCFGFILE="$HOME/.vsimrc" #Bash conventions seem to prefer rc
-if ! [ -f "$VSIMCFGFILE" ];then touch "$VSIMCFGFILE";fi
+#load the config file
 . "$VSIMCFGFILE"
 
 #Respect the user ENV
