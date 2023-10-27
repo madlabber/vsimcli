@@ -293,7 +293,7 @@ function help() # $1=subcommand
 					echo "   -node-name <name>                    Node Name";;esac
 	case $1 in usage|create )
 					echo "   -partner <vsim name>                 Also create the HA partner"
-          echo "   -partnerserial <serial_number>       System Serial Number of the HA partner"
+                    echo "   -partnerserial <serial_number>       System Serial Number of the HA partner"
 					echo "   -auto                                Enable Auto setup"
 					echo "   -create <cluster name>               Create a new cluster"
 					echo "   -join <cluster name>                 Join an existing cluster"
@@ -2834,18 +2834,17 @@ function vsimimport()
 			fi;;
 	esac
 
+
+    echo "2838: template: $template"
+	if [ "$template" != "false" ]; then
+		OLDPWD="$PWD"
+		cd "$ITGZPATH"
+        vsimexport
+		PWD="$OLDPWD"
+        rm -rf "$simpath"	
+    fi
+
 	echo
-	exit
-
-  	#if -maketgz is set, exporttgz
-  	if [ "$maketgz" == "true" ]; then
-  		tar -C "$simpath/.." -zcf "$name.tgz" "$name"
-  	fi
-
-  	#if -makeova then exportova
-  	if [ "$makeova" == "true" ]; then
-  		exportova "$vmx" "$SIMDIR" "$name.ova"
-  	fi
 
 }
 
@@ -4484,8 +4483,8 @@ function cfclean()
 
         echo "preparing to zero $mfreemb MB"
 		dd if=/dev/zero of="$simpath/zero" bs=1048576 count=$mfreemb &>/dev/null
-		mcopy -ovm -i "$mdisk" "$simpath/zero" ::/
-		mdel -v -i "$mdisk" "::/zero"
+		mcopy -ovm -i "$mdisk" "$simpath/zero" ::/ &>/dev/null
+		mdel -v -i "$mdisk" "::/zero" &>/dev/null
 		rm "$simpath/zero"
 
     # otherwise fallback to mount
@@ -5078,8 +5077,8 @@ case $action in
 
             echo "preparing to zero $mfreemb MB"
 			dd if=/dev/zero of="$simpath/zero" bs=1048576 count=$mfreemb &>/dev/null
-			mcopy -ovm -i "$mdisk" "$simpath/zero" ::/
-			mdel -v -i "$mdisk" "::/zero"
+			mcopy -ovm -i "$mdisk" "$simpath/zero" ::/ &>/dev/null
+			mdel -v -i "$mdisk" "::/zero" &>/dev/null
 
         # otherwise fallback to mount
         else

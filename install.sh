@@ -55,59 +55,24 @@ if ! [ -f "classic.tgz" ];then
 		#((errCount++)) -- non-fatal
 fi
 
-if ! [ -f "standard.tgz" ];then
+if [ -f "standard.tgz" ];then
+  echo "+ A standard vSIM template was found: standard.tgz"
+else
 	echo "- A standard vSIM template was not found."
-	ovafile="vsim-netapp-DOT9.9.1-cm_nodar.ova"
 fi
 
-# lazy search for a supported ova
-if ! [ -f "$ovafile" ];then
-  ovafile="vsim-netapp-DOT9.9.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="vsim-netapp-DOT9.10.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="vsim-netapp-DOT9.11.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="vsim-netapp-DOT9.12.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="vsim-netapp-DOT9.13.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="vsim-netapp-DOT9.14.1-cm_nodar.ova"
-fi
-# also look in downloads
-if ! [ -f "$ovafile" ];then
-  ovafile="~/Downloads/vsim-netapp-DOT9.9.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="~/Downloads/vsim-netapp-DOT9.10.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="~/Downloads/vsim-netapp-DOT9.11.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="~/Downloads/vsim-netapp-DOT9.12.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="~/Downloads/vsim-netapp-DOT9.13.1-cm_nodar.ova"
-fi
-if ! [ -f "$ovafile" ];then
-  ovafile="~/Downloads/vsim-netapp-DOT9.14.1-cm_nodar.ova"
+ovafile="$(ls vsim-netapp-DOT9.*.ova 2> /dev/null| tail -n 1)"
+if ! [ -f "$ovafile" ];then 
+  ovafile="$(ls ~/Downloads/vsim-netapp-DOT9.*.ova 2> /dev/null| tail -n 1)"
 fi
 
 if [ -f "$ovafile" ];then 
-  echo "+ A vSIM OVA file was found: $ovafile"
-fi
-if [ -f "standard.tgz" ];then
-  echo "+ A standard vSIM template was found: standard.tgz"
-  echo "..using existing standard.tgz"
+  echo "+ Found: $ovafile"
+else
+  echo "- A vSIM OVA file was not found."
 fi
 
-
+# At least one of these must be present to continue.
 if ! [ -f "$ovafile" ] && ! [ -f "standard.tgz" ];then
         echo ""
 		echo "  An existing vsim OVA file is required."
@@ -215,14 +180,17 @@ if ! [ -f "standard.tgz" ];then
     echo "Building standard diskmodel template."
     ./vsim delete standard
     ./vsim import -file "$ovafile" -name "standard"
-    ./vsim export -vsim standard -image image1
-
-	imagetgz=$(ls *_image.tgz)
-    ./vsim import $imagetgz
-    ./vsim clean standard
-    echo "Exporting tgz"
+    echo "Exporting standard.tgz"
     ./vsim export standard -tgz
     ./vsim delete standard
+fi
+
+# Import ovafile as template
+if [ -f "$ovafile" ];then 
+  echo
+  echo "Importing templates."
+  echo "+ $ovafile"
+  result="$(./vsim import -file "$ovafile" -template -image1 )"
 fi
 
 echo
