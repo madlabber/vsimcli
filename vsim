@@ -3,34 +3,11 @@
 #GLOBALS
 VSIMVERSION="20231026.01"
 
-#Capture the user ENV
-ENV_VSIMHOME="$VSIMHOME"
-ENV_ITGZPATH="$ITGZPATH"
-ENV_SIMDIR="$SIMDIR"
-ENV_FODDIR="$FODDIR"
-ENV_VSIMPASSWORD="$VSIMPASSWORD"
-ENV_VSIMLICENSE="$VSIMLICENSE"
-ENV_SDOT_BUILTIN_LICENSES="$SDOT_BUILTIN_LICENSES"
-ENV_VSIMSERIAL="$VSIMSERIAL"
-ENV_VSIMPARTNERSERIAL="$VSIMPARTNERSERIAL"
-
-ENV_OVFTOOL="$OVFTOOL"
-ENV_VMRUN="$VMRUN"
-ENV_VDISKMANAGER="$VDISKMANAGER"
-ENV_VSIMHOST="$VSIMHOST"
-ENV_VSIMDATASTORE="$VSIMDATASTORE"
-ENV_NAT_NAME="$NAT_NAME"
-ENV_HOSTONLY_NAME="$HOSTONLY_NAME"
-ENV_BRIDGED_NAME="$BRIDGED_NAME"
-ENV_NAT_SUBNET="$NAT_SUBNET"
-ENV_NAT_NETMASK="$NAT_NETMASK"
-ENV_NAT_GATEWAY="$NAT_GATEWAY"
-
 #A config file for extra settings
 if [ "$VSIMCFGFILE" == "" ];then VSIMCFGFILE="$HOME/.vsimrc";fi 
 if ! [ -f "$VSIMCFGFILE" ];then touch "$VSIMCFGFILE";fi
 
-#If not defined in the user ENV Load from the config file
+#If not defined in the user ENV use the config file
 if [ "$VSIMHOME" == "" ];then              VSIMHOME="$(cat ~/.vsimrc              | grep ^VSIMHOME=              |cut -d'"' -f 2)";fi
 if [ "$ITGZPATH" == "" ];then              ITGZPATH="$(cat ~/.vsimrc              | grep ^ITGZPATH=              |cut -d'"' -f 2)";fi
 if [ "$SIMDIR" == "" ];then                SIMDIR="$(cat ~/.vsimrc                | grep ^SIMDIR=                |cut -d'"' -f 2)";fi
@@ -40,15 +17,17 @@ if [ "$VSIMLICENSE" == "" ];then           VSIMLICENSE="$(cat ~/.vsimrc         
 if [ "$SDOT_BUILTIN_LICENSES" == "" ];then SDOT_BUILTIN_LICENSES="$(cat ~/.vsimrc | grep ^SDOT_BUILTIN_LICENSES= |cut -d'"' -f 2)";fi
 if [ "$VSIMSERIAL" == "" ];then            VSIMSERIAL="$(cat ~/.vsimrc            | grep ^VSIMSERIAL=            |cut -d'"' -f 2)";fi
 if [ "$VSIMPARTNERSERIAL" == "" ];then     VSIMPARTNERSERIAL="$(cat ~/.vsimrc     | grep ^VSIMPARTNERSERIAL=     |cut -d'"' -f 2)";fi
-
-#debug
-# echo "VSIMHOME             : $VSIMHOME"
-# echo "ITGZPATH             : $ITGZPATH"
-# echo "VSIMPASSWORD         : $VSIMPASSWORD"
-# echo "VSIMLICENSE          : $VSIMLICENSE"
-# echo "SDOT_BUILTIN_LICENSES: $SDOT_BUILTIN_LICENSES"
-# echo "VSIMSERIAL           : $VSIMSERIAL"
-# echo "VSIMPARTNERSERIAL    : $VSIMPARTNERSERIAL"
+if [ "$VSIMHOST" == "" ];then              VSIMHOST="$(cat ~/.vsimrc              | grep ^VSIMHOST=              |cut -d'"' -f 2)";fi
+if [ "$VSIMDATASTORE" == "" ];then         VSIMDATASTORE="$(cat ~/.vsimrc         | grep ^VSIMDATASTORE=         |cut -d'"' -f 2)";fi
+if [ "$NAT_NAME" == "" ];then              NAT_NAME="$(cat ~/.vsimrc              | grep ^NAT_NAME=              |cut -d'"' -f 2)";fi
+if [ "$NAT_SUBNET" == "" ];then            NAT_SUBNET="$(cat ~/.vsimrc            | grep ^NAT_SUBNET=            |cut -d'"' -f 2)";fi
+if [ "$NAT_NETMASK" == "" ];then           NAT_NETMASK="$(cat ~/.vsimrc           | grep ^NAT_NETMASK=           |cut -d'"' -f 2)";fi
+if [ "$NAT_GATEWAY" == "" ];then           NAT_GATEWAY="$(cat ~/.vsimrc           | grep ^NAT_GATEWAY=           |cut -d'"' -f 2)";fi
+if [ "$HOSTONLY_NAME" == "" ];then         HOSTONLY_NAME="$(cat ~/.vsimrc         | grep ^HOSTONLY_NAME=         |cut -d'"' -f 2)";fi
+if [ "$BRIDGED_NAME" == "" ];then          BRIDGED_NAME="$(cat ~/.vsimrc          | grep ^BRIDGED_NAME=          |cut -d'"' -f 2)";fi
+if [ "$OVFTOOL" == "" ];then               OVFTOOL="$(cat ~/.vsimrc               | grep ^OVFTOOL=               |cut -d'"' -f 2)";fi
+if [ "$VDISKMANAGER" == "" ];then          VDISKMANAGER="$(cat ~/.vsimrc          | grep ^VDISKMANAGER=          |cut -d'"' -f 2)";fi
+if [ "$VMRUN" == "" ];then                 VMRUN="$(cat ~/.vsimrc                 | grep ^VMRUN=                 |cut -d'"' -f 2)";fi
 
 #If still not defined use defaults:
 if [ "$VSIMHOME" == "" ];then        VSIMHOME="$HOME/.vsim";fi
@@ -60,62 +39,50 @@ if [ "$VSIMLICENSE" ];then           VSIMLICENSE="";fi
 if [ "$SDOT_BUILTIN_LICENSES" ];then SDOT_BUILTIN_LICENSES="";fi
 if [ "$VSIMSERIAL" ];then            VSIMSERIAL="";fi
 if [ "$VSIMPARTNERSERIAL" ];then     VSIMPARTNERSERIAL="";fi
+if [ "$VSIMHOST" ];then              VSIMHOST="";fi
+if [ "$VSIMDATASTORE" ];then         VSIMDATASTORE="";fi
+if [ "$NAT_NAME" ];then              NAT_NAME="VM Network";fi
+if [ "$NAT_SUBNET" ];then            NAT_SUBNET="";fi
+if [ "$NAT_NETMASK" ];then           NAT_NETMASK="";fi
+if [ "$NAT_GATEWAY" ];then           NAT_GATEWAY="";fi
+if [ "$HOSTONLY_NAME" ];then         HOSTONLY_NAME="Cluster Network";fi
+if [ "$BRIDGED_NAME" ];then          BRIDGED_NAME="Management Network";fi
+if [ "$OVFTOOL" ];then               OVFTOOL="$(which ovftool 2>/dev/null)";fi
+if [ "$VDISKMANAGER" ];then          VDISKMANAGER="$(which vmware-vdiskmanager 2>/dev/null)";fi
+if [ "$VMRUN" ];then                 VMRUN="$(which vmrun 2>/dev/null)";fi
 
-
-
-#OVFTOOL="/Applications/VMware OVF Tool/ovftool"
-OVFTOOL="/Applications/VMware Fusion.app/Contents/Library/VMware OVF Tool/ovftool"
-VDISKMANAGER="/Applications/VMware Fusion.app/Contents/Library/vmware-vdiskmanager"
-VMRUN="/Applications/VMware Fusion.app/Contents/Library/vmrun"
-VSIMHOST=""
-VSIMDATASTORE=""
-NAT_NAME="VM Network"
-HOSTONLY_NAME="Cluster Network"
-BRIDGED_NAME="Management Network"
-
-#If those failed, maybe it is a tech preview of Fusion:
-if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware Fusion Tech Preview.app/Contents/Library/VMware OVF Tool/ovftool";fi
-if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmware-vdiskmanager";fi
-if ! [ -f "$VMRUN" ];then VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun";fi
-
-#OVFTOOL Might be installed as a standalone package
-if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware OVF Tool/ovftool";fi
-
-#If they aren't in default locations check the path
-if ! [ -f "$OVFTOOL" ];then OVFTOOL=$(which ovftool);fi
-if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER=$(which vmware-vdiskmanager);fi
-if ! [ -f "$VMRUN" ];then VMRUN=$(which vmrun);fi
-
-#load the config file
-. "$VSIMCFGFILE"
-
-#Respect the user ENV
-if [ -n "$ENV_OVFTOOL" ];then OVFTOOL="$ENV_OVFTOOL";fi
-if [ -n "$ENV_VMRUN" ];then VMRUN="$ENV_VMRUN";fi
-if [ -n "$ENV_VDISKMANAGER" ];then VDISKMANAGER="$VDISKMANAGER";fi
-if [ -n "$ENV_SIMDIR" ];then SIMDIR="$ENV_SIMDIR";fi
-if [ -n "$ENV_FODDIR" ];then FODDIR="$ENV_FODDIR";fi
-if [ -n "$ENV_ITGZPATH" ];then ITGZPATH="$ENV_ITGZPATH";fi
-if [ -n "$ENV_VSIMHOME" ];then VSIMHOME="$ENV_VSIMHOME";fi
-if [ -n "$ENV_VSIMSERIAL" ];then VSIMSERIAL="$ENV_VSIMSERIAL";fi
-if [ -n "$ENV_VSIMPARTNERSERIAL" ];then VSIMPARTNERSERIAL="$ENV_VSIMPARTNERSERIAL";fi
-if [ -n "$ENV_VSIMHOST" ];then VSIMHOST="$ENV_VSIMHOST";fi
-if [ -n "$ENV_VSIMDATASTORE" ];then VSIMDATASTORE="$ENV_VSIMDATASTORE";fi
-if [ -n "$ENV_NAT_NAME" ];then VSIMDATASTORE="$ENV_NAT_NAME";fi
-if [ -n "$ENV_HOSTONLY_NAME" ];then VSIMDATASTORE="$ENV_HOSTONLY_NAME";fi
-if [ -n "$ENV_BRIDGED_NAME" ];then VSIMDATASTORE="$ENV_BRIDGED_NAME";fi
-
-# Apply defaults
+# Apply defaults to some parameters.  These might be overriden by cli parameters. #FIXME
 if [ -n "$VSIMSERIAL" ] && [ -z "$serno" ];then serno="$VSIMSERIAL";fi
 if [ -n "$VSIMPARTNERSERIAL" ] && [ -z "$serno2" ];then serno2="$VSIMPARTNERSERIAL";fi
 if [ -n "$VSIMHOST" ] && [ -z "$host" ];then host="$VSIMHOST";fi
 if [ -n "$VSIMDATASTORE" ] && [ -z "$datastore" ];then datastore="$VSIMDATASTORE";fi
 
+# Find required VMware components
+# Usually in the path on Linux but these tend to move around a lot on Darwin.
+
+#OVFTool:
+if ! [ -f "$OVFTOOL" ];then OVFTOOL="/Applications/VMware OVF Tool/ovftool";fi  #standalone package on Darwin
+if ! [ -f "$OVFTOOL" ];then OVFTOOL="/usr/lib/vmware-ovftool/ovftool";fi        #standalone package on linux
+
+# VMware Fusion
+if ! [ -f "$OVFTOOL" ];then      OVFTOOL="/Applications/VMware Fusion.app/Contents/Library/VMware OVF Tool/ovftool";fi
+if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER="/Applications/VMware Fusion.app/Contents/Library/vmware-vdiskmanager";fi
+if ! [ -f "$VMRUN" ];then        VMRUN="/Applications/VMware Fusion.app/Contents/Library/vmrun";fi
+
+#VMware Fusion Tech Preview:
+if ! [ -f "$OVFTOOL" ];then      OVFTOOL="/Applications/VMware Fusion Tech Preview.app/Contents/Library/VMware OVF Tool/ovftool";fi
+if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmware-vdiskmanager";fi
+if ! [ -f "$VMRUN" ];then        VMRUN="/Applications/VMware Fusion Tech Preview.app/Contents/Library/vmrun";fi
+
+#VMware Workstation on Windows via WSL
+if ! [ -f "$OVFTOOL" ];then OVFTOOL="/mnt/c/Program Files (x86)/VMware/VMware Workstation/OVFTool/ovftool.exe";fi
+if ! [ -f "$VDISKMANAGER" ];then VDISKMANAGER="/mnt/c/Program Files (x86)/VMware/VMware Workstation/vmware-vdiskmanager.exe";fi
+if ! [ -f "$VMRUN" ];then VMRUN="/mnt/c/Program Files (x86)/VMware/VMware Workstation/vmrun.exe";fi
+
 # Networking is managed by VMware
 vmnet_file="/Library/Preferences/VMware Fusion/networking"
 vmnet1_file="/Library/Preferences/VMware Fusion/vmnet1/dhcpd.conf"
 vmnet8_file="/Library/Preferences/VMware Fusion/vmnet8/dhcpd.conf"
-
 
 # If its not there maybe this is linux
 if ! [ -f "$vmnet_file" ];then vmnet_file="/etc/vmware/networking";fi
@@ -135,9 +102,9 @@ if [ -f "$vmnet_file" ];then
     vmnet8_domain=$(cat "$vmnet8_file" | grep -m 1 "domain-name " | cut -d' ' -f3 | cut -d';' -f1)
     #vmnet8_dns=$(cat "$vmnet8_file" | grep -m1 "option domain-name-servers" | cut -d' ' -f3 | cut -d';' -f1)
     # Populate some read only options
-    NAT_SUBNET="$vmnet8_subnet"
-    NAT_NETMASK="$vmnet8_netmask"
-    NAT_GATEWAY="$vmnet8_gateway"
+    if [ "$NAT_SUBNET" == "" ];then  NAT_SUBNET="$vmnet8_subnet";fi
+    if [ "$NAT_NETMASK" == "" ];then NAT_NETMASK="$vmnet8_netmask";fi
+    if [ "$NAT_GATEWAY" == "" ];then NAT_GATEWAY="$vmnet8_gateway";fi
 fi
 
 # If this is WSL there is a lot more work to do
@@ -151,15 +118,10 @@ if [ -f "/mnt/c/ProgramData/VMware/vmnetdhcp.conf" ];then
     vmnet8_netmask=$(cat "$vmnet_file" | sed '0,/segment 8/d' | sed '/# End/,$d' | grep "netmask" | cut -d' ' -f4)
     vmnet8_gateway=$(cat "$vmnet_file" | sed '0,/segment 8/d' | sed '/# End/,$d' | grep "routers" | cut -d' ' -f3 | cut -d';' -f 1)
 	vmnet8_domain=$(cat "$vmnet_file" | sed '0,/segment 8/d' | sed '/# End/,$d' | grep -m 1 "domain-name " | cut -d'"' -f2)
-    NAT_SUBNET="$vmnet8_subnet"
-    NAT_NETMASK="$vmnet8_netmask"
-    NAT_GATEWAY="$vmnet8_gateway"
+    if [ "$NAT_SUBNET" == "" ];then  NAT_SUBNET="$vmnet8_subnet";fi
+    if [ "$NAT_NETMASK" == "" ];then NAT_NETMASK="$vmnet8_netmask";fi
+    if [ "$NAT_GATEWAY" == "" ];then NAT_GATEWAY="$vmnet8_gateway";fi
 fi
-
-# Allow the env vars to override the vmnet files
-if [ -n "$ENV_NAT_SUBNET" ];then  NAT_SUBNET="$ENV_NAT_SUBNET";fi
-if [ -n "$ENV_NAT_NETMASK" ];then NAT_NETMASK="$ENV_NAT_NETMASK";fi
-if [ -n "$ENV_NAT_GATEWAY" ];then NAT_GATEWAY="$ENV_NAT_GATEWAY";fi
 
 ##
 ##  TODO:
@@ -2362,6 +2324,17 @@ function setdefaults()
   if [ "$template" == "false" ] && [ -f "$VSIMHOME/standard_$baseversion.tgz" ];then
     template="standard_$baseversion.tgz"
 	echo "template=$template"
+  fi
+
+  # If there is no perfect match, pick the newest appropriate one available
+  # vloader changed at 9.10.1 so prefer a newer template on 9.10.1+ and older template on 9.9.1 and below
+  if [ -z "$template" ];then 
+      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9101.tgz" ] ; then template="standard_9101.tgz";fi
+      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9111.tgz" ] ; then template="standard_9111.tgz";fi	
+      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9121.tgz" ] ; then template="standard_9121.tgz";fi
+      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9131.tgz" ] ; then template="standard_9131.tgz";fi
+      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9141.tgz" ] ; then template="standard_9141.tgz";fi	 
+      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9151.tgz" ] ; then template="standard_9151.tgz";fi	 	  
   fi
 
 	#default bsdport
