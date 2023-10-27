@@ -2333,7 +2333,7 @@ function setdefaults()
 
   # If a matching template is found use that one
   if [ "$template" == "false" ] && [ -f "$VSIMHOME/standard_$baseversion.tgz" ];then
-    template="standard_$baseversion"
+    template="standard_$baseversion.tgz"
 	echo "template=$template"
   fi
 
@@ -3029,6 +3029,8 @@ function vsimmake()
   		echo "vsimmake: missing vm template: $_template"
   		exit
   	fi
+    
+	echo "_template: $_template"
 
 	#Extract the TGZ
   	echo "creating vsim:"
