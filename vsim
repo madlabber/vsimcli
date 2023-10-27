@@ -2331,6 +2331,12 @@ function setdefaults()
     nics=4 #PCIBridge problems
   fi
 
+  # If a matching template is found use that one
+  if [ "$template" == "false" ] && [ -f "$VSIMHOME/standard_$baseversion.tgz" ];then
+    template="standard_$baseversion"
+	echo "template=$template"
+  fi
+
 	#default bsdport
   if [ -z "$bsdportname" ];then bsdportname="e0c";fi
 
@@ -2679,7 +2685,7 @@ function vsimexport()
 			if [ "$template" == "true" ];then template="standard_$shortversion";fi
 		    echo "saving $name as $template.tgz"
 			cfclean
-  			tar -C "$simpath/.." -zcf "$VSIMHOME/$template.tgz" "$name"
+  			tar -C "$simpath/.." --exclude="cfcard" --exclude="CFCARD" -zcf "$VSIMHOME/$template.tgz" "$name"
 			#cfsave
         fi
 
@@ -2834,8 +2840,6 @@ function vsimimport()
 			fi;;
 	esac
 
-
-    echo "2838: template: $template"
 	if [ "$template" != "false" ]; then
 		OLDPWD="$PWD"
 		cd "$ITGZPATH"
