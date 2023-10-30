@@ -4,5 +4,5 @@ standard.tgz
 classic.tgz
 .DS_Store
 *.tgz
-CMode_licenses_9.9.1.txt
-vsim-netapp-DOT9.13.1-cm_nodar.ova
+CMode_licenses_*.txt
+vsim-netapp-DOT*-cm_nodar.ova

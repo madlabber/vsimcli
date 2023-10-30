@@ -8,48 +8,48 @@ if [ "$VSIMCFGFILE" == "" ];then VSIMCFGFILE="$HOME/.vsimrc";fi
 if ! [ -f "$VSIMCFGFILE" ];then touch "$VSIMCFGFILE";fi
 
 #If not defined in the user ENV use the config file
-if [ "$VSIMHOME" == "" ];then              VSIMHOME="$(cat ~/.vsimrc              | grep ^VSIMHOME=              |cut -d'"' -f 2)";fi
-if [ "$ITGZPATH" == "" ];then              ITGZPATH="$(cat ~/.vsimrc              | grep ^ITGZPATH=              |cut -d'"' -f 2)";fi
-if [ "$SIMDIR" == "" ];then                SIMDIR="$(cat ~/.vsimrc                | grep ^SIMDIR=                |cut -d'"' -f 2)";fi
-if [ "$FODDIR" == "" ];then                FODDIR="$(cat ~/.vsimrc                | grep ^FODDIR=                |cut -d'"' -f 2)";fi
-if [ "$VSIMPASSWORD" == "" ];then          VSIMPASSWORD="$(cat ~/.vsimrc          | grep ^VSIMPASSWORD=          |cut -d'"' -f 2)";fi
-if [ "$VSIMLICENSE" == "" ];then           VSIMLICENSE="$(cat ~/.vsimrc           | grep ^VSIMLICENSE=           |cut -d'"' -f 2)";fi
-if [ "$SDOT_BUILTIN_LICENSES" == "" ];then SDOT_BUILTIN_LICENSES="$(cat ~/.vsimrc | grep ^SDOT_BUILTIN_LICENSES= |cut -d'"' -f 2)";fi
-if [ "$VSIMSERIAL" == "" ];then            VSIMSERIAL="$(cat ~/.vsimrc            | grep ^VSIMSERIAL=            |cut -d'"' -f 2)";fi
-if [ "$VSIMPARTNERSERIAL" == "" ];then     VSIMPARTNERSERIAL="$(cat ~/.vsimrc     | grep ^VSIMPARTNERSERIAL=     |cut -d'"' -f 2)";fi
-if [ "$VSIMHOST" == "" ];then              VSIMHOST="$(cat ~/.vsimrc              | grep ^VSIMHOST=              |cut -d'"' -f 2)";fi
-if [ "$VSIMDATASTORE" == "" ];then         VSIMDATASTORE="$(cat ~/.vsimrc         | grep ^VSIMDATASTORE=         |cut -d'"' -f 2)";fi
-if [ "$NAT_NAME" == "" ];then              NAT_NAME="$(cat ~/.vsimrc              | grep ^NAT_NAME=              |cut -d'"' -f 2)";fi
-if [ "$NAT_SUBNET" == "" ];then            NAT_SUBNET="$(cat ~/.vsimrc            | grep ^NAT_SUBNET=            |cut -d'"' -f 2)";fi
-if [ "$NAT_NETMASK" == "" ];then           NAT_NETMASK="$(cat ~/.vsimrc           | grep ^NAT_NETMASK=           |cut -d'"' -f 2)";fi
-if [ "$NAT_GATEWAY" == "" ];then           NAT_GATEWAY="$(cat ~/.vsimrc           | grep ^NAT_GATEWAY=           |cut -d'"' -f 2)";fi
-if [ "$HOSTONLY_NAME" == "" ];then         HOSTONLY_NAME="$(cat ~/.vsimrc         | grep ^HOSTONLY_NAME=         |cut -d'"' -f 2)";fi
-if [ "$BRIDGED_NAME" == "" ];then          BRIDGED_NAME="$(cat ~/.vsimrc          | grep ^BRIDGED_NAME=          |cut -d'"' -f 2)";fi
-if [ "$OVFTOOL" == "" ];then               OVFTOOL="$(cat ~/.vsimrc               | grep ^OVFTOOL=               |cut -d'"' -f 2)";fi
-if [ "$VDISKMANAGER" == "" ];then          VDISKMANAGER="$(cat ~/.vsimrc          | grep ^VDISKMANAGER=          |cut -d'"' -f 2)";fi
-if [ "$VMRUN" == "" ];then                 VMRUN="$(cat ~/.vsimrc                 | grep ^VMRUN=                 |cut -d'"' -f 2)";fi
+if [ -z "$VSIMHOME" ];then              VSIMHOME="$(cat ~/.vsimrc              | grep ^VSIMHOME=              |cut -d'"' -f 2)";fi
+if [ -z "$ITGZPATH" ];then              ITGZPATH="$(cat ~/.vsimrc              | grep ^ITGZPATH=              |cut -d'"' -f 2)";fi
+if [ -z "$SIMDIR" ];then                SIMDIR="$(cat ~/.vsimrc                | grep ^SIMDIR=                |cut -d'"' -f 2)";fi
+if [ -z "$FODDIR" ];then                FODDIR="$(cat ~/.vsimrc                | grep ^FODDIR=                |cut -d'"' -f 2)";fi
+if [ -z "$VSIMPASSWORD" ];then          VSIMPASSWORD="$(cat ~/.vsimrc          | grep ^VSIMPASSWORD=          |cut -d'"' -f 2)";fi
+if [ -z "$VSIMLICENSE" ];then           VSIMLICENSE="$(cat ~/.vsimrc           | grep ^VSIMLICENSE=           |cut -d'"' -f 2)";fi
+if [ -z "$SDOT_BUILTIN_LICENSES" ];then SDOT_BUILTIN_LICENSES="$(cat ~/.vsimrc | grep ^SDOT_BUILTIN_LICENSES= |cut -d'"' -f 2)";fi
+if [ -z "$VSIMSERIAL" ];then            VSIMSERIAL="$(cat ~/.vsimrc            | grep ^VSIMSERIAL=            |cut -d'"' -f 2)";fi
+if [ -z "$VSIMPARTNERSERIAL" ];then     VSIMPARTNERSERIAL="$(cat ~/.vsimrc     | grep ^VSIMPARTNERSERIAL=     |cut -d'"' -f 2)";fi
+if [ -z "$VSIMHOST" ];then              VSIMHOST="$(cat ~/.vsimrc              | grep ^VSIMHOST=              |cut -d'"' -f 2)";fi
+if [ -z "$VSIMDATASTORE" ];then         VSIMDATASTORE="$(cat ~/.vsimrc         | grep ^VSIMDATASTORE=         |cut -d'"' -f 2)";fi
+if [ -z "$NAT_NAME" ];then              NAT_NAME="$(cat ~/.vsimrc              | grep ^NAT_NAME=              |cut -d'"' -f 2)";fi
+if [ -z "$NAT_SUBNET" ];then            NAT_SUBNET="$(cat ~/.vsimrc            | grep ^NAT_SUBNET=            |cut -d'"' -f 2)";fi
+if [ -z "$NAT_NETMASK" ];then           NAT_NETMASK="$(cat ~/.vsimrc           | grep ^NAT_NETMASK=           |cut -d'"' -f 2)";fi
+if [ -z "$NAT_GATEWAY" ];then           NAT_GATEWAY="$(cat ~/.vsimrc           | grep ^NAT_GATEWAY=           |cut -d'"' -f 2)";fi
+if [ -z "$HOSTONLY_NAME" ];then         HOSTONLY_NAME="$(cat ~/.vsimrc         | grep ^HOSTONLY_NAME=         |cut -d'"' -f 2)";fi
+if [ -z "$BRIDGED_NAME" ];then          BRIDGED_NAME="$(cat ~/.vsimrc          | grep ^BRIDGED_NAME=          |cut -d'"' -f 2)";fi
+if [ -z "$OVFTOOL" ];then               OVFTOOL="$(cat ~/.vsimrc               | grep ^OVFTOOL=               |cut -d'"' -f 2)";fi
+if [ -z "$VDISKMANAGER" ];then          VDISKMANAGER="$(cat ~/.vsimrc          | grep ^VDISKMANAGER=          |cut -d'"' -f 2)";fi
+if [ -z "$VMRUN" ];then                 VMRUN="$(cat ~/.vsimrc                 | grep ^VMRUN=                 |cut -d'"' -f 2)";fi
 
 #If still not defined use defaults:
-if [ "$VSIMHOME" == "" ];then        VSIMHOME="$HOME/.vsim";fi
-if [ "$ITGZPATH" == "" ];then        ITGZPATH="$VSIMHOME/ontap";fi
-if [ "$SIMDIR" == "" ];then          SIMDIR="$HOME/vsims";fi
-if [ "$FODDIR" == "" ];then          FODDIR="$HOME/vsims";fi
-if [ "$VSIMPASSWORD" ];then          VSIMPASSWORD="netapp123";fi
-if [ "$VSIMLICENSE" ];then           VSIMLICENSE="";fi
-if [ "$SDOT_BUILTIN_LICENSES" ];then SDOT_BUILTIN_LICENSES="";fi
-if [ "$VSIMSERIAL" ];then            VSIMSERIAL="";fi
-if [ "$VSIMPARTNERSERIAL" ];then     VSIMPARTNERSERIAL="";fi
-if [ "$VSIMHOST" ];then              VSIMHOST="";fi
-if [ "$VSIMDATASTORE" ];then         VSIMDATASTORE="";fi
-if [ "$NAT_NAME" ];then              NAT_NAME="VM Network";fi
-if [ "$NAT_SUBNET" ];then            NAT_SUBNET="";fi
-if [ "$NAT_NETMASK" ];then           NAT_NETMASK="";fi
-if [ "$NAT_GATEWAY" ];then           NAT_GATEWAY="";fi
-if [ "$HOSTONLY_NAME" ];then         HOSTONLY_NAME="Cluster Network";fi
-if [ "$BRIDGED_NAME" ];then          BRIDGED_NAME="Management Network";fi
-if [ "$OVFTOOL" ];then               OVFTOOL="$(which ovftool 2>/dev/null)";fi
-if [ "$VDISKMANAGER" ];then          VDISKMANAGER="$(which vmware-vdiskmanager 2>/dev/null)";fi
-if [ "$VMRUN" ];then                 VMRUN="$(which vmrun 2>/dev/null)";fi
+if [ -z "$VSIMHOME" ];then              VSIMHOME="$HOME/.vsim";fi
+if [ -z "$ITGZPATH" ];then              ITGZPATH="$VSIMHOME/ontap";fi
+if [ -z "$SIMDIR" ];then                SIMDIR="$HOME/vsims";fi
+if [ -z "$FODDIR" ];then                FODDIR="$HOME/vsims";fi
+if [ -z "$VSIMPASSWORD" ];then          VSIMPASSWORD="netapp123";fi
+if [ -z "$VSIMLICENSE" ];then           VSIMLICENSE="";fi
+if [ -z "$SDOT_BUILTIN_LICENSES" ];then SDOT_BUILTIN_LICENSES="";fi
+if [ -z "$VSIMSERIAL" ];then            VSIMSERIAL="";fi
+if [ -z "$VSIMPARTNERSERIAL" ];then     VSIMPARTNERSERIAL="";fi
+if [ -z "$VSIMHOST" ];then              VSIMHOST="";fi
+if [ -z "$VSIMDATASTORE" ];then         VSIMDATASTORE="";fi
+if [ -z "$NAT_NAME" ];then              NAT_NAME="VM Network";fi
+if [ -z "$NAT_SUBNET" ];then            NAT_SUBNET="";fi
+if [ -z "$NAT_NETMASK" ];then           NAT_NETMASK="";fi
+if [ -z "$NAT_GATEWAY" ];then           NAT_GATEWAY="";fi
+if [ -z "$HOSTONLY_NAME" ];then         HOSTONLY_NAME="Cluster Network";fi
+if [ -z "$BRIDGED_NAME" ];then          BRIDGED_NAME="Management Network";fi
+if [ -z "$OVFTOOL" ];then               OVFTOOL="$(which ovftool 2>/dev/null)";fi
+if [ -z "$VDISKMANAGER" ];then          VDISKMANAGER="$(which vmware-vdiskmanager 2>/dev/null)";fi
+if [ -z "$VMRUN" ];then                 VMRUN="$(which vmrun 2>/dev/null)";fi
 
 # Apply defaults to some parameters.  These might be overriden by cli parameters. #FIXME
 if [ -n "$VSIMSERIAL" ] && [ -z "$serno" ];then serno="$VSIMSERIAL";fi
