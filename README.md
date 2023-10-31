@@ -10,6 +10,22 @@ vsimcli is a shell script for building and managing a local vsim (NetApp ONTAP *
  - Start/Stop of local Simulator VMs
  - Connecting to a vsim's serial console
 
+## Requirements
+The following components are required on MacOS
+  1. VMware Fusion
+
+  2. (optional) mtools
+
+The following components are required on Linux
+  1. VMware Workstation
+
+  2. libnsl (required by ovftool)
+
+  3. mtools
+
+  4. expect
+
+
 ## Installation
 
 To install:
