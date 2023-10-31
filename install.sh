@@ -7,8 +7,8 @@ errCount=0
 # fi
 
 # decide where to install to
-if [ "$VSIMHOME" == "" ] && [ -f "$HOME/.vsimrc" ];then VSIMHOME="$(cat ~/.vsimrc | grep ^VSIMHOME|cut -d'"' -f 2)";fi
-if [ "$VSIMHOME" == "" ]; then VSIMHOME="$HOME/.vsim";fi
+if [ -z "$VSIMHOME" ] && [ -f "$HOME/.vsimrc" ];then VSIMHOME="$(cat ~/.vsimrc | grep ^VSIMHOME|cut -d'"' -f 2)";fi
+if [ -z "$VSIMHOME" ]; then VSIMHOME="$HOME/.vsim";fi
 export VSIMHOME="$VSIMHOME"
 echo "VSIMHOME=$VSIMHOME"
 
@@ -68,11 +68,11 @@ else
 fi
 
 ovafile="$(ls vsim-netapp-DOT9.*.ova 2> /dev/null| tail -n 1)"
-if ! [ -f "$ovafile" ];then 
+if ! [ -f "$ovafile" ];then
   ovafile="$(ls ~/Downloads/vsim-netapp-DOT9.*.ova 2> /dev/null| tail -n 1)"
 fi
 
-if [ -f "$ovafile" ];then 
+if [ -f "$ovafile" ];then
   echo "+ Found: $ovafile"
 else
   echo "- A vSIM OVA file was not found."
@@ -131,9 +131,9 @@ cp vsim $VSIMHOME/bin
 if [ -f "$VSIMHOME/bin/vsim" ]; then
 	echo "+ $VSIMHOME/bin/vsim"
 fi
-cp .vsim-completion.sh $VSIMHOME/bin
-if [ -f "$VSIMHOME/bin/.vsim-completion.sh" ]; then
-	echo "+ $VSIMHOME/bin/.vsim-completion.sh"
+cp vsim-completion.sh $VSIMHOME/bin
+if [ -f "$VSIMHOME/bin/vsim-completion.sh" ]; then
+	echo "+ $VSIMHOME/bin/vsim-completion.sh"
 fi
 
 
@@ -159,24 +159,24 @@ fi
 
 # configure bashrc for linux
 echo
-echo "Updating .bashrc"
+echo "Updating .bashrc:"
 bashrc="$HOME/.bashrc"
-src="source $VSIMHOME/bin/.vsim-completion.sh"
+src="source $VSIMHOME/bin/vsim-completion.sh"
 bashpath='export PATH="'$VSIMHOME'/bin:$PATH"'
 if ! [ -f "$bashrc" ];then touch "$bashrc";fi
-if ! cat "$bashrc" | grep "$src";then	echo "$src" >> "$bashrc";fi
-if ! cat "$bashrc" | grep "$bashpath";then echo "$bashpath" >> "$bashrc";fi
+if ! grep "$src" "$bashrc";then	echo "$src" >> "$bashrc";fi
+if ! grep "$bashpath" "$bashrc";then echo "$bashpath" >> "$bashrc";fi
 
 #configure zshrc for newer macos
 echo
-echo "Updating .zshrc"
+echo "Updating .zshrc:"
 zshrc="$HOME/.zshrc"
 zshpath='export PATH='$VSIMHOME'/bin:$PATH'
 if ! [ -f "$zshrc" ];then touch "$zshrc";fi
-if ! cat "$zshrc" | grep "compinit";then echo "autoload -U +X compinit && compinit" >> "$zshrc";fi
-if ! cat "$zshrc" | grep "bashcompinit";then echo "autoload -U +X bashcompinit && bashcompinit" >> "$zshrc";fi
-if ! cat "$zshrc" | grep "$src";then echo "$src" >> "$zshrc";fi
-if ! cat "$zshrc" | grep "$zshpath";then echo "$zshpath" >> "$zshrc";fi
+if ! grep "compinit" "$zshrc";then echo "autoload -U +X compinit && compinit" >> "$zshrc";fi
+if ! grep "bashcompinit" "$zshrc";then echo "autoload -U +X bashcompinit && bashcompinit" >> "$zshrc";fi
+if ! grep "$src" "$zshrc";then echo "$src" >> "$zshrc";fi
+if ! grep "$zshpath" "$zshrc";then echo "$zshpath" >> "$zshrc";fi
 
 #Build templates if necessary
 #Build standard.tgz from the ova
@@ -191,7 +191,7 @@ if ! [ -f "standard.tgz" ];then
 fi
 
 # Import ovafile as template
-if [ -f "$ovafile" ];then 
+if [ -f "$ovafile" ];then
   echo
   echo "Importing templates."
   echo "+ $ovafile"
