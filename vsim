@@ -4,7 +4,7 @@
 VSIMVERSION="20231026.01"
 
 #A config file for extra settings
-if [ "$VSIMCFGFILE" == "" ];then VSIMCFGFILE="$HOME/.vsimrc";fi 
+if [ "$VSIMCFGFILE" == "" ];then VSIMCFGFILE="$HOME/.vsimrc";fi
 if ! [ -f "$VSIMCFGFILE" ];then touch "$VSIMCFGFILE";fi
 
 #If not defined in the user ENV use the config file or default
@@ -282,7 +282,7 @@ function help() # $1=subcommand
 					echo "   -vbox                                Export the vsim in vbox format";;esac
 	case $1 in deploy|console )
 					echo "   -host <name | ip>                    ESXi host";;esac
-    case $1 in deploy )    
+    case $1 in deploy )
 					echo "   -datastore  <name>                   ESXi Datastore"
 					echo "   -nat <portgroup>                     ESXi Data Network (VM Network)"
 					echo "   -hostonly <portgroup>                ESXi Cluster Network (Cluster Network)";;esac
@@ -563,12 +563,12 @@ function autosetup()
 			if [ -n "$VSIMLICENSE" ];then
 				echo "ngsh -c license add $VSIMLICENSE" >> $setupfile
 			fi
-            
+
 			#BURT 8250500 may require a time machine
 			if $delorean_required;then
 				echo "ngsh -c date "`date +%Y%m%d%H%M` >> $setupfile
 			fi
-			
+
             #Create the cluster_mgmt lif
 			echo "ngsh -c network interface create -vserver $cluster -lif cluster_mgmt -role cluster-mgmt -home-node $_node_name -home-port e0d -address $clusterip -netmask $mgmt_netmask"  >> $setupfile
 			#Jumbos don't work in Fusion, so fix the Cluster ports
@@ -1344,9 +1344,9 @@ function saveoptions()
     echo 'HOSTONLY_NAME="'$HOSTONLY_NAME'"'
     echo 'NAT_NAME="'$NAT_NAME'"'
     echo 'BRIDGED_NAME="'$BRIDGED_NAME'"'
-    echo    
+    echo
     echo "#When using an ESX host, specify the VMware NFS Datastore.  Must also be mounted locally as the SIMDIR specified above."
-    echo 'VSIMDATASTORE="'$VSIMDATASTORE'"'    
+    echo 'VSIMDATASTORE="'$VSIMDATASTORE'"'
     echo
 	} > "$VSIMCFGFILE"
 	chmod 777 "$VSIMCFGFILE"
@@ -1495,7 +1495,7 @@ function IsMounted() #$1=simpath
 	if [ -z "$_simpath" ]; then return 1;fi
 
     # test the path
-	if [ -n "$(mount | grep "$_simpath/")" ]; then 
+	if [ -n "$(mount | grep "$_simpath/")" ]; then
         return 0
     else
         return 1
@@ -1562,7 +1562,7 @@ function IsRunning() #$1=simpath
 
     local _simpath=${1:-"$simpath"}
 
-    if [ -n "$(ls $_simpath | grep .lck)" ]; then 
+    if [ -n "$(ls $_simpath | grep .lck)" ]; then
         return 0
     else
         return 1
@@ -2306,13 +2306,13 @@ function setdefaults()
 
   # If there is no perfect match, pick the newest appropriate one available
   # vloader changed at 9.10.1 so prefer a newer template on 9.10.1+ and older template on 9.9.1 and below
-  if [ -z "$template" ];then 
+  if [ -z "$template" ];then
       if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9101.tgz" ] ; then template="standard_9101.tgz";fi
-      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9111.tgz" ] ; then template="standard_9111.tgz";fi	
+      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9111.tgz" ] ; then template="standard_9111.tgz";fi
       if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9121.tgz" ] ; then template="standard_9121.tgz";fi
       if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9131.tgz" ] ; then template="standard_9131.tgz";fi
-      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9141.tgz" ] ; then template="standard_9141.tgz";fi	 
-      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9151.tgz" ] ; then template="standard_9151.tgz";fi	 	  
+      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9141.tgz" ] ; then template="standard_9141.tgz";fi
+      if [ $baseversion -ge 9101 ] && [ -f "$VSIMHOME/standard_9151.tgz" ] ; then template="standard_9151.tgz";fi
   fi
 
 	#default bsdport
@@ -2640,7 +2640,7 @@ function vsimexport()
 					setvmx ethernet1.networkName "$HOSTONLY_NAME";fi
 				if [ "$(getvmx ethernet2.present)" = "TRUE" ]; then
 					unsetvmx ethernet2.connectionType
-					setvmx ethernet2.networkName "$NAT_NAME";fi 
+					setvmx ethernet2.networkName "$NAT_NAME";fi
 				if [ "$(getvmx ethernet3.present)" = "TRUE" ]; then
 					unsetvmx ethernet3.connectionType
 					setvmx ethernet3.networkName "$NAT_NAME";fi
@@ -2823,7 +2823,7 @@ function vsimimport()
 		cd "$ITGZPATH"
         vsimexport
 		PWD="$OLDPWD"
-        rm -rf "$simpath"	
+        rm -rf "$simpath"
     fi
 
 	echo
@@ -3001,13 +3001,13 @@ function vsimmake()
 
 	# If -model \ -template was supplied us that one
 	if [ -f "$VSIMHOME/$template" ]; then _template="$VSIMHOME/$template";fi
-	
+
   	# Now if the template is missing, exit gracefully
   	if ! [ -f "$_template" ];then
   		echo "vsimmake: missing vm template: $_template"
   		exit
   	fi
-    
+
 	echo "_template: $_template"
 
 	#Extract the TGZ
@@ -4301,7 +4301,7 @@ function vsimstart()
 	    #echo "WSL Detected."
 		_vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
 	fi
-    if [ -z "$host" ];then 
+    if [ -z "$host" ];then
   	  echo "Starting $name"
  	  "$VMRUN" -T "$_type" start "$_vmxfile" "$_gui" #&>/dev/null
     else
@@ -4310,7 +4310,7 @@ function vsimstart()
       #echo "$registerVM"
       vmid=$(ssh root@$host 'vim-cmd vmsvc/getallvms' | grep vsims | grep $name/ | cut -d' ' -f1 )
       echo "vmid: $vmid"
-      if [ -z "$vmid" ];then 
+      if [ -z "$vmid" ];then
         echo "vsim not registered"
       fi
 
@@ -4340,12 +4340,12 @@ function vsimstop()
 
     # And it must be running
     if ! IsRunning; then return 1;fi
-    
+
     # determine hypervisor type
     _type="Fusion"
     if [ "$(uname)" = "Linux" ];then _type="ws";fi
     if [ -n "$host" ];then _type="esx";fi
-    
+
     #WSL Accomodations
     _vmxfile="$vmxfile"
     if [ "$(echo $_vmxfile | grep /mnt/c/)" = "$_vmxfile" ];then
@@ -4354,19 +4354,19 @@ function vsimstop()
     fi
 
     # On Fusion and Workstation use VMRUN
-    if [ "$_type" != "esx" ];then 
+    if [ "$_type" != "esx" ];then
         echo "Stopping vsim: $name"
         "$VMRUN" -T "$_type" stop "$_vmxfile" "$_hard" &>/dev/null
     fi
 
     # On ESX, use vim-cmd over ssh
-    if [ "$_type" = "esx" ];then 
+    if [ "$_type" = "esx" ];then
         echo "Stopping $name on $host"
 
         #get the vmid
         vmid=$(ssh root@$host 'vim-cmd vmsvc/getallvms' | grep vsims | grep $name/ | cut -d' ' -f1 )
         #echo "vmid: $vmid"
-        
+
         if $force;then
             guestStop=$(ssh root@$host "vim-cmd vmsvc/power.off $vmid" &>/dev/null)
         else
@@ -4377,6 +4377,10 @@ function vsimstop()
         ret=$(ssh root@$host "chmod -R 777 /vmfs/volumes/$datastore/$name")
     fi
 
+    if $force;then
+      rm "$simpath"/*.lck 2> /dev/null
+      rm -rf "$simpath"/*.lck 2> /dev/null
+    fi
     #update the envcache
     envcache
 }
@@ -4669,9 +4673,9 @@ function vsimupdate()
         file_list=""
         file_list=" $file_list netboot/VERSION netboot/BUILD netboot/CHECKSUM netboot/COMPAT.TXT"
         file_list=" $file_list netboot/INSTALL netboot/bsdboot.tgz netboot/cap.xml netboot/fw.tgz netboot/if_vmx.ko netboot/if_vtnet.ko"
-        file_list=" $file_list netboot/kernel netboot/kernel.csfc.sig netboot/kernel.sig"        
+        file_list=" $file_list netboot/kernel netboot/kernel.csfc.sig netboot/kernel.sig"
         file_list=" $file_list netboot/key_fingerprint.csfc.sig netboot/key_fingerprint.sig netboot/metadata.xml"
-        file_list=" $file_list netboot/mlxen.ko netboot/mlx4.ko netboot/mlx4en.ko netboot/mpt.ko netboot/netapp_vmx.ko"        
+        file_list=" $file_list netboot/mlxen.ko netboot/mlx4.ko netboot/mlx4en.ko netboot/mpt.ko netboot/netapp_vmx.ko"
         file_list=" $file_list netboot/nvdimm.ko netboot/platform.ko netboot/platform.ko.sig netboot/platform.ko.csfc.sig"
         file_list=" $file_list netboot/platfs.img netboot/platfs.img.csfc.sig netboot/platfs.img.sig netboot/pmroot_late.tgz netboot/pvscsi.ko"
         file_list=" $file_list netboot/rootfs.img netboot/rootfs.img.csfc.sig netboot/rootfs.img.sig"
@@ -5093,7 +5097,7 @@ case $action in
             _vmxfile=$(echo $_vmxfile | sed 's^/mnt/c^^g' | sed 's^/^\\^g')
             fi
 
-            if [ -z "$host" ];then 
+            if [ -z "$host" ];then
 			    "$VMRUN" -T "$_type" deleteVM "$_vmxfile"
             else
                 ret=$(ssh root@$host "chmod -R 777 /vmfs/volumes/$datastore/$name")
@@ -5207,7 +5211,7 @@ case $action in
 	stop 	    ) 	vsimstop;;
 	suspend 	)   "$VMRUN" suspend "$vmxfile";;
 	update 	    )
-        cfcache	
+        cfcache
         vsimupdate
         cfsave
         ;;
