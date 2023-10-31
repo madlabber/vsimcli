@@ -191,13 +191,47 @@ if ! [ -f "standard.tgz" ];then
 fi
 
 # Import ovafile as template
-if [ -f "$ovafile" ];then
-  echo
-  echo "Importing templates."
-  echo "+ $ovafile"
-  result="$(./vsim import -file "$ovafile" -vsim template -template -image1 )"
-  #echo "$result"
-fi
+# if [ -f "$ovafile" ];then
+#   echo
+#   echo "Importing templates."
+#   echo "+ $ovafile"
+#   result="$(./vsim import -file "$ovafile" -vsim template -template -image1 -force )"
+#   #echo "$result"
+# fi
+echo
+echo "Importing more templates"
+for item in vsim-netapp-DOT9.9.1-cm_nodar.ova \
+            vsim-netapp-DOT9.10.1-cm_nodar.ova \
+            vsim-netapp-DOT9.11.1-cm_nodar.ova \
+            vsim-netapp-DOT9.12.1-cm_nodar.ova \
+            vsim-netapp-DOT9.13.1-cm_nodar.ova \
+						vsim-netapp-DOT9.14.1-cm_nodar.ova
+  do
+    echo $item
+		#remove any X code suffix
+		baseversion=$(echo $item | cut -d'X' -f1)
+		#remove any RC suffixes
+		baseversion=$(echo $baseversion | cut -d'R' -f1)
+		#remove any P release suffixes
+		baseversion=$(echo $baseversion | cut -d'P' -f1)
+		#remove any D release suffixes
+		baseversion=$(echo $baseversion | cut -d'D' -f2)
+		#remove any _ suffix
+		baseversion=$(echo $baseversion | cut -d'_' -f1)
+		#just the digits please
+		baseversion=${baseversion//[!0-9]/}
+		#add a zero if needed
+		if [ $baseversion -lt "100" ];then baseversion=$(($baseversion*10));fi
+		template="standard_$baseversion.tgz"
+		echo "$template"
+		if [ -f "$item" ] && ! [ -f "$VSIMHOME/$template" ]; then
+		  echo "+ $item"
+		  result="$(./vsim import -file "$item" -vsim template -template -image1 -force )"
+		elif [ -f "$HOME/Downloads/$item" ] && ! [ -f "$VSIMHOME/$template" ]; then
+		  echo "+ $HOME/Downloads/$item"
+		  result="$(./vsim import -file "$HOME/Downloads/$item" -vsim template -template -image1 -force )"
+		fi
+  done
 
 echo
 echo "Searching for license file."
