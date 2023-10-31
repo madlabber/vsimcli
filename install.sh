@@ -107,6 +107,7 @@ mkdir -p "$VSIMHOME"
 mkdir -p "$VSIMHOME/ontap"
 mkdir -p "$VSIMHOME/cfcard"
 mkdir -p "$VSIMHOME/bin"
+mkdir -p "$HOME/vsims"
 chmod -R 777 "$VSIMHOME"
 
 # #Scripts go here if they can
