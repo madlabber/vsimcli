@@ -30,10 +30,10 @@ if ! [ -f "$VSIMCFGFILE" ];then touch "$VSIMCFGFILE";fi
 [ "${VMRUN:=$(grep                 ^VMRUN=                 $VSIMCFGFILE|cut -d'"' -f2)}" ] || VMRUN="$(which vmrun 2>/dev/null)"
 
 # Apply defaults to some parameters.  These might be overriden by cli parameters. #FIXME
-if [ -n "$VSIMSERIAL" ] && [ -z "$serno" ];then serno="$VSIMSERIAL";fi
-if [ -n "$VSIMPARTNERSERIAL" ] && [ -z "$serno2" ];then serno2="$VSIMPARTNERSERIAL";fi
-if [ -n "$VSIMHOST" ] && [ -z "$host" ];then host="$VSIMHOST";fi
-if [ -n "$VSIMDATASTORE" ] && [ -z "$datastore" ];then datastore="$VSIMDATASTORE";fi
+if [ -z "$serno" ];then serno="$VSIMSERIAL";fi
+if [ -z "$serno2" ];then serno2="$VSIMPARTNERSERIAL";fi
+if [ -z "$host" ];then host="$VSIMHOST";fi
+if [ -z "$datastore" ];then datastore="$VSIMDATASTORE";fi
 
 # Find required VMware components
 # Usually in the path on Linux but these tend to move around a lot on Darwin.
