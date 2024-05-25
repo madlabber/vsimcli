@@ -179,34 +179,16 @@ if ! grep "bashcompinit" "$zshrc";then echo "autoload -U +X bashcompinit && bash
 if ! grep "$src" "$zshrc";then echo "$src" >> "$zshrc";fi
 if ! grep "$zshpath" "$zshrc";then echo "$zshpath" >> "$zshrc";fi
 
-#Build templates if necessary
-#Build standard.tgz from the ova
-if ! [ -f "standard.tgz" ];then
-    echo
-    echo "Building standard diskmodel template."
-    ./vsim delete standard
-    ./vsim import -file "$ovafile" -name "standard"
-    echo "Exporting standard.tgz"
-    ./vsim export standard -tgz
-    ./vsim delete standard
-fi
 
-# Import ovafile as template
-# if [ -f "$ovafile" ];then
-#   echo
-#   echo "Importing templates."
-#   echo "+ $ovafile"
-#   result="$(./vsim import -file "$ovafile" -vsim template -template -image1 -force )"
-#   #echo "$result"
-# fi
+#Build templates from available vsim OVAs
 echo
-echo "Importing more templates"
+echo "Build templates"
 for item in vsim-netapp-DOT9.9.1-cm_nodar.ova \
             vsim-netapp-DOT9.10.1-cm_nodar.ova \
             vsim-netapp-DOT9.11.1-cm_nodar.ova \
             vsim-netapp-DOT9.12.1-cm_nodar.ova \
             vsim-netapp-DOT9.13.1-cm_nodar.ova \
-						vsim-netapp-DOT9.14.1-cm_nodar.ova
+			vsim-netapp-DOT9.14.1-cm_nodar.ova
   do
     echo $item
 		#remove any X code suffix
@@ -231,6 +213,10 @@ for item in vsim-netapp-DOT9.9.1-cm_nodar.ova \
 		elif [ -f "$HOME/Downloads/$item" ] && ! [ -f "$VSIMHOME/$template" ]; then
 		  echo "+ $HOME/Downloads/$item"
 		  result="$(./vsim import -file "$HOME/Downloads/$item" -vsim template -template -image1 -force )"
+		fi
+		#if standard.tgz is missing use the current template.
+		if ! [ -f "$VSIMHOME/standard.tgz" ] && [ -f "$VSIMHOME/$template" ]; then
+		  cp "$VSIMHOME/$template" "$VSIMHOME/standard.tgz"
 		fi
   done
 
@@ -269,7 +255,6 @@ echo "Copying files to $VSIMHOME:"
 cp standard.tgz $VSIMHOME 2>/dev/null
 if [ -f "$VSIMHOME/standard.tgz" ];then
 	echo "+ $VSIMHOME/standard.tgz"
-	cp standard.tgz $VSIMHOME
 fi
 cp classic.tgz $VSIMHOME 2>/dev/null
 if [ -f "$VSIMHOME/classic.tgz" ];then
@@ -289,7 +274,7 @@ if [ $failed -ne 0 ];then
 	exit
 fi
 
-# Patch up ownership
+# Attempt to patch up ownership
 case "$(uname)" in
 	Darwin )
 		userid=$(stat -f %u "$HOME")
@@ -299,8 +284,8 @@ case "$(uname)" in
 		userid=$(stat --format %u "$HOME")
 		groupid=$(stat --format %g "$HOME");;
 esac
-chown -R $userid:$groupid "$HOME/vsims"
-chmod -R 777 "$HOME/vsims"
+chown -R $userid:$groupid "$HOME/vsims" 2> /dev/null
+chmod -R 777 "$HOME/vsims" 2> /dev/null
 
 
 #Now configure NFS based on the vmnet1 settings in VMware
